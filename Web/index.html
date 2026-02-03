@@ -185,6 +185,14 @@
             box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
         }
 
+        /* Flaps selector - vertical */
+        .selector[data-id="flaps"] {
+            grid-column: span 1;
+        }
+        .selector[data-id="flaps"] .selector-options {
+            flex-direction: column;
+        }
+
         /* Momentary Button */
         .btn-momentary {
             display: flex;
