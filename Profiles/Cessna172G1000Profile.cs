@@ -239,9 +239,9 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Selector,
             SelectorOptions = new List<SelectorOption>
             {
-                new SelectorOption { Label = "LEFT", SimEvent = "FUEL_SELECTOR_LEFT", Value = 2 },
-                new SelectorOption { Label = "BOTH", SimEvent = "FUEL_SELECTOR_ALL", Value = 1 },
-                new SelectorOption { Label = "RIGHT", SimEvent = "FUEL_SELECTOR_RIGHT", Value = 3 },
+                new SelectorOption { Label = "LEFT", SimEvent = "FUEL_SELECTOR_1_LEFT", Value = 0 },
+                new SelectorOption { Label = "BOTH", SimEvent = "FUEL_SELECTOR_1_ALL", Value = 1 },
+                new SelectorOption { Label = "RIGHT", SimEvent = "FUEL_SELECTOR_1_RIGHT", Value = 2 },
             }
         },
 
