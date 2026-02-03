@@ -185,12 +185,29 @@
             box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
         }
 
-        /* Flaps selector - vertical */
+        /* VOLETS category - custom layout: selector vertical + buttons right */
+        .category:has(.selector[data-id="flaps"]) .category-buttons {
+            display: grid;
+            grid-template-columns: auto 60px;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+        }
         .selector[data-id="flaps"] {
-            grid-column: span 1;
+            grid-column: 1;
+            grid-row: 1 / 3;
         }
         .selector[data-id="flaps"] .selector-options {
             flex-direction: column;
+        }
+        .btn-momentary[data-id="flaps_decr"] {
+            grid-column: 2;
+            grid-row: 1;
+            min-height: auto;
+        }
+        .btn-momentary[data-id="flaps_incr"] {
+            grid-column: 2;
+            grid-row: 2;
+            min-height: auto;
         }
 
         /* Momentary Button */
@@ -482,7 +499,7 @@
 
         function renderMomentary(cmd) {
             return `
-                <button class="btn-momentary" onclick="sendToggle('${cmd.id}')">
+                <button class="btn-momentary" data-id="${cmd.id}" onclick="sendToggle('${cmd.id}')">
                     <span class="label">${cmd.name}</span>
                 </button>
             `;
