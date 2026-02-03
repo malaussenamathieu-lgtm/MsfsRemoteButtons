@@ -291,6 +291,58 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "W",
             ControlType = ControlType.Toggle
         },
+
+        // ============================================
+        // AFFICHEURS AUTOPILOT (Hidden)
+        // ============================================
+        new AircraftCommand
+        {
+            Id = "display_spd",
+            Name = "SPD Display",
+            SimVar = "AUTOPILOT AIRSPEED HOLD VAR",
+            SimVarUnit = "Knots",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "display_hdg",
+            Name = "HDG Display",
+            SimVar = "AUTOPILOT HEADING LOCK DIR",
+            SimVarUnit = "Degrees",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "display_alt",
+            Name = "ALT Display",
+            SimVar = "AUTOPILOT ALTITUDE LOCK VAR",
+            SimVarUnit = "Feet",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "display_vs",
+            Name = "VS Display",
+            SimVar = "AUTOPILOT VERTICAL HOLD VAR",
+            SimVarUnit = "Feet per minute",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle,
+            Hidden = true
+        },
     };
 
     /// <summary>

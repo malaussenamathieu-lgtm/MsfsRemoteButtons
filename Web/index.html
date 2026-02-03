@@ -262,6 +262,24 @@
                     opt.classList.toggle('active', Math.abs(value - optValue) < 0.5);
                 });
             }
+
+            // Autopilot displays
+            if (id === 'display_spd') {
+                const el = document.getElementById('display-spd');
+                if (el) el.textContent = Math.round(value);
+            }
+            if (id === 'display_hdg') {
+                const el = document.getElementById('display-hdg');
+                if (el) el.textContent = Math.round(value).toString().padStart(3, '0');
+            }
+            if (id === 'display_alt') {
+                const el = document.getElementById('display-alt');
+                if (el) el.textContent = Math.round(value);
+            }
+            if (id === 'display_vs') {
+                const el = document.getElementById('display-vs');
+                if (el) el.textContent = (value >= 0 ? '+' : '') + Math.round(value);
+            }
         }
 
         // Envoi des commandes
