@@ -6,33 +6,36 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #1a1a2e;
+    font-family: 'Segoe UI', 'Arial', sans-serif;
+    background: #0a0a0a;
     color: #eee;
     min-height: 100vh;
-    padding: 10px;
+    padding: 15px;
+    margin: 0 auto;
 }
 
 /* Header */
 .header {
     text-align: center;
-    padding: 15px;
-    background: linear-gradient(135deg, #16213e, #1a1a2e);
-    border-radius: 10px;
+    padding: 12px;
+    background: #1a1a1a;
+    border: 1px solid #333;
     margin-bottom: 15px;
 }
 
 .header h1 {
-    font-size: 1.3em;
-    color: #4fc3f7;
+    font-size: 1.1em;
+    color: #00ff00;
     margin-bottom: 5px;
+    font-weight: normal;
+    letter-spacing: 2px;
 }
 
 .status {
     display: flex;
     justify-content: center;
     gap: 20px;
-    font-size: 0.85em;
+    font-size: 0.8em;
 }
 
 .status-item {
@@ -42,112 +45,124 @@ body {
 }
 
 .status-dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background: #f44336;
+    background: #333;
+    border: 1px solid #555;
 }
 
 .status-dot.connected {
-    background: #4caf50;
-    box-shadow: 0 0 10px #4caf50;
+    background: #00ff00;
+    box-shadow: 0 0 8px #00ff00;
 }
 
 .aircraft-name {
-    color: #ffd54f;
-    font-weight: bold;
+    color: #ffcc00;
+    font-weight: normal;
+    font-size: 0.9em;
 }
 
 /* Categories */
 .category {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .category-title {
-    font-size: 0.8em;
+    font-size: 0.75em;
     color: #888;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 8px 12px;
-    background: #16213e;
-    border-radius: 8px 8px 0 0;
-    border-bottom: 2px solid #4fc3f7;
+    letter-spacing: 2px;
+    padding: 6px 10px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-bottom: none;
 }
 
 .category-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-    gap: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
     padding: 10px;
-    background: rgba(22, 33, 62, 0.5);
-    border-radius: 0 0 8px 8px;
+    background: #111;
+    border: 1px solid #333;
 }
 
-/* Toggle Button */
+.category-buttons > * {
+    flex: 1 1 80px;
+    max-width: 100px;
+}
+
+/* A320 Style Toggle Button */
 .btn-toggle {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    padding: 12px 8px;
-    border: none;
-    border-radius: 8px;
+    justify-content: flex-start;
+    padding: 8px 6px;
+    border: 1px solid #444;
+    border-radius: 3px;
     cursor: pointer;
-    transition: all 0.15s ease;
-    background: linear-gradient(180deg, #3a3a4a, #2a2a3a);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-    min-height: 70px;
+    transition: all 0.1s ease;
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    min-height: 65px;
 }
 
 .btn-toggle:active {
-    transform: scale(0.95);
-    box-shadow: 0 2px 3px rgba(0,0,0,0.3);
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
 }
 
+/* A320 LED indicator - rectangular bar at top */
 .btn-toggle .indicator {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    margin-bottom: 6px;
-    background: #555;
-    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-    transition: all 0.2s ease;
+    width: 100%;
+    height: 6px;
+    border-radius: 1px;
+    margin-bottom: 8px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    transition: all 0.15s ease;
 }
 
 .btn-toggle.on .indicator {
-    background: #4caf50;
-    box-shadow: 0 0 15px #4caf50, inset 0 -2px 4px rgba(0,0,0,0.3);
+    background: #00ff00;
+    border-color: #00ff00;
+    box-shadow: 0 0 10px #00ff00, 0 0 20px rgba(0, 255, 0, 0.3);
 }
 
 .btn-toggle.off .indicator {
-    background: #f44336;
-    box-shadow: 0 0 10px rgba(244, 67, 54, 0.5), inset 0 -2px 4px rgba(0,0,0,0.3);
+    background: #1a1a1a;
+    border-color: #333;
 }
 
 .btn-toggle .label {
-    font-size: 0.75em;
+    font-size: 0.7em;
     color: #ccc;
     text-align: center;
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 /* Selector */
 .selector {
     display: flex;
     flex-direction: column;
-    background: linear-gradient(180deg, #3a3a4a, #2a2a3a);
-    border-radius: 8px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 3px;
     padding: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     grid-column: span 2;
 }
 
 .selector-label {
-    font-size: 0.7em;
+    font-size: 0.65em;
     color: #888;
     text-align: center;
     margin-bottom: 6px;
     text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .selector-options {
@@ -158,24 +173,26 @@ body {
 .selector-option {
     flex: 1;
     padding: 10px 4px;
-    border: none;
-    border-radius: 4px;
+    border: 1px solid #444;
+    border-radius: 2px;
     cursor: pointer;
-    font-size: 0.7em;
+    font-size: 0.65em;
     font-weight: bold;
-    background: #444;
-    color: #aaa;
-    transition: all 0.15s ease;
+    background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+    color: #888;
+    transition: all 0.1s ease;
+    text-transform: uppercase;
 }
 
 .selector-option:active {
-    transform: scale(0.95);
+    transform: translateY(1px);
 }
 
 .selector-option.active {
-    background: linear-gradient(180deg, #4fc3f7, #0288d1);
+    background: #00aa00;
+    border-color: #00ff00;
     color: #fff;
-    box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
 }
 
 /* Momentary Button */
@@ -184,42 +201,46 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 12px 8px;
-    border: none;
-    border-radius: 8px;
+    padding: 10px 6px;
+    border: 1px solid #444;
+    border-radius: 3px;
     cursor: pointer;
     transition: all 0.1s ease;
-    background: linear-gradient(180deg, #5a5a6a, #4a4a5a);
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-    min-height: 70px;
-    color: #ccc;
+    background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    min-height: 65px;
+    color: #888;
 }
 
 .btn-momentary:active {
-    transform: scale(0.9);
-    background: linear-gradient(180deg, #4fc3f7, #0288d1);
+    transform: translateY(1px);
+    background: #00aa00;
+    border-color: #00ff00;
     color: #fff;
 }
 
 .btn-momentary .label {
-    font-size: 0.75em;
+    font-size: 0.7em;
     font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 /* VOLETS - Flaps control with vertical selector and +/- buttons */
 .flaps-control {
-    background: linear-gradient(180deg, #3a3a4a, #2a2a3a);
-    border-radius: 8px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 3px;
     padding: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
 .flaps-control .selector-label {
-    font-size: 0.7em;
+    font-size: 0.65em;
     color: #888;
     text-align: center;
     margin-bottom: 6px;
     text-transform: uppercase;
+    letter-spacing: 1px;
     display: block;
 }
 
@@ -248,21 +269,22 @@ body {
     flex: 1;
     width: 50px;
     padding: 10px 4px;
-    border: none;
-    border-radius: 4px;
+    border: 1px solid #444;
+    border-radius: 2px;
     cursor: pointer;
-    font-size: 0.7em;
+    font-size: 0.8em;
     font-weight: bold;
-    background: #444;
-    color: #aaa;
-    transition: all 0.15s ease;
+    background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+    color: #888;
+    transition: all 0.1s ease;
 }
 
 .flaps-btn:active {
-    transform: scale(0.95);
-    background: linear-gradient(180deg, #4fc3f7, #0288d1);
+    transform: translateY(1px);
+    background: #00aa00;
+    border-color: #00ff00;
     color: #fff;
-    box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
 }
 
 /* Hide default flaps +/- buttons rendered outside */
@@ -283,7 +305,7 @@ body {
     display: inline-block;
     width: 20px;
     height: 20px;
-    border: 2px solid #4fc3f7;
+    border: 2px solid #00ff00;
     border-top-color: transparent;
     border-radius: 50%;
     animation: spin 1s linear infinite;
@@ -303,7 +325,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.9);
     justify-content: center;
     align-items: center;
     flex-direction: column;
@@ -315,7 +337,7 @@ body {
 }
 
 .disconnected-overlay h2 {
-    color: #f44336;
+    color: #ff3333;
     margin-bottom: 10px;
 }
 
@@ -323,19 +345,66 @@ body {
     color: #888;
 }
 
-/* Responsive */
+/* Responsive - optimized for 1920x1080 */
 @media (min-width: 600px) {
     body {
-        padding: 20px;
-        max-width: 800px;
-        margin: 0 auto;
-    }
-
-    .category-buttons {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        padding: 30px;
     }
 
     .btn-toggle, .btn-momentary {
-        min-height: 80px;
+        min-height: 75px;
     }
+
+    .btn-toggle .label,
+    .btn-momentary .label {
+        font-size: 0.75em;
+    }
+}
+
+/* A320 Autopilot Panel with displays */
+.autopilot-panel {
+    background: #111;
+    border: 1px solid #333;
+    padding: 10px;
+}
+
+.displays-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.display-spacer {
+    flex: 1 1 80px;
+    max-width: 100px;
+}
+
+.display-box {
+    flex: 1 1 80px;
+    max-width: 100px;
+    background: #050505;
+    border: 1px solid #333;
+    border-radius: 2px;
+    padding: 4px 6px;
+    text-align: center;
+}
+
+.display-label {
+    font-size: 0.55em;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.display-value {
+    font-size: 1em;
+    color: #00ff00;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-weight: bold;
+}
+
+.autopilot-panel .category-buttons {
+    border: none;
+    padding: 0;
+    background: transparent;
 }

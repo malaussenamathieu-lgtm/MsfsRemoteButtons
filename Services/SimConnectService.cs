@@ -474,37 +474,8 @@ public class SimConnectService : IDisposable
                 {
                     _buttonStates[commandId] = simVarData.Value;
                     StateChanged?.Invoke(commandId, simVarData.Value);
-
-                    // Calcul spécial pour les magnetos (combinaison left + right)
-                    if (commandId == "magneto_left" || commandId == "magneto_right")
-                    {
-                        CalculateMagnetosState();
-                    }
                 }
             }
-        }
-    }
-
-    /// <summary>
-    /// Calcule l'état combiné des magnetos depuis left + right
-    /// OFF=0, R=1, L=2, BOTH=3
-    /// </summary>
-    private void CalculateMagnetosState()
-    {
-        var left = _buttonStates.GetValueOrDefault("magneto_left") > 0.5;
-        var right = _buttonStates.GetValueOrDefault("magneto_right") > 0.5;
-
-        double magnetoState;
-        if (!left && !right) magnetoState = 0;       // OFF
-        else if (!left && right) magnetoState = 1;   // R
-        else if (left && !right) magnetoState = 2;   // L
-        else magnetoState = 3;                        // BOTH
-
-        var oldState = _buttonStates.GetValueOrDefault("magnetos");
-        if (Math.Abs(oldState - magnetoState) > 0.001)
-        {
-            _buttonStates["magnetos"] = magnetoState;
-            StateChanged?.Invoke("magnetos", magnetoState);
         }
     }
 

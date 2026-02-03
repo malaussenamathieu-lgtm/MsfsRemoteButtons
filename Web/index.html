@@ -133,6 +133,23 @@
 
                 html += `<div class="category">`;
                 html += `<div class="category-title">${category}</div>`;
+
+                // Special layout for AUTOPILOT with displays
+                if (category === 'AUTOPILOT') {
+                    html += `<div class="autopilot-panel">`;
+                    html += `<div class="displays-row">`;
+                    html += `<div class="display-spacer"></div>`; // AP
+                    html += `<div class="display-spacer"></div>`; // FD
+                    html += `<div class="display-box"><div class="display-label">SPD</div><div class="display-value" id="display-spd">---</div></div>`; // FLC
+                    html += `<div class="display-box"><div class="display-label">HDG</div><div class="display-value" id="display-hdg">---</div></div>`; // HDG
+                    html += `<div class="display-box"><div class="display-label">ALT</div><div class="display-value" id="display-alt">-----</div></div>`; // ALT
+                    html += `<div class="display-spacer"></div>`; // NAV
+                    html += `<div class="display-spacer"></div>`; // VNAV
+                    html += `<div class="display-spacer"></div>`; // APR
+                    html += `<div class="display-box"><div class="display-label">VS</div><div class="display-value" id="display-vs">----</div></div>`; // VS
+                    html += `</div>`;
+                }
+
                 html += `<div class="category-buttons">`;
 
                 for (const cmd of commands) {
@@ -145,7 +162,11 @@
                     }
                 }
 
-                html += `</div></div>`;
+                html += `</div>`; // close category-buttons
+                if (category === 'AUTOPILOT') {
+                    html += `</div>`; // close autopilot-panel
+                }
+                html += `</div>`; // close category
             }
 
             controlsEl.innerHTML = html;
@@ -240,6 +261,24 @@
                     const optValue = parseFloat(opt.dataset.value);
                     opt.classList.toggle('active', Math.abs(value - optValue) < 0.5);
                 });
+            }
+
+            // Autopilot displays
+            if (id === 'display_spd') {
+                const el = document.getElementById('display-spd');
+                if (el) el.textContent = Math.round(value);
+            }
+            if (id === 'display_hdg') {
+                const el = document.getElementById('display-hdg');
+                if (el) el.textContent = Math.round(value).toString().padStart(3, '0');
+            }
+            if (id === 'display_alt') {
+                const el = document.getElementById('display-alt');
+                if (el) el.textContent = Math.round(value);
+            }
+            if (id === 'display_vs') {
+                const el = document.getElementById('display-vs');
+                if (el) el.textContent = (value >= 0 ? '+' : '') + Math.round(value);
             }
         }
 

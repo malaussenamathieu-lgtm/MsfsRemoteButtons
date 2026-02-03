@@ -19,11 +19,11 @@ public class Cessna172G1000Profile : IAircraftProfile
 
     public List<string> Categories => new()
     {
-        "LUMIÈRES",
-        "ÉLECTRIQUE",
-        "MOTEUR",
-        "VOLETS",
         "AUTOPILOT",
+        "LUMIÈRES",
+        "VOLETS",
+        "MOTEUR",
+        "ÉLECTRIQUE",
     };
 
     public List<AircraftCommand> Commands => new()
@@ -181,27 +181,6 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
 
         // ============================================
-        // CARBURANT (Sélecteur) - C172 n'a pas de position OFF
-        // ============================================
-        new AircraftCommand
-        {
-            Id = "fuel_selector",
-            Name = "Fuel Selector",
-            SimVar = "FUELSYSTEM JUNCTION SETTING:'FuelSelector'_n",
-            SimVarUnit = "Enum",
-            Category = "CARBURANT",
-            Key = ConsoleKey.G,
-            KeyDisplay = "G",
-            ControlType = ControlType.Selector,
-            SelectorOptions = new List<SelectorOption>
-            {
-                new SelectorOption { Label = "LEFT", SimEvent = "FUEL_SELECTOR_1_Set", Value = 0 },
-                new SelectorOption { Label = "BOTH", SimEvent = "FUEL_SELECTOR_1_Set", Value = 1 },
-                new SelectorOption { Label = "RIGHT", SimEvent = "FUEL_SELECTOR_1_Set", Value = 2 },
-            }
-        },
-
-        // ============================================
         // AUTOPILOT
         // ============================================
         new AircraftCommand
@@ -226,6 +205,18 @@ public class Cessna172G1000Profile : IAircraftProfile
             Category = "AUTOPILOT",
             Key = ConsoleKey.D,
             KeyDisplay = "D",
+            ControlType = ControlType.Toggle
+        },
+        new AircraftCommand
+        {
+            Id = "ap_flc",
+            Name = "FLC",
+            SimEvent = "FLIGHT_LEVEL_CHANGE",
+            SimVar = "AUTOPILOT FLIGHT LEVEL CHANGE",
+            SimVarUnit = "Bool",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
         new AircraftCommand
@@ -266,6 +257,18 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
         new AircraftCommand
         {
+            Id = "ap_vnav",
+            Name = "VNAV",
+            SimEvent = "AP_VNAV_PUSH",
+            SimVar = "AUTOPILOT VERTICAL HOLD",
+            SimVarUnit = "Bool",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
+        },
+        new AircraftCommand
+        {
             Id = "ap_apr",
             Name = "APR",
             SimEvent = "AP_APR_HOLD",
@@ -287,6 +290,58 @@ public class Cessna172G1000Profile : IAircraftProfile
             Key = ConsoleKey.W,
             KeyDisplay = "W",
             ControlType = ControlType.Toggle
+        },
+
+        // ============================================
+        // AFFICHEURS AUTOPILOT (Hidden)
+        // ============================================
+        new AircraftCommand
+        {
+            Id = "display_spd",
+            Name = "SPD Display",
+            SimVar = "AUTOPILOT AIRSPEED HOLD VAR",
+            SimVarUnit = "Knots",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "display_hdg",
+            Name = "HDG Display",
+            SimVar = "AUTOPILOT HEADING LOCK DIR",
+            SimVarUnit = "Degrees",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "display_alt",
+            Name = "ALT Display",
+            SimVar = "AUTOPILOT ALTITUDE LOCK VAR",
+            SimVarUnit = "Feet",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "display_vs",
+            Name = "VS Display",
+            SimVar = "AUTOPILOT VERTICAL HOLD VAR",
+            SimVarUnit = "Feet per minute",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle,
+            Hidden = true
         },
     };
 
