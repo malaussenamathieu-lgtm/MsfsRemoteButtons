@@ -209,6 +209,18 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
         new AircraftCommand
         {
+            Id = "ap_flc",
+            Name = "FLC",
+            SimEvent = "FLIGHT_LEVEL_CHANGE",
+            SimVar = "AUTOPILOT FLIGHT LEVEL CHANGE",
+            SimVarUnit = "Bool",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
+        },
+        new AircraftCommand
+        {
             Id = "ap_hdg",
             Name = "HDG",
             SimEvent = "AP_HDG_HOLD",
