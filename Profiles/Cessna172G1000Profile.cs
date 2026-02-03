@@ -120,31 +120,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "A",
             ControlType = ControlType.Toggle
         },
-        new AircraftCommand
-        {
-            Id = "avionics_master_1",
-            Name = "Avionics 1",
-            SimEvent = "ELECTRICAL_LINE_BUS_1_TO_AVIONICS_BUS_1_Set",
-            SimVar = "LINE CONNECTION ON:'BUS_1_To_AVIONICS_BUS_1'_n",
-            SimVarUnit = "Bool",
-            Category = "ÉLECTRIQUE",
-            Key = ConsoleKey.V,
-            KeyDisplay = "V",
-            ControlType = ControlType.Toggle,
-            IsMomentary = true
-        },
-        new AircraftCommand
-        {
-            Id = "avionics_master_2",
-            Name = "Avionics 2",
-            InputEvent = "ELECTRICAL_LINE_BUS_2_TO_AVIONICS_BUS_2_TOGGLE",  // B:Event MSFS 2024
-            SimVar = "CIRCUIT AVIONICS ON:2",
-            SimVarUnit = "Bool",
-            Category = "ÉLECTRIQUE",
-            Key = ConsoleKey.X,
-            KeyDisplay = "X",
-            ControlType = ControlType.Toggle
-        },
 
         // ============================================
         // MOTEUR - Magnetos (Sélecteur)
