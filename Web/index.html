@@ -328,7 +328,7 @@
         function connect() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/ws`;
-            
+
             console.log('Connexion à', wsUrl);
             ws = new WebSocket(wsUrl);
 
@@ -344,7 +344,7 @@
                 wsStatusEl.classList.remove('connected');
                 simStatusEl.classList.remove('connected');
                 disconnectedOverlay.classList.add('show');
-                
+
                 // Reconnexion automatique
                 if (reconnectTimeout) clearTimeout(reconnectTimeout);
                 reconnectTimeout = setTimeout(connect, 2000);
@@ -446,15 +446,15 @@
 
         function renderSelector(cmd) {
             if (!cmd.options) return '';
-            
+
             const currentValue = states[cmd.id] || 0;
-            
+
             let optionsHtml = '';
             for (const opt of cmd.options) {
                 const active = Math.abs(currentValue - opt.value) < 0.5 ? 'active' : '';
                 optionsHtml += `
-                    <button class="selector-option ${active}" 
-                            data-id="${cmd.id}" 
+                    <button class="selector-option ${active}"
+                            data-id="${cmd.id}"
                             data-value="${opt.value}"
                             onclick="sendSelector('${cmd.id}', '${opt.simEvent}', ${opt.value})">
                         ${opt.label}
@@ -505,7 +505,7 @@
         // Envoi des commandes
         function sendToggle(id) {
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
-            
+
             ws.send(JSON.stringify({
                 type: 'command',
                 data: { id: id }
@@ -514,7 +514,7 @@
 
         function sendSelector(id, simEvent, value) {
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
-            
+
             ws.send(JSON.stringify({
                 type: 'command',
                 data: { id: id, simEvent: simEvent }

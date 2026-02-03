@@ -28,7 +28,7 @@ public static class ProfileManager
     /// </summary>
     public static IAircraftProfile? GetProfile(string aircraftId)
     {
-        return _profiles.FirstOrDefault(p => 
+        return _profiles.FirstOrDefault(p =>
             p.AircraftId.Equals(aircraftId, StringComparison.OrdinalIgnoreCase));
     }
 

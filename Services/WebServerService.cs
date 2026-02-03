@@ -42,7 +42,7 @@ public class WebServerService : IDisposable
     public void Start()
     {
         var webRoot = Path.Combine(AppContext.BaseDirectory, "Web");
-        
+
         // Créer le dossier Web s'il n'existe pas
         if (!Directory.Exists(webRoot))
         {
@@ -175,7 +175,7 @@ public class SimConnectWebSocket : WebSocketModule
     protected override async Task OnMessageReceivedAsync(IWebSocketContext context, byte[] buffer, IWebSocketReceiveResult result)
     {
         var json = System.Text.Encoding.UTF8.GetString(buffer);
-        
+
         try
         {
             var message = JsonSerializer.Deserialize<WsMessage>(json, new JsonSerializerOptions
@@ -196,7 +196,7 @@ public class SimConnectWebSocket : WebSocketModule
     protected override async Task OnClientConnectedAsync(IWebSocketContext context)
     {
         Console.WriteLine($"📱 Client connecté: {context.RemoteEndPoint}");
-        
+
         // Envoyer l'état initial
         await SendInitialState(context);
     }

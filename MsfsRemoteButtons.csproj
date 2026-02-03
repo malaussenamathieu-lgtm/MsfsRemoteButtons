@@ -15,7 +15,7 @@
     <PackageReference Include="EmbedIO" Version="3.5.2" />
   </ItemGroup>
 
-  <!-- 
+  <!--
     IMPORTANT: Tu dois copier 2 DLL dans le dossier du projet:
     1. Microsoft.FlightSimulator.SimConnect.dll (managed)
        Depuis: C:\MSFS 2024 SDK\SimConnect SDK\lib\managed\Microsoft.FlightSimulator.SimConnect.dll
@@ -30,14 +30,12 @@
 
   <!-- Copie les DLL dans le dossier bin à la compilation -->
   <ItemGroup>
-    <None Include=".github\copilot-instructions.md" />
     <None Include="Microsoft.FlightSimulator.SimConnect.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="SimConnect.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="YourProject.csproj" />
   </ItemGroup>
 
   <!-- Fichiers web embarqués -->
