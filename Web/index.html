@@ -4,284 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>MSFS Remote Buttons</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1a2e;
-            color: #eee;
-            min-height: 100vh;
-            padding: 10px;
-        }
-
-        /* Header */
-        .header {
-            text-align: center;
-            padding: 15px;
-            background: linear-gradient(135deg, #16213e, #1a1a2e);
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-
-        .header h1 {
-            font-size: 1.3em;
-            color: #4fc3f7;
-            margin-bottom: 5px;
-        }
-
-        .status {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            font-size: 0.85em;
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #f44336;
-        }
-
-        .status-dot.connected {
-            background: #4caf50;
-            box-shadow: 0 0 10px #4caf50;
-        }
-
-        .aircraft-name {
-            color: #ffd54f;
-            font-weight: bold;
-        }
-
-        /* Categories */
-        .category {
-            margin-bottom: 15px;
-        }
-
-        .category-title {
-            font-size: 0.8em;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 8px 12px;
-            background: #16213e;
-            border-radius: 8px 8px 0 0;
-            border-bottom: 2px solid #4fc3f7;
-        }
-
-        .category-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-            gap: 8px;
-            padding: 10px;
-            background: rgba(22, 33, 62, 0.5);
-            border-radius: 0 0 8px 8px;
-        }
-
-        /* Toggle Button */
-        .btn-toggle {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 8px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            background: linear-gradient(180deg, #3a3a4a, #2a2a3a);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-            min-height: 70px;
-        }
-
-        .btn-toggle:active {
-            transform: scale(0.95);
-            box-shadow: 0 2px 3px rgba(0,0,0,0.3);
-        }
-
-        .btn-toggle .indicator {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-bottom: 6px;
-            background: #555;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
-            transition: all 0.2s ease;
-        }
-
-        .btn-toggle.on .indicator {
-            background: #4caf50;
-            box-shadow: 0 0 15px #4caf50, inset 0 -2px 4px rgba(0,0,0,0.3);
-        }
-
-        .btn-toggle.off .indicator {
-            background: #f44336;
-            box-shadow: 0 0 10px rgba(244, 67, 54, 0.5), inset 0 -2px 4px rgba(0,0,0,0.3);
-        }
-
-        .btn-toggle .label {
-            font-size: 0.75em;
-            color: #ccc;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        /* Selector */
-        .selector {
-            display: flex;
-            flex-direction: column;
-            background: linear-gradient(180deg, #3a3a4a, #2a2a3a);
-            border-radius: 8px;
-            padding: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            grid-column: span 2;
-        }
-
-        .selector-label {
-            font-size: 0.7em;
-            color: #888;
-            text-align: center;
-            margin-bottom: 6px;
-            text-transform: uppercase;
-        }
-
-        .selector-options {
-            display: flex;
-            gap: 4px;
-        }
-
-        .selector-option {
-            flex: 1;
-            padding: 10px 4px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.7em;
-            font-weight: bold;
-            background: #444;
-            color: #aaa;
-            transition: all 0.15s ease;
-        }
-
-        .selector-option:active {
-            transform: scale(0.95);
-        }
-
-        .selector-option.active {
-            background: linear-gradient(180deg, #4fc3f7, #0288d1);
-            color: #fff;
-            box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
-        }
-
-        /* Momentary Button */
-        .btn-momentary {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 8px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.1s ease;
-            background: linear-gradient(180deg, #5a5a6a, #4a4a5a);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
-            min-height: 70px;
-            color: #ccc;
-        }
-
-        .btn-momentary:active {
-            transform: scale(0.9);
-            background: linear-gradient(180deg, #4fc3f7, #0288d1);
-            color: #fff;
-        }
-
-        .btn-momentary .label {
-            font-size: 0.75em;
-            font-weight: 500;
-        }
-
-        /* Loading */
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: #888;
-        }
-
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #4fc3f7;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-            vertical-align: middle;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Disconnected overlay */
-        .disconnected-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.8);
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            z-index: 100;
-        }
-
-        .disconnected-overlay.show {
-            display: flex;
-        }
-
-        .disconnected-overlay h2 {
-            color: #f44336;
-            margin-bottom: 10px;
-        }
-
-        .disconnected-overlay p {
-            color: #888;
-        }
-
-        /* Responsive */
-        @media (min-width: 600px) {
-            body {
-                padding: 20px;
-                max-width: 800px;
-                margin: 0 auto;
-            }
-
-            .category-buttons {
-                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-            }
-
-            .btn-toggle, .btn-momentary {
-                min-height: 80px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="header">
@@ -462,6 +185,24 @@
                 `;
             }
 
+            // Special layout for flaps: vertical selector with +/- buttons on right
+            if (cmd.id === 'flaps') {
+                return `
+                    <div class="flaps-control" data-id="${cmd.id}">
+                        <span class="selector-label">${cmd.name}</span>
+                        <div class="flaps-content">
+                            <div class="selector-options">
+                                ${optionsHtml}
+                            </div>
+                            <div class="flaps-buttons">
+                                <button class="flaps-btn" onclick="sendToggle('flaps_decr')">−</button>
+                                <button class="flaps-btn" onclick="sendToggle('flaps_incr')">+</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             return `
                 <div class="selector" data-id="${cmd.id}">
                     <span class="selector-label">${cmd.name}</span>
@@ -474,7 +215,7 @@
 
         function renderMomentary(cmd) {
             return `
-                <button class="btn-momentary" onclick="sendToggle('${cmd.id}')">
+                <button class="btn-momentary" data-id="${cmd.id}" onclick="sendToggle('${cmd.id}')">
                     <span class="label">${cmd.name}</span>
                 </button>
             `;
@@ -491,8 +232,8 @@
                 toggleBtn.classList.add(value > 0.5 ? 'on' : 'off');
             }
 
-            // Selector options
-            const selector = document.querySelector(`.selector[data-id="${id}"]`);
+            // Selector options (including flaps-control)
+            const selector = document.querySelector(`.selector[data-id="${id}"], .flaps-control[data-id="${id}"]`);
             if (selector) {
                 const options = selector.querySelectorAll('.selector-option');
                 options.forEach(opt => {

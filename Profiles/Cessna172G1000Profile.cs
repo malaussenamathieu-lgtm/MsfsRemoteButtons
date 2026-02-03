@@ -183,8 +183,18 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
 
         // ============================================
-        // VOLETS (Sélecteur)
+        // VOLETS (Sélecteur + boutons)
         // ============================================
+        new AircraftCommand
+        {
+            Id = "flaps_decr",
+            Name = "−",
+            SimEvent = "FLAPS_DECR",
+            Category = "VOLETS",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary
+        },
         new AircraftCommand
         {
             Id = "flaps",
@@ -202,6 +212,16 @@ public class Cessna172G1000Profile : IAircraftProfile
                 new SelectorOption { Label = "20°", SimEvent = "FLAPS_2", Value = 2 },
                 new SelectorOption { Label = "30°", SimEvent = "FLAPS_3", Value = 3 },
             }
+        },
+        new AircraftCommand
+        {
+            Id = "flaps_incr",
+            Name = "+",
+            SimEvent = "FLAPS_INCR",
+            Category = "VOLETS",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary
         },
 
         // ============================================
