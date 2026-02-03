@@ -181,27 +181,6 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
 
         // ============================================
-        // CARBURANT (Sélecteur) - C172 n'a pas de position OFF
-        // ============================================
-        new AircraftCommand
-        {
-            Id = "fuel_selector",
-            Name = "Fuel Selector",
-            SimVar = "FUELSYSTEM JUNCTION SETTING:'FuelSelector'_n",
-            SimVarUnit = "Enum",
-            Category = "CARBURANT",
-            Key = ConsoleKey.G,
-            KeyDisplay = "G",
-            ControlType = ControlType.Selector,
-            SelectorOptions = new List<SelectorOption>
-            {
-                new SelectorOption { Label = "LEFT", SimEvent = "FUEL_SELECTOR_1_Set", Value = 0 },
-                new SelectorOption { Label = "BOTH", SimEvent = "FUEL_SELECTOR_1_Set", Value = 1 },
-                new SelectorOption { Label = "RIGHT", SimEvent = "FUEL_SELECTOR_1_Set", Value = 2 },
-            }
-        },
-
-        // ============================================
         // AUTOPILOT
         // ============================================
         new AircraftCommand
