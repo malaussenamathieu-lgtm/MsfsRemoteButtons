@@ -19,11 +19,11 @@ public class Cessna172G1000Profile : IAircraftProfile
 
     public List<string> Categories => new()
     {
-        "LUMIÈRES",
-        "ÉLECTRIQUE",
-        "MOTEUR",
-        "VOLETS",
         "AUTOPILOT",
+        "LUMIÈRES",
+        "VOLETS",
+        "MOTEUR",
+        "ÉLECTRIQUE",
     };
 
     public List<AircraftCommand> Commands => new()

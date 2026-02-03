@@ -323,11 +323,11 @@ body {
     color: #888;
 }
 
-/* Responsive */
+/* Responsive - optimisé pour 1920x1080 */
 @media (min-width: 600px) {
     body {
         padding: 20px;
-        max-width: 800px;
+        max-width: 1200px;
         margin: 0 auto;
     }
 
@@ -337,5 +337,54 @@ body {
 
     .btn-toggle, .btn-momentary {
         min-height: 80px;
+    }
+}
+
+@media (min-width: 1200px) {
+    body {
+        padding: 30px;
+        max-width: 1800px;
+    }
+
+    #controls {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .category {
+        margin-bottom: 0;
+    }
+
+    .category-buttons {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .btn-toggle, .btn-momentary {
+        min-height: 90px;
+    }
+
+    .btn-toggle .indicator {
+        width: 24px;
+        height: 24px;
+    }
+
+    .btn-toggle .label,
+    .btn-momentary .label {
+        font-size: 0.85em;
+    }
+
+    .selector-option {
+        padding: 12px 6px;
+        font-size: 0.8em;
+    }
+
+    .flaps-btn {
+        font-size: 0.8em;
+        width: 60px;
+    }
+
+    .flaps-control .selector-option {
+        min-width: 60px;
     }
 }
