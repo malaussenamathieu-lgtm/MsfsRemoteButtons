@@ -245,6 +245,18 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
         new AircraftCommand
         {
+            Id = "ap_vnav",
+            Name = "VNAV",
+            SimEvent = "AP_VNAV_PUSH",
+            SimVar = "AUTOPILOT VERTICAL HOLD",
+            SimVarUnit = "Bool",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
+        },
+        new AircraftCommand
+        {
             Id = "ap_apr",
             Name = "APR",
             SimEvent = "AP_APR_HOLD",

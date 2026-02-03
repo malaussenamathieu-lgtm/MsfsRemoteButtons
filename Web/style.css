@@ -11,7 +11,6 @@ body {
     color: #eee;
     min-height: 100vh;
     padding: 15px;
-    max-width: 600px;
     margin: 0 auto;
 }
 
@@ -81,12 +80,17 @@ body {
 }
 
 .category-buttons {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 6px;
     padding: 10px;
     background: #111;
     border: 1px solid #333;
+}
+
+.category-buttons > * {
+    flex: 1 1 80px;
+    max-width: 100px;
 }
 
 /* A320 Style Toggle Button */
@@ -341,15 +345,10 @@ body {
     color: #888;
 }
 
-/* Responsive - 1 column, optimized for 1920x1080 */
+/* Responsive - optimized for 1920x1080 */
 @media (min-width: 600px) {
     body {
         padding: 30px;
-        max-width: 500px;
-    }
-
-    .category-buttons {
-        grid-template-columns: repeat(5, 1fr);
     }
 
     .btn-toggle, .btn-momentary {
@@ -360,4 +359,36 @@ body {
     .btn-momentary .label {
         font-size: 0.75em;
     }
+}
+
+/* A320 Displays row */
+.displays-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    justify-content: center;
+}
+
+.display-box {
+    background: #0a0a0a;
+    border: 1px solid #444;
+    border-radius: 3px;
+    padding: 8px 15px;
+    text-align: center;
+    min-width: 80px;
+}
+
+.display-label {
+    font-size: 0.6em;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.display-value {
+    font-size: 1.2em;
+    color: #00ff00;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-weight: bold;
 }

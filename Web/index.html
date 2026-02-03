@@ -127,6 +127,28 @@
 
             let html = '';
 
+            // A320 Displays row before AUTOPILOT
+            html += `
+                <div class="displays-row">
+                    <div class="display-box">
+                        <div class="display-label">SPD</div>
+                        <div class="display-value" id="display-spd">---</div>
+                    </div>
+                    <div class="display-box">
+                        <div class="display-label">HDG</div>
+                        <div class="display-value" id="display-hdg">---</div>
+                    </div>
+                    <div class="display-box">
+                        <div class="display-label">ALT</div>
+                        <div class="display-value" id="display-alt">-----</div>
+                    </div>
+                    <div class="display-box">
+                        <div class="display-label">VS</div>
+                        <div class="display-value" id="display-vs">----</div>
+                    </div>
+                </div>
+            `;
+
             for (const category of profile.categories) {
                 const commands = profile.commands.filter(c => c.category === category && !c.hidden);
                 if (commands.length === 0) continue;
