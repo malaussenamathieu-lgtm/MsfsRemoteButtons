@@ -137,23 +137,7 @@
                 // Special layout for AUTOPILOT with displays
                 if (category === 'AUTOPILOT') {
                     html += `<div class="autopilot-panel">`;
-                }
-
-                html += `<div class="category-buttons">`;
-
-                for (const cmd of commands) {
-                    if (cmd.controlType === 'toggle') {
-                        html += renderToggle(cmd);
-                    } else if (cmd.controlType === 'selector') {
-                        html += renderSelector(cmd);
-                    } else if (cmd.controlType === 'momentary') {
-                        html += renderMomentary(cmd);
-                    }
-                }
-
-                html += `</div>`; // close category-buttons
-                if (category === 'AUTOPILOT') {
-                    // Displays row with control buttons
+                    // Displays row with control buttons - ABOVE buttons
                     html += `<div class="displays-row">`;
                     html += `<div class="display-spacer"></div>`; // AP
                     html += `<div class="display-spacer"></div>`; // FD
@@ -197,6 +181,22 @@
                         </div>
                     </div>`;
                     html += `</div>`; // close displays-row
+                }
+
+                html += `<div class="category-buttons">`;
+
+                for (const cmd of commands) {
+                    if (cmd.controlType === 'toggle') {
+                        html += renderToggle(cmd);
+                    } else if (cmd.controlType === 'selector') {
+                        html += renderSelector(cmd);
+                    } else if (cmd.controlType === 'momentary') {
+                        html += renderMomentary(cmd);
+                    }
+                }
+
+                html += `</div>`; // close category-buttons
+                if (category === 'AUTOPILOT') {
                     html += `</div>`; // close autopilot-panel
                 }
                 html += `</div>`; // close category
