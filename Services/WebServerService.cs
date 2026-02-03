@@ -239,7 +239,7 @@ public class SimConnectWebSocket : WebSocketModule
 
             if (cmd != null)
             {
-                _simConnect.SendCommand(cmd.Id, cmd.SimEvent);
+                _simConnect.SendCommand(cmd.Id, cmd.SimEvent, cmd.Value);
             }
         }
         catch (Exception ex)
@@ -331,4 +331,5 @@ public class CommandData
 {
     public string Id { get; set; } = "";
     public string? SimEvent { get; set; }
+    public uint? Value { get; set; }
 }

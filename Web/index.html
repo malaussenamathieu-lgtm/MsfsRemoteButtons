@@ -258,7 +258,7 @@
 
             ws.send(JSON.stringify({
                 type: 'command',
-                data: { id: id, simEvent: simEvent }
+                data: { id: id, simEvent: simEvent, value: value }
             }));
 
             // Mise à jour optimiste
