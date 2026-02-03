@@ -266,7 +266,8 @@
             // Autopilot displays
             if (id === 'display_spd') {
                 const el = document.getElementById('display-spd');
-                if (el) el.textContent = Math.round(value);
+                const flcActive = states['ap_flc'] > 0.5;
+                if (el) el.textContent = flcActive ? Math.round(value) : '---';
             }
             if (id === 'display_hdg') {
                 const el = document.getElementById('display-hdg');
@@ -278,7 +279,19 @@
             }
             if (id === 'display_vs') {
                 const el = document.getElementById('display-vs');
-                if (el) el.textContent = (value >= 0 ? '+' : '') + Math.round(value);
+                const vsActive = states['ap_vs'] > 0.5;
+                if (el) el.textContent = vsActive ? ((value >= 0 ? '+' : '') + Math.round(value)) : '----';
+            }
+            // Update displays when button state changes
+            if (id === 'ap_flc') {
+                const el = document.getElementById('display-spd');
+                const spdValue = states['display_spd'] || 0;
+                if (el) el.textContent = value > 0.5 ? Math.round(spdValue) : '---';
+            }
+            if (id === 'ap_vs') {
+                const el = document.getElementById('display-vs');
+                const vsValue = states['display_vs'] || 0;
+                if (el) el.textContent = value > 0.5 ? ((vsValue >= 0 ? '+' : '') + Math.round(vsValue)) : '----';
             }
         }
 

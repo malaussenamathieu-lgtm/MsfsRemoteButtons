@@ -6,7 +6,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', 'Arial', sans-serif;
+    font-family: 'Consolas', 'Courier New', monospace;
     background: #0a0a0a;
     color: #eee;
     min-height: 100vh;
@@ -89,24 +89,24 @@ body {
 }
 
 .category-buttons > * {
-    flex: 1 1 80px;
-    max-width: 100px;
+    flex: 1 1 90px;
+    max-width: 120px;
 }
 
-/* A320 Style Toggle Button */
+/* A320 Style Toggle Button - Touch optimized */
 .btn-toggle {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 8px 6px;
+    padding: 10px 8px;
     border: 1px solid #444;
     border-radius: 3px;
     cursor: pointer;
     transition: all 0.1s ease;
     background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-    min-height: 65px;
+    min-height: 80px;
 }
 
 .btn-toggle:active {
@@ -137,10 +137,10 @@ body {
 }
 
 .btn-toggle .label {
-    font-size: 0.7em;
+    font-size: 0.9em;
     color: #ccc;
     text-align: center;
-    font-weight: 500;
+    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -195,20 +195,20 @@ body {
     box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
 }
 
-/* Momentary Button */
+/* Momentary Button - Touch optimized */
 .btn-momentary {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 10px 6px;
+    padding: 12px 8px;
     border: 1px solid #444;
     border-radius: 3px;
     cursor: pointer;
     transition: all 0.1s ease;
     background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
     box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    min-height: 65px;
+    min-height: 80px;
     color: #888;
 }
 
@@ -220,8 +220,8 @@ body {
 }
 
 .btn-momentary .label {
-    font-size: 0.7em;
-    font-weight: 500;
+    font-size: 0.9em;
+    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
