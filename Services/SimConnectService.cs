@@ -184,14 +184,14 @@ public class SimConnectService : IDisposable
     /// <summary>
     /// Envoie une commande
     /// </summary>
-    public void SendCommand(string commandId, string? simEvent = null)
+    public void SendCommand(string commandId, string? simEvent = null, uint? value = null)
     {
         if (_simConnect == null || !_isConnected || _activeProfile == null) return;
 
-        // Si simEvent est fourni (pour les sélecteurs), l'utiliser directement en momentary
+        // Si simEvent est fourni (pour les sélecteurs), l'utiliser avec la valeur
         if (!string.IsNullOrEmpty(simEvent))
         {
-            SendEventByName(simEvent, value: 1, momentary: true);
+            SendEventByName(simEvent, value: value ?? 0, momentary: false);
             return;
         }
 
