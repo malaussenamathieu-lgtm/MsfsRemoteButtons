@@ -368,20 +368,42 @@ body {
     padding: 10px;
 }
 
+.autopilot-panel .category-buttons {
+    display: flex;
+    gap: 6px;
+    border: none;
+    padding: 0;
+    background: transparent;
+    flex-wrap: nowrap;
+}
+
+.autopilot-panel .btn-toggle {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    flex: none;
+}
+
 .displays-row {
     display: flex;
     gap: 6px;
-    margin-bottom: 8px;
+    margin-top: 10px;
+}
+
+.display-column {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 70px;
+    min-width: 70px;
 }
 
 .display-spacer {
-    flex: 1 1 80px;
-    max-width: 100px;
+    width: 70px;
+    min-width: 70px;
 }
 
 .display-box {
-    flex: 1 1 80px;
-    max-width: 100px;
     background: #050505;
     border: 1px solid #333;
     border-radius: 2px;
@@ -397,14 +419,36 @@ body {
 }
 
 .display-value {
-    font-size: 1em;
+    font-size: 1.1em;
     color: #00ff00;
     font-family: 'Consolas', 'Courier New', monospace;
     font-weight: bold;
 }
 
-.autopilot-panel .category-buttons {
-    border: none;
-    padding: 0;
-    background: transparent;
+.control-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+}
+
+.control-buttons.two-buttons {
+    grid-template-columns: 1fr 1fr;
+}
+
+.ctrl-btn {
+    padding: 6px 2px;
+    border: 1px solid #444;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 0.6em;
+    font-weight: bold;
+    background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+    color: #888;
+    font-family: 'Consolas', monospace;
+}
+
+.ctrl-btn:active {
+    background: #00aa00;
+    border-color: #00ff00;
+    color: #fff;
 }
