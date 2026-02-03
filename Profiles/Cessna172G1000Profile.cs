@@ -23,7 +23,6 @@ public class Cessna172G1000Profile : IAircraftProfile
         "ÉLECTRIQUE",
         "MOTEUR",
         "VOLETS",
-        "CARBURANT",
         "AUTOPILOT",
     };
 
@@ -122,51 +121,8 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
 
         // ============================================
-        // MOTEUR - Magnetos (Sélecteur)
+        // MOTEUR
         // ============================================
-        new AircraftCommand
-        {
-            Id = "magneto_left",
-            Name = "Mag L",
-            SimVar = "RECIP ENG LEFT MAGNETO:1",
-            SimVarUnit = "Bool",
-            Category = "MOTEUR",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
-            ControlType = ControlType.Toggle,
-            Hidden = true  // Caché, juste pour lire l'état
-        },
-        new AircraftCommand
-        {
-            Id = "magneto_right",
-            Name = "Mag R",
-            SimVar = "RECIP ENG RIGHT MAGNETO:1",
-            SimVarUnit = "Bool",
-            Category = "MOTEUR",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
-            ControlType = ControlType.Toggle,
-            Hidden = true  // Caché, juste pour lire l'état
-        },
-        new AircraftCommand
-        {
-            Id = "magnetos",
-            Name = "Magnetos",
-            SimVar = null,  // Calculé depuis left+right
-            SimVarUnit = "Enum",
-            Category = "MOTEUR",
-            Key = ConsoleKey.M,
-            KeyDisplay = "M",
-            ControlType = ControlType.Selector,
-            SelectorOptions = new List<SelectorOption>
-            {
-                new SelectorOption { Label = "OFF", SimEvent = "MAGNETO1_OFF", Value = 0 },
-                new SelectorOption { Label = "R", SimEvent = "MAGNETO1_RIGHT", Value = 1 },
-                new SelectorOption { Label = "L", SimEvent = "MAGNETO1_LEFT", Value = 2 },
-                new SelectorOption { Label = "BOTH", SimEvent = "MAGNETO1_BOTH", Value = 3 },
-                new SelectorOption { Label = "START", SimEvent = "MAGNETO1_START", Value = 4 },
-            }
-        },
         new AircraftCommand
         {
             Id = "fuel_pump",
