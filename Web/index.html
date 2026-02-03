@@ -188,7 +188,7 @@
             // Special layout for flaps: vertical selector with +/- buttons on right
             if (cmd.id === 'flaps') {
                 return `
-                    <div class="flaps-control">
+                    <div class="flaps-control" data-id="${cmd.id}">
                         <span class="selector-label">${cmd.name}</span>
                         <div class="flaps-content">
                             <div class="selector-options">
@@ -232,8 +232,8 @@
                 toggleBtn.classList.add(value > 0.5 ? 'on' : 'off');
             }
 
-            // Selector options
-            const selector = document.querySelector(`.selector[data-id="${id}"]`);
+            // Selector options (including flaps-control)
+            const selector = document.querySelector(`.selector[data-id="${id}"], .flaps-control[data-id="${id}"]`);
             if (selector) {
                 const options = selector.querySelectorAll('.selector-option');
                 options.forEach(opt => {
