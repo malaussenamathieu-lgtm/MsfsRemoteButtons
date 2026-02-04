@@ -387,7 +387,7 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "alt_inc_1000",
             Name = "ALT+1000",
-            SimEvent = "AP_ALT_VAR_INC",
+            SimEvent = "AS1000_PFD_ALT_OUTER_INC",
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
@@ -398,7 +398,7 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "alt_dec_1000",
             Name = "ALT-1000",
-            SimEvent = "AP_ALT_VAR_DEC",
+            SimEvent = "AS1000_PFD_ALT_OUTER_DEC",
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",

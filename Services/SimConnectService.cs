@@ -195,17 +195,12 @@ public class SimConnectService : IDisposable
             return;
         }
 
-        // Gestion spéciale pour les incréments multiples
+        // Gestion spéciale pour les incréments multiples (HDG +/-10)
         int repeatCount = 1;
         string? actualCommandId = commandId;
 
-        if (commandId.Contains("_10") || commandId.Contains("_1000"))
-        {
-            if (commandId == "hdg_inc_10") { actualCommandId = "hdg_inc_1"; repeatCount = 10; }
-            else if (commandId == "hdg_dec_10") { actualCommandId = "hdg_dec_1"; repeatCount = 10; }
-            else if (commandId == "alt_inc_1000") { actualCommandId = "alt_inc_100"; repeatCount = 10; }
-            else if (commandId == "alt_dec_1000") { actualCommandId = "alt_dec_100"; repeatCount = 10; }
-        }
+        if (commandId == "hdg_inc_10") { actualCommandId = "hdg_inc_1"; repeatCount = 10; }
+        else if (commandId == "hdg_dec_10") { actualCommandId = "hdg_dec_1"; repeatCount = 10; }
 
         // Récupérer la commande
         var command = _activeProfile.Commands.FirstOrDefault(c => c.Id == actualCommandId);
