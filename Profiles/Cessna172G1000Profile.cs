@@ -73,11 +73,13 @@ public class Cessna172G1000Profile : IAircraftProfile
         // ============================================
 
         // Feux de navigation (bouts d'ailes: rouge gauche, vert droite, blanc arrière)
+        // B: LIGHTING_NAV_0 prioritaire si Developer Mode actif
         new AircraftCommand
         {
             Id = "nav_lights",
             Name = "Nav",
             SimEvent = "TOGGLE_NAV_LIGHTS",
+            InputEvent = "LIGHTING_NAV_0",
             SimVar = "LIGHT NAV",
             SimVarUnit = "Bool",
             Category = "LUMIÈRES",
@@ -91,6 +93,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "beacon",
             Name = "Beacon",
             SimEvent = "TOGGLE_BEACON_LIGHTS",
+            InputEvent = "LIGHTING_BEACON_1",
             SimVar = "LIGHT BEACON",
             SimVarUnit = "Bool",
             Category = "LUMIÈRES",
@@ -105,6 +108,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "strobe",
             Name = "Strobe",
             SimEvent = "STROBES_TOGGLE",
+            InputEvent = "LIGHTING_STROBE_0",
             SimVar = "LIGHT STROBE",
             SimVarUnit = "Bool",
             Category = "LUMIÈRES",
@@ -119,6 +123,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "landing_light",
             Name = "Landing",
             SimEvent = "LANDING_LIGHTS_TOGGLE",
+            InputEvent = "LIGHTING_LANDING_1",
             SimVar = "LIGHT LANDING",
             SimVarUnit = "Bool",
             Category = "LUMIÈRES",
@@ -133,6 +138,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "taxi_light",
             Name = "Taxi",
             SimEvent = "TOGGLE_TAXI_LIGHTS",
+            InputEvent = "LIGHTING_TAXI_1",
             SimVar = "LIGHT TAXI",
             SimVarUnit = "Bool",
             Category = "LUMIÈRES",
@@ -153,6 +159,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "master_battery",
             Name = "Battery",
             SimEvent = "TOGGLE_MASTER_BATTERY",
+            InputEvent = "ELECTRICAL_BATTERY_1",
             SimVar = "ELECTRICAL MASTER BATTERY",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
@@ -167,6 +174,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "master_alternator",
             Name = "Alternator",
             SimEvent = "TOGGLE_MASTER_ALTERNATOR",
+            InputEvent = "ELECTRICAL_ALTERNATOR_1",
             SimVar = "GENERAL ENG MASTER ALTERNATOR:1",  // :1 = moteur n°1
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
@@ -176,14 +184,14 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
 
         // Pompe à carburant électrique - Pour amorçage et secours
-        // ATTENTION: Utilise SimEventOn/Off car FUELSYSTEM_PUMP_TOGGLE n'existe pas
-        // IsMomentary = true car ces events nécessitent un press+release
+        // B: FUEL_PUMP_1 ou K: SimEventOn/Off (press+release)
         new AircraftCommand
         {
             Id = "fuel_pump",
             Name = "Fuel Pump",
             SimEventOn = "FUELSYSTEM_PUMP_ON",
             SimEventOff = "FUELSYSTEM_PUMP_OFF",
+            InputEvent = "FUEL_PUMP_1",
             SimVar = "FUELSYSTEM PUMP SWITCH:1",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
@@ -258,6 +266,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "ap_master",
             Name = "AP",
             SimEvent = "AP_MASTER",
+            InputEvent = "AS1000_AUTOPILOT_AP_PFD",
             SimVar = "AUTOPILOT MASTER",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
@@ -272,6 +281,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "ap_fd",
             Name = "FD",
             SimEvent = "TOGGLE_FLIGHT_DIRECTOR",
+            InputEvent = "AS1000_AUTOPILOT_FD_PFD",
             SimVar = "AUTOPILOT FLIGHT DIRECTOR ACTIVE",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
@@ -300,6 +310,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "ap_hdg",
             Name = "HDG",
             SimEvent = "AP_HDG_HOLD",
+            InputEvent = "AS1000_AUTOPILOT_HEADING_PFD",
             SimVar = "AUTOPILOT HEADING LOCK",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
@@ -314,6 +325,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "ap_alt",
             Name = "ALT",
             SimEvent = "AP_ALT_HOLD",
+            InputEvent = "AS1000_AUTOPILOT_ALTITUDE_PFD",
             SimVar = "AUTOPILOT ALTITUDE LOCK",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
@@ -328,6 +340,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "ap_nav",
             Name = "NAV",
             SimEvent = "AP_NAV1_HOLD",
+            InputEvent = "AS1000_AUTOPILOT_NAVIGATION_PFD",
             SimVar = "AUTOPILOT NAV1 LOCK",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
@@ -356,6 +369,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "ap_vs",
             Name = "VS",
             SimEvent = "AP_VS_HOLD",
+            InputEvent = "AS1000_AUTOPILOT_VERTICALSPEED_PFD",
             SimVar = "AUTOPILOT VERTICAL HOLD",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",

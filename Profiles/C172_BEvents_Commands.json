@@ -1,0 +1,150 @@
+{
+  "description": "C172 B: Input Events mapping. Hashes are resolved at runtime from EnumerateInputEvents when Developer Mode is ON. Use inputEvent name for lookup.",
+  "aircraftId": "C172",
+  "commands": [
+    {
+      "id": "nav_lights",
+      "name": "Nav",
+      "category": "LUMIÈRES",
+      "inputEvent": "LIGHTING_NAV_0",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "LIGHT NAV",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "beacon",
+      "name": "Beacon",
+      "category": "LUMIÈRES",
+      "inputEvent": "LIGHTING_BEACON_1",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "LIGHT BEACON",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "strobe",
+      "name": "Strobe",
+      "category": "LUMIÈRES",
+      "inputEvent": "LIGHTING_STROBE_0",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "LIGHT STROBE",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "landing_light",
+      "name": "Landing",
+      "category": "LUMIÈRES",
+      "inputEvent": "LIGHTING_LANDING_1",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "LIGHT LANDING",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "taxi_light",
+      "name": "Taxi",
+      "category": "LUMIÈRES",
+      "inputEvent": "LIGHTING_TAXI_1",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "LIGHT TAXI",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "master_battery",
+      "name": "Battery",
+      "category": "ÉLECTRIQUE",
+      "inputEvent": "ELECTRICAL_BATTERY_1",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "ELECTRICAL MASTER BATTERY",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "master_alternator",
+      "name": "Alternator",
+      "category": "ÉLECTRIQUE",
+      "inputEvent": "ELECTRICAL_ALTERNATOR_1",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "GENERAL ENG MASTER ALTERNATOR:1",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "fuel_pump",
+      "name": "Fuel Pump",
+      "category": "ÉLECTRIQUE",
+      "inputEvent": "FUEL_PUMP_1",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "FUELSYSTEM PUMP SWITCH:1",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "ap_master",
+      "name": "AP",
+      "category": "AUTOPILOT",
+      "inputEvent": "AS1000_AUTOPILOT_AP_PFD",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "AUTOPILOT MASTER",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "ap_fd",
+      "name": "FD",
+      "category": "AUTOPILOT",
+      "inputEvent": "AS1000_AUTOPILOT_FD_PFD",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "AUTOPILOT FLIGHT DIRECTOR ACTIVE",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "ap_hdg",
+      "name": "HDG",
+      "category": "AUTOPILOT",
+      "inputEvent": "AS1000_AUTOPILOT_HEADING_PFD",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "AUTOPILOT HEADING LOCK",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "ap_alt",
+      "name": "ALT",
+      "category": "AUTOPILOT",
+      "inputEvent": "AS1000_AUTOPILOT_ALTITUDE_PFD",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "AUTOPILOT ALTITUDE LOCK",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "ap_nav",
+      "name": "NAV",
+      "category": "AUTOPILOT",
+      "inputEvent": "AS1000_AUTOPILOT_NAVIGATION_PFD",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "AUTOPILOT NAV1 LOCK",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "ap_vs",
+      "name": "VS",
+      "category": "AUTOPILOT",
+      "inputEvent": "AS1000_AUTOPILOT_VERTICALSPEED_PFD",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "AUTOPILOT VERTICAL HOLD",
+      "simVarUnit": "Bool"
+    }
+  ],
+  "notes": [
+    "Flaps (flaps_incr, flaps_decr, flaps selector) keep K: events; no B: equivalent used.",
+    "inputEventHash 0 = resolved at runtime from EnumerateInputEvents (Developer Mode ON)."
+  ]
+}

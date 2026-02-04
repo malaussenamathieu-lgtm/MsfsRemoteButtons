@@ -61,6 +61,9 @@ public class SimConnectService : IDisposable
     private const int AIRCRAFT_TITLE_DEFINITION = 1;                        // ID de définition pour le titre
     private const int AIRCRAFT_TITLE_REQUEST = 1;                           // ID de requête pour le titre
 
+    // B: EVENT: ID de requête pour l'énumération des Input Events (EnumerateInputEvents)
+    private const int INPUT_EVENTS_REQUEST_ID = 9999;
+
     // === ÉTATS DES CONTRÔLES ===
     // Cache local des valeurs SimVar pour éviter les requêtes répétées
     private readonly Dictionary<string, double> _buttonStates = new();      // commandId -> valeur actuelle (0.0 ou 1.0 pour Bool)
@@ -68,6 +71,13 @@ public class SimConnectService : IDisposable
 
     // THREAD-SAFETY: SimConnect n'est pas thread-safe (documentation Microsoft). Tous les appels _simConnect.* doivent être dans lock (_simConnectLock).
     private readonly object _simConnectLock = new();
+
+    // B: EVENT: Stockage des Input Events énumérés (nom → hash). Rempli par OnRecvEnumerateInputEvents.
+    private readonly Dictionary<string, ulong> _inputEventHashes = new();
+    private readonly object _inputEventLock = new();
+    private bool _inputEventsEnumerated;
+    // null = pas encore testé, true = Developer Mode actif, false = inactif ou timeout
+    private bool? _developerModeDetected;
 
     // === ÉVÉNEMENTS PUBLICS ===
     // Ces événements permettent aux autres services (WebServer) de réagir aux changements
@@ -80,6 +90,14 @@ public class SimConnectService : IDisposable
     public bool IsConnected => _isConnected;
     public IAircraftProfile? ActiveProfile => _activeProfile;
     public string CurrentAircraftTitle { get; private set; } = "";
+
+    /// <summary>True si l'énumération des B: Input Events a été effectuée (Developer Mode requis).</summary>
+    // B: EVENT
+    public bool InputEventsEnumerated => _inputEventsEnumerated;
+
+    /// <summary>True si Developer Mode est actif dans MSFS (B: events disponibles).</summary>
+    // B: EVENT
+    public bool IsDeveloperModeActive => _developerModeDetected == true;
 
     /// <summary>
     /// Tente de se connecter à MSFS avec retry automatique (3 tentatives, délais 0 / 2 s / 5 s).
@@ -134,6 +152,7 @@ public class SimConnectService : IDisposable
                 _simConnect.OnRecvQuit += OnRecvQuit;
                 _simConnect.OnRecvException += OnRecvException;
                 _simConnect.OnRecvSimobjectData += OnRecvSimobjectData;
+                _simConnect.OnRecvEnumerateInputEvents += OnRecvEnumerateInputEvents;
 
                 _simConnect.AddToDataDefinition(
                     (DefineId)AIRCRAFT_TITLE_DEFINITION,
@@ -204,6 +223,12 @@ public class SimConnectService : IDisposable
         _eventIds.Clear();
         _simVarDefinitions.Clear();
         _buttonStates.Clear();
+        lock (_inputEventLock)
+        {
+            _inputEventHashes.Clear();
+        }
+        _inputEventsEnumerated = false;
+        _developerModeDetected = null;
         _nextEventId = 1;
         _nextDefinitionId = 100;
         CurrentAircraftTitle = "";
@@ -232,20 +257,65 @@ public class SimConnectService : IDisposable
     }
 
     /// <summary>
+    /// Récupère le hash d'un Input Event (B:) par son nom, si l'énumération a été faite.
+    /// </summary>
+    /// <param name="name">Nom de l'event (ex: "NAV_LIGHTS_SET").</param>
+    /// <param name="hash">Hash reçu si trouvé.</param>
+    /// <returns>True si le hash a été trouvé.</returns>
+    // B: EVENT
+    public bool TryGetInputEventHash(string name, out ulong hash)
+    {
+        lock (_inputEventLock)
+        {
+            return _inputEventHashes.TryGetValue(name, out hash);
+        }
+    }
+
+    /// <summary>
     /// Demande le titre de l'avion actuel
     /// </summary>
     public void RequestAircraftTitle()
     {
         if (_simConnect == null || !_isConnected) return;
 
-        _simConnect.RequestDataOnSimObject(
+        lock (_simConnectLock)
+        {
+            _simConnect.RequestDataOnSimObject(
             (RequestId)AIRCRAFT_TITLE_REQUEST,
             (DefineId)AIRCRAFT_TITLE_DEFINITION,
             SimConnect.SIMCONNECT_OBJECT_ID_USER,
             SIMCONNECT_PERIOD.ONCE,
             SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT,
             0, 0, 0
-        );
+            );
+        }
+    }
+
+    /// <summary>
+    /// Demande l'énumération des Input Events (B:) disponibles. Les résultats arrivent dans OnRecvEnumerateInputEvents.
+    /// Nécessite Developer Mode activé dans MSFS. Seuls les events _SET sont retournés.
+    /// </summary>
+    // B: EVENT
+    public void EnumerateInputEvents()
+    {
+        if (_simConnect == null || !_isConnected) return;
+
+        lock (_simConnectLock)
+        {
+            Log("B: EVENT: Demande d'énumération des Input Events...");
+            _simConnect.EnumerateInputEvents((RequestId)INPUT_EVENTS_REQUEST_ID);
+        }
+
+        // Timeout: si aucun retour sous 5 s, Developer Mode est probablement désactivé
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(5000);
+            if (_developerModeDetected != null) return; // Callback déjà passé
+            _developerModeDetected = false;
+            Log("⚠️ Aucune réponse MSFS pour les Input Events (timeout 5 s).");
+            Log("   Developer Mode est peut-être désactivé : Options → General → Developers → Developer Mode ON");
+            Log("   Redémarrez MSFS après activation. Les K: events (legacy) restent utilisables.");
+        });
     }
 
     /// <summary>
@@ -256,6 +326,11 @@ public class SimConnectService : IDisposable
         _activeProfile = profile;
         RegisterProfileEvents();
         RegisterProfileSimVars();
+
+        // B: EVENT: Énumérer les Input Events disponibles (nécessite Developer Mode dans MSFS)
+        Log("🔍 Énumération des Input Events disponibles...");
+        Log("   Commandes : K: events (toujours disponibles). B: events si Developer Mode activé dans MSFS.");
+        EnumerateInputEvents();
 
         // Exporter les SimEvents après le chargement du profil
         try
@@ -312,7 +387,14 @@ public class SimConnectService : IDisposable
         var command = _activeProfile.Commands.FirstOrDefault(c => c.Id == actualCommandId);
         if (command == null) return;
 
-        // Exécution avec délai entre chaque répétition
+        // B: EVENT: si la commande a un Input Event et qu'on a le hash, utiliser SetInputEvent (prioritaire sur K:)
+        if (repeatCount == 1 && TryResolveInputEventHash(command, out ulong inputHash))
+        {
+            SendInputEventCommand(actualCommandId, command, inputHash);
+            return;
+        }
+
+        // Exécution K: events (legacy) avec délai entre chaque répétition
         for (int i = 0; i < repeatCount; i++)
         {
             ExecuteCommand(command, actualCommandId);
@@ -321,6 +403,37 @@ public class SimConnectService : IDisposable
                 Thread.Sleep(delayMs);  // Laisser le temps à MSFS de traiter
             }
         }
+    }
+
+    /// <summary>
+    /// Résout le hash B: d'une commande (propriété InputEventHash ou lookup par InputEvent).
+    /// </summary>
+    // B: EVENT
+    private bool TryResolveInputEventHash(AircraftCommand command, out ulong hash)
+    {
+        hash = 0;
+        if (command.InputEventHash.HasValue && command.InputEventHash.Value != 0)
+        {
+            hash = command.InputEventHash.Value;
+            return true;
+        }
+        if (!string.IsNullOrEmpty(command.InputEvent) && TryGetInputEventHash(command.InputEvent, out hash))
+            return true;
+        return false;
+    }
+
+    /// <summary>
+    /// Envoie une commande via B: Input Event (SetInputEvent). Lit l'état SimVar, inverse, envoie la valeur.
+    /// </summary>
+    // B: EVENT
+    private void SendInputEventCommand(string commandId, AircraftCommand command, ulong hash)
+    {
+        double currentState = GetState(commandId);
+        double newValue = currentState > 0.5 ? 0.0 : 1.0;
+
+        SetInputEvent(hash, newValue);
+        Log($"→ {commandId} (B: {command.InputEvent} = {newValue})");
+        RefreshSimVarForCommand(commandId);
     }
 
     /// <summary>
@@ -661,6 +774,136 @@ public class SimConnectService : IDisposable
         };
 
         Log($"⚠️ Exception SimConnect: {errorInfo}");
+    }
+
+    /// <summary>
+    /// Callback: Réception de la liste des Input Events (B:) énumérés.
+    /// Peut être appelé en plusieurs paquets (pagination). Ne pas bloquer le thread SimConnect → Task.Run.
+    /// </summary>
+    // B: EVENT
+    // EVENT DISPATCH: Task.Run() pour ne pas bloquer le thread SimConnect
+    private void OnRecvEnumerateInputEvents(SimConnect sender, SIMCONNECT_RECV_ENUMERATE_INPUT_EVENTS data)
+    {
+        Task.Run(() =>
+        {
+            try
+            {
+                int count = data.rgData?.Length ?? 0;
+                Log($"B: EVENT: {count} Input Event(s) reçu(s)");
+
+                if (count == 0)
+                {
+                    _developerModeDetected = false;
+                    Log("⚠️ Developer Mode semble désactivé");
+                    Log("   Les Input Events (B: events) ne sont pas disponibles");
+                    Log("   → Pour activer : Options → General → Developers → Developer Mode ON");
+                    Log("   → Redémarrez MSFS après activation");
+                    Log("   ℹ️ Les K: events (legacy) restent fonctionnels");
+                    return;
+                }
+
+                _developerModeDetected = true;
+                Log("✅ Developer Mode actif - B: events disponibles");
+
+                // Premier paquet : vider le cache. Les paquets suivants s'ajoutent.
+                if (data.dwEntryNumber == 0)
+                {
+                    lock (_inputEventLock)
+                    {
+                        _inputEventHashes.Clear();
+                    }
+                }
+
+                lock (_inputEventLock)
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        var item = data.rgData![i] as SIMCONNECT_INPUT_EVENT_DESCRIPTOR;
+                        if (item == null) continue;
+                        string name = item.Name ?? "";
+                        if (string.IsNullOrEmpty(name)) continue;
+                        ulong hash = (ulong)item.Hash;
+                        _inputEventHashes[name] = hash;
+#if DEBUG
+                        Log($"   B: {name} = {hash}");
+#endif
+                    }
+                }
+
+                // Dernier paquet de la liste
+                if (data.dwEntryNumber >= data.dwOutOf - 1)
+                {
+                    _inputEventsEnumerated = true;
+                    int total;
+                    lock (_inputEventLock)
+                    {
+                        total = _inputEventHashes.Count;
+                        Log($"✅ {total} Input Event(s) catalogué(s)");
+                    }
+                    if (total > 0)
+                        ExportInputEventsToFile();
+                }
+            }
+            catch (Exception ex)
+            {
+                Log($"⚠️ Erreur traitement Input Events: {ex.Message}");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Exporte la liste des B: Input Events vers un fichier texte (documentation / debug).
+    /// Fichier : {AircraftName}_InputEvents.txt dans le répertoire courant (Directory.GetCurrentDirectory()).
+    /// </summary>
+    // B: EVENT
+    private void ExportInputEventsToFile()
+    {
+        string aircraftName;
+        List<KeyValuePair<string, ulong>> snapshot;
+        lock (_inputEventLock)
+        {
+            if (_inputEventHashes.Count == 0) return;
+            aircraftName = _activeProfile?.AircraftName ?? "Unknown";
+            snapshot = _inputEventHashes.OrderBy(kv => kv.Key).ToList();
+        }
+
+        string safeName = string.Join("_", aircraftName.Split(Path.GetInvalidFileNameChars(), StringSplitOptions.RemoveEmptyEntries)).Trim();
+        if (string.IsNullOrEmpty(safeName)) safeName = "Aircraft";
+        string directory = Directory.GetCurrentDirectory();
+        string filePath = Path.Combine(directory, $"{safeName}_InputEvents.txt");
+
+        var lines = new List<string>
+        {
+            "=================================================================",
+            "MSFS 2024 - Input Events (B: events)",
+            "=================================================================",
+            $"Aircraft: {aircraftName}",
+            $"Date: {DateTime.Now:yyyy-MM-dd HH:mm:ss}",
+            $"Total Events: {snapshot.Count}",
+            "Developer Mode: Required (must be ON in MSFS)",
+            "",
+            "Note: Only _SET type events are enumerated. _TOGGLE, _INC, _DEC variants exist but are not listed.",
+            ""
+        };
+
+        foreach (var kv in snapshot)
+            lines.Add($"{kv.Key} = 0x{kv.Value:X8} ({kv.Value})");
+
+        lines.Add("");
+        lines.Add("=================================================================");
+
+        try
+        {
+            if (!Directory.Exists(directory))
+                return;
+            File.WriteAllLines(filePath, lines, System.Text.Encoding.UTF8);
+            string fullPath = Path.GetFullPath(filePath);
+            Log($"📄 Input Events exportés : {fullPath} ({snapshot.Count} event(s))");
+        }
+        catch (Exception ex)
+        {
+            Log($"⚠️ Erreur export Input Events : {ex.Message}");
+        }
     }
 
     /// <summary>
