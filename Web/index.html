@@ -293,7 +293,7 @@
             }
             if (id === 'display_alt') {
                 const el = document.getElementById('display-alt');
-                if (el) el.textContent = Math.round(value);
+                if (el) el.textContent = Math.round(value).toString().padStart(5, '0');
             }
             if (id === 'display_vs') {
                 const el = document.getElementById('display-vs');

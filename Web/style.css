@@ -404,11 +404,14 @@ body {
 }
 
 .display-box {
+    width: 70px;
+    min-width: 70px;
     background: #050505;
     border: 1px solid #333;
     border-radius: 2px;
     padding: 4px 6px;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .display-label {

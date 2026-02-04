@@ -211,10 +211,14 @@ public class SimConnectService : IDisposable
         var command = _activeProfile.Commands.FirstOrDefault(c => c.Id == actualCommandId);
         if (command == null) return;
 
-        // Exécuter plusieurs fois si nécessaire
+        // Exécuter plusieurs fois si nécessaire (avec délai pour que MSFS traite chaque event)
         for (int i = 0; i < repeatCount; i++)
         {
             ExecuteCommand(command, actualCommandId);
+            if (repeatCount > 1 && i < repeatCount - 1)
+            {
+                Thread.Sleep(20); // 20ms entre chaque event
+            }
         }
     }
 
