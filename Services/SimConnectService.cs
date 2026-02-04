@@ -423,16 +423,29 @@ public class SimConnectService : IDisposable
     }
 
     /// <summary>
-    /// Envoie une commande via B: Input Event (SetInputEvent). Lit l'état SimVar, inverse, envoie la valeur.
+    /// Envoie une commande via B: Input Event (SetInputEvent).
+    /// AS1000 autopilot: toujours value=1 (MSFS gère le toggle). Autres: lit l'état, inverse.
     /// </summary>
     // B: EVENT
     private void SendInputEventCommand(string commandId, AircraftCommand command, ulong hash)
     {
-        double currentState = GetState(commandId);
-        double newValue = currentState > 0.5 ? 0.0 : 1.0;
+        string? eventName = command.InputEvent;
+        bool isAS1000Toggle = commandId.StartsWith("ap_", StringComparison.OrdinalIgnoreCase) ||
+                              (eventName?.Contains("AS1000_AUTOPILOT", StringComparison.OrdinalIgnoreCase) ?? false);
 
-        SetInputEvent(hash, newValue);
-        Log($"→ {commandId} (B: {command.InputEvent} = {newValue})");
+        if (isAS1000Toggle)
+        {
+            SetInputEvent(hash, 1.0);
+            Log($"→ {commandId} (B: EVENT AS1000: {eventName} = 1)");
+        }
+        else
+        {
+            double currentState = GetState(commandId);
+            double newValue = currentState > 0.5 ? 0.0 : 1.0;
+            SetInputEvent(hash, newValue);
+            Log($"→ {commandId} (B: {eventName} = {newValue})");
+        }
+
         RefreshSimVarForCommand(commandId);
     }
 
