@@ -1,0 +1,237 @@
+# MsfsRemoteButtons - Cursor Rules
+
+## Project Overview
+Application WPF C# pour contrôler MSFS 2024 depuis un laptop/tablette tactile via SimConnect.
+Support des avions Premium Deluxe par défaut (pas d'avions tiers custom).
+
+## Documentation de référence
+
+### SimConnect SDK MSFS 2024
+Utilise @docs "MSFS 2024 SimConnect SDK" pour toute question sur SimConnect.
+Documentation officielle : https://docs.flightsimulator.com/msfs2024/
+
+### Input Events (B: events)
+Priorité aux B: events (modernes) plutôt que K: events (legacy).
+Documentation : https://docs.flightsimulator.com/msfs2024/html/6_Programming_APIs/SimConnect/API_Reference/InputEvents/
+
+## Architecture technique
+
+### Stack
+- Framework : .NET 8.0 / WPF
+- Communication : SimConnect SDK
+- UI : WPF avec support tactile natif
+- Configuration : JSON (profils avions)
+
+### Fichiers critiques
+- `SimConnectService.cs` : Service principal SimConnect
+- `Program.cs` : Point d'entrée et configuration
+- `Commands.json` : Mapping commandes → SimConnect events
+- `.github/AI_INSTRUCTIONS.md` : Instructions développement
+- `.github/SIMCONNECT_COMPLIANCE.md` : Checklist conformité SDK
+- `ARCHITECTURE.md` : Architecture détaillée
+
+## Règles critiques SimConnect
+
+### PRIORITÉ #1 : Thread Safety
+⚠️ **SimConnect n'est PAS thread-safe** (documentation officielle Microsoft)
+
+**TOUS les appels `_simConnect.*` DOIVENT être dans `lock (_simConnectLock)`**
+
+Méthodes à protéger :
+- Connect(), Disconnect()
+- ReceiveMessages() / ReceiveMessage()
+- SendCommand(), RefreshSimVarForCommand(), SendEventByName()
+- RequestAircraftTitle(), SetProfile()
+- EnumerateInputEvents(), SetInputEvent()
+- MapClientEventToSimEvent(), TransmitClientEvent()
+- AddToDataDefinition(), RequestDataOnSimObject()
+
+**Exemple correct** :
+public void SendCommand(string commandId)
+{
+    lock (_simConnectLock)  // ← OBLIGATOIRE
+    {
+        _simConnect.TransmitClientEvent(...);
+    }
+}
+
+PRIORITÉ #2 : Event Dispatch
+Les callbacks OnRecv* ne doivent JAMAIS bloquer le thread SimConnect.
+
+TOUJOURS utiliser Task.Run() pour les events C# :
+private void OnRecvSimobjectData(...)
+{
+    // ❌ INTERDIT : Event?.Invoke(...) directement
+    
+    // ✅ CORRECT :
+    Task.Run(() => AircraftDataReceived?.Invoke(this, data));
+}
+
+PRIORITÉ #3 : ReceiveMessages Loop
+ReceiveMessage() ou ReceiveMessages() doit être appelé fréquemment (toutes les 10-50ms).
+
+Ne JAMAIS bloquer ce thread (pas de Thread.Sleep, pas d'opérations longues).
+
+PRIORITÉ #4 : B: events vs K: events
+Ordre de priorité :
+
+B: events (Input Events) - Modernes, précis, MSFS 2024
+
+K: events (legacy) - Fallback si B: non disponible
+
+RPN - Seulement pour avions custom (pas notre scope)
+
+Pour avions par défaut Microsoft/Asobo : B: events SUFFISENT.
+
+Conventions de code
+Naming
+_simConnect : Instance SimConnect
+
+_simConnectLock : Lock object pour thread-safety
+
+_eventIds : Mapping commandId → SimConnect eventId
+
+_inputEventHashes : Mapping eventName → B: event hash
+
+_buttonStates : Cache des valeurs SimVars
+
+Commentaires obligatoires
+Ajouter ces commentaires au-dessus des méthodes critiques :
+// THREAD-SAFETY: Protected by _simConnectLock
+// EVENT DISPATCH: Task.Run() to avoid blocking SimConnect thread
+// SIMCONNECT: Equivalent de SimConnect_EnumerateInputEvents
+// B: EVENT: Uses modern Input Events API
+
+Commits Git
+Format : type(scope): description
+
+Types :
+
+feat : Nouvelle fonctionnalité
+
+fix : Bug fix
+
+refactor : Refactoring code
+
+docs : Documentation
+
+test : Tests
+
+chore : Maintenance
+
+Exemples :
+feat(simconnect): implement EnumerateInputEvents B: events support
+fix(ui): fuel pump button not responding to touch
+refactor(service): improve thread-safety with _simConnectLock
+docs(readme): add installation instructions for MSFS 2024
+Workflow développement
+Avant toute modification de SimConnectService.cs
+✅ Consulter @docs "MSFS 2024 SimConnect SDK"
+
+✅ Lire .github/AI_INSTRUCTIONS.md
+
+✅ Vérifier .github/SIMCONNECT_COMPLIANCE.md
+
+✅ Respecter patterns Microsoft dans exemples SDK
+
+✅ Toujours protéger avec lock (_simConnectLock)
+
+Tests requis avant commit
+✅ Build réussit (pas d'erreurs)
+
+✅ App se connecte à MSFS
+
+✅ Boutons testés fonctionnent
+
+✅ Pas de code de debug (Console.WriteLine, etc.)
+
+✅ Thread-safety vérifié (tous les appels dans lock)
+
+Git workflow
+❌ JAMAIS commit direct sur master
+
+✅ Toujours travailler sur dev
+
+✅ PR dev → master quand stable
+
+✅ Commits réguliers avec messages clairs
+
+Priorités actuelles (février 2026)
+Phase actuelle : Implémentation B: events
+🔄 Mapper tous les B: events C172
+
+🔄 Implémenter SetInputEvent() avec thread-safety
+
+🔄 Tester avec UI tactile
+
+🔄 Créer fallback K: events si B: non disponible
+
+Phase suivante : Multi-avions
+⏳ Auto-détection avion actuel
+
+⏳ Profil C152
+
+⏳ Profil DA40
+
+⏳ UI adaptative selon avion
+
+Avions supportés (scope)
+✅ Avions Premium Deluxe Microsoft/Asobo seulement
+❌ PAS d'avions tiers (PMDG, FlyByWire, etc.)
+
+Raison : B: events natifs suffisent pour avions par défaut.
+Avions tiers nécessiteraient RPN complexe et L: vars (hors scope).
+
+Erreurs fréquentes à éviter
+❌ Oublier le lock
+// ❌ DANGER : Race condition
+_simConnect.TransmitClientEvent(...);
+
+// ✅ CORRECT
+lock (_simConnectLock)
+{
+    _simConnect.TransmitClientEvent(...);
+}
+❌ Bloquer le thread SimConnect
+// ❌ DANGER : Bloque SimConnect
+private void OnRecvData(...)
+{
+    AircraftDataReceived?.Invoke(this, data);  // Synchrone !
+}
+
+// ✅ CORRECT
+private void OnRecvData(...)
+{
+    Task.Run(() => AircraftDataReceived?.Invoke(this, data));
+}
+❌ Utiliser K: events au lieu de B: events
+// ⚠️ OLD : K: event legacy
+MapClientEventToSimEvent(eventId, "FUEL_PUMP");
+TransmitClientEvent(eventId, 1);
+
+// ✅ NEW : B: event moderne
+SetInputEvent(hash, 1.0);
+
+Resources
+SDK Documentation : https://docs.flightsimulator.com/msfs2024/
+
+MobiFlight Presets : https://hubhop.mobiflight.com/ (pour référence noms events)
+
+Project README : README.md
+
+Architecture : ARCHITECTURE.md
+
+AI Instructions : .github/AI_INSTRUCTIONS.md
+
+SimConnect Compliance : .github/SIMCONNECT_COMPLIANCE.md
+
+Notes importantes
+SimConnect n'est PAS thread-safe (documentation officielle)
+
+B: events prioritaires sur K: events
+
+Pas de RPN nécessaire pour notre scope (avions par défaut)
+
+Support tactile natif WPF (pas besoin de libraries tierces)
+
+Projet hobby/open-source (pas commercial pour l'instant)
