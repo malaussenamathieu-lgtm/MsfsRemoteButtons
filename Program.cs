@@ -2,6 +2,19 @@
 // MSFS 2024 Remote Buttons - Serveur Web
 // Permet de piloter MSFS depuis n'importe quel navigateur sur le réseau
 // ============================================================================
+//
+// Architecture:
+// - SimConnectService: Communication avec MSFS via SimConnect
+// - WebServerService: Serveur HTTP/WebSocket pour les clients web
+// - ProfileManager: Gestion des profils avion (détection auto)
+//
+// Flux:
+// 1. Démarrage du serveur web (port 8080)
+// 2. Connexion automatique à MSFS
+// 3. Boucle de réception des messages SimConnect (thread séparé)
+// 4. Boucle principale: gestion des commandes clavier console
+//
+// ============================================================================
 
 using MsfsRemoteButtons.Services;
 using EmbedIO;
@@ -11,10 +24,14 @@ namespace MsfsRemoteButtons;
 
 class Program
 {
-    static SimConnectService? _simConnect;
-    static WebServerService? _webServer;
-    static bool _running = true;
+    // === SERVICES ===
+    static SimConnectService? _simConnect;   // Interface MSFS
+    static WebServerService? _webServer;     // Serveur HTTP/WebSocket
+    static bool _running = true;             // Flag pour arrêter les boucles
 
+    /// <summary>
+    /// Point d'entrée de l'application
+    /// </summary>
     static void Main(string[] args)
     {
         Console.WriteLine("╔════════════════════════════════════════════════════════════╗");
@@ -42,28 +59,34 @@ class Program
         Console.WriteLine("└────────────────────────────────────────────────────────────┘");
         Console.WriteLine();
 
-        // Thread pour recevoir les messages SimConnect
+        // Thread séparé pour recevoir les messages SimConnect
+        // IMPORTANT: SimConnect.ReceiveMessage() doit être appelé régulièrement
+        // sinon les callbacks (OnRecvSimobjectData, etc.) ne sont jamais déclenchés
         var receiveThread = new Thread(ReceiveLoop) { IsBackground = true };
         receiveThread.Start();
 
-        // Boucle principale
+        // Boucle principale: gestion des commandes clavier
+        // Le serveur web tourne en arrière-plan via EmbedIO
         while (_running)
         {
             if (Console.KeyAvailable)
             {
-                var key = Console.ReadKey(true).Key;
+                var key = Console.ReadKey(true).Key;  // true = ne pas afficher la touche
                 HandleKey(key);
             }
-            Thread.Sleep(50);
+            Thread.Sleep(50);  // Éviter de consommer 100% CPU
         }
 
-        // Nettoyage
+        // Nettoyage propre avant de quitter
         _simConnect?.Dispose();
         _webServer?.Dispose();
 
         Console.WriteLine("\nAu revoir !");
     }
 
+    /// <summary>
+    /// Gère les commandes clavier de la console
+    /// </summary>
     static void HandleKey(ConsoleKey key)
     {
         switch (key)
@@ -87,6 +110,13 @@ class Program
         }
     }
 
+    /// <summary>
+    /// Boucle de réception des messages SimConnect (thread séparé)
+    ///
+    /// SimConnect fonctionne en mode polling: on doit appeler ReceiveMessage()
+    /// régulièrement pour que les callbacks soient déclenchés.
+    /// Cette boucle tourne toutes les 10ms pour une réactivité optimale.
+    /// </summary>
     static void ReceiveLoop()
     {
         while (_running)
@@ -97,9 +127,9 @@ class Program
             }
             catch
             {
-                // Ignorer les erreurs de réception
+                // Ignorer les erreurs de réception (déconnexion gérée ailleurs)
             }
-            Thread.Sleep(10);
+            Thread.Sleep(10);  // 100 Hz de polling
         }
     }
 }

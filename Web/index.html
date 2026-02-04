@@ -34,20 +34,43 @@
     </div>
 
     <script>
-        // État global
-        let ws = null;
-        let profile = null;
-        let states = {};
-        let reconnectTimeout = null;
+        // ================================================================
+        // MSFS REMOTE BUTTONS - CLIENT WEB
+        // ================================================================
+        //
+        // Architecture:
+        // - WebSocket pour la communication temps réel avec le serveur
+        // - Génération dynamique de l'interface selon le profil d'avion
+        // - Mise à jour visuelle instantanée des états (LEDs, sélecteurs)
+        //
+        // Flux de données:
+        // 1. Connexion WebSocket → Réception du profil → Génération de l'UI
+        // 2. Clic bouton → Envoi commande → Serveur → MSFS
+        // 3. MSFS change état → Serveur → WebSocket → Mise à jour UI
+        //
+        // ================================================================
 
-        // Éléments DOM
+        // === ÉTAT GLOBAL ===
+        let ws = null;               // Instance WebSocket
+        let profile = null;          // Profil d'avion actuel (commandes, catégories)
+        let states = {};             // Cache des états: { commandId: valeur }
+        let reconnectTimeout = null; // Timer pour reconnexion auto
+
+        // === ÉLÉMENTS DOM ===
         const controlsEl = document.getElementById('controls');
         const wsStatusEl = document.getElementById('wsStatus');
         const simStatusEl = document.getElementById('simStatus');
         const aircraftNameEl = document.getElementById('aircraftName');
         const disconnectedOverlay = document.getElementById('disconnectedOverlay');
 
-        // Connexion WebSocket
+        // ================================================================
+        // CONNEXION WEBSOCKET
+        // ================================================================
+
+        /**
+         * Établit la connexion WebSocket avec le serveur
+         * Gère automatiquement la reconnexion en cas de perte de connexion
+         */
         function connect() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -55,20 +78,22 @@
             console.log('Connexion à', wsUrl);
             ws = new WebSocket(wsUrl);
 
+            // Connexion établie
             ws.onopen = () => {
                 console.log('WebSocket connecté');
                 wsStatusEl.classList.add('connected');
                 disconnectedOverlay.classList.remove('show');
+                // Demander l'état initial au serveur
                 ws.send(JSON.stringify({ type: 'getState' }));
             };
 
+            // Connexion perdue - Reconnexion automatique après 2 secondes
             ws.onclose = () => {
                 console.log('WebSocket déconnecté');
                 wsStatusEl.classList.remove('connected');
                 simStatusEl.classList.remove('connected');
                 disconnectedOverlay.classList.add('show');
 
-                // Reconnexion automatique
                 if (reconnectTimeout) clearTimeout(reconnectTimeout);
                 reconnectTimeout = setTimeout(connect, 2000);
             };
@@ -77,6 +102,7 @@
                 console.error('Erreur WebSocket:', err);
             };
 
+            // Réception d'un message du serveur
             ws.onmessage = (event) => {
                 try {
                     const msg = JSON.parse(event.data);
@@ -87,7 +113,14 @@
             };
         }
 
-        // Traitement des messages
+        // ================================================================
+        // TRAITEMENT DES MESSAGES SERVEUR
+        // ================================================================
+
+        /**
+         * Route les messages reçus du serveur vers les handlers appropriés
+         * Types: connection, aircraft, state, pong
+         */
         function handleMessage(msg) {
             switch (msg.type) {
                 case 'connection':
@@ -113,12 +146,19 @@
                     break;
 
                 case 'pong':
-                    // Heartbeat OK
+                    // Heartbeat OK - Connexion toujours active
                     break;
             }
         }
 
-        // Rendu des contrôles
+        // ================================================================
+        // GÉNÉRATION DE L'INTERFACE
+        // ================================================================
+
+        /**
+         * Génère l'interface complète selon le profil d'avion
+         * Appelé quand un nouveau profil est reçu (changement d'avion)
+         */
         function renderControls() {
             if (!profile) {
                 controlsEl.innerHTML = '<div class="loading">En attente du profil...</div>';
@@ -187,12 +227,15 @@
 
             controlsEl.innerHTML = html;
 
-            // Mettre à jour les états
+            // Appliquer les états déjà connus aux nouveaux éléments
             for (const [id, value] of Object.entries(states)) {
                 updateControlState(id, value);
             }
         }
 
+        /**
+         * Génère le HTML pour un bouton Toggle (ON/OFF avec LED)
+         */
         function renderToggle(cmd) {
             const state = states[cmd.id] || 0;
             const stateClass = state > 0.5 ? 'on' : 'off';
@@ -204,6 +247,10 @@
             `;
         }
 
+        /**
+         * Génère le HTML pour un Selector (multi-positions)
+         * Cas spécial pour les volets (flaps) avec boutons +/-
+         */
         function renderSelector(cmd) {
             if (!cmd.options) return '';
 
@@ -250,6 +297,9 @@
             `;
         }
 
+        /**
+         * Génère le HTML pour un bouton Momentary (appui bref, pas de LED)
+         */
         function renderMomentary(cmd) {
             return `
                 <button class="btn-momentary" data-id="${cmd.id}" onclick="sendToggle('${cmd.id}')">
@@ -258,7 +308,17 @@
             `;
         }
 
-        // Mise à jour de l'état visuel
+        // ================================================================
+        // MISE À JOUR DE L'INTERFACE
+        // ================================================================
+
+        /**
+         * Met à jour l'état visuel d'un contrôle
+         * Appelé quand le serveur envoie un changement d'état
+         *
+         * @param {string} id - ID de la commande (ex: "nav_lights")
+         * @param {number} value - Nouvelle valeur (0.0 ou 1.0 pour Bool, autres pour Number)
+         */
         function updateControlState(id, value) {
             states[id] = value;
 
@@ -279,7 +339,9 @@
                 });
             }
 
-            // Autopilot displays
+            // === AFFICHEURS AUTOPILOT ===
+            // Ces IDs correspondent aux commandes "hidden" du profil
+            // Logique spéciale: SPD et VS ne s'affichent que si le mode correspondant est actif
             if (id === 'display_spd') {
                 const el = document.getElementById('display-spd');
                 const flcActive = states['ap_flc'] > 0.5;
@@ -311,7 +373,14 @@
             }
         }
 
-        // Envoi des commandes
+        // ================================================================
+        // ENVOI DE COMMANDES
+        // ================================================================
+
+        /**
+         * Envoie une commande Toggle/Momentary au serveur
+         * @param {string} id - ID de la commande (ex: "nav_lights", "hdg_inc_10")
+         */
         function sendToggle(id) {
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
@@ -321,6 +390,12 @@
             }));
         }
 
+        /**
+         * Envoie une commande Selector au serveur avec l'event spécifique
+         * @param {string} id - ID de la commande (ex: "flaps")
+         * @param {string} simEvent - Event SimConnect à exécuter (ex: "FLAPS_2")
+         * @param {number} value - Valeur de la position (ex: 2)
+         */
         function sendSelector(id, simEvent, value) {
             if (!ws || ws.readyState !== WebSocket.OPEN) return;
 
@@ -329,18 +404,22 @@
                 data: { id: id, simEvent: simEvent, value: value }
             }));
 
-            // Mise à jour optimiste
+            // Mise à jour optimiste de l'UI (n'attend pas la confirmation serveur)
             updateControlState(id, value);
         }
 
-        // Heartbeat
+        // ================================================================
+        // HEARTBEAT & DÉMARRAGE
+        // ================================================================
+
+        // Ping toutes les 30 secondes pour garder la connexion active
         setInterval(() => {
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'ping' }));
             }
         }, 30000);
 
-        // Démarrage
+        // Démarrage de l'application
         connect();
     </script>
 </body>

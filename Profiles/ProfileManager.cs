@@ -1,16 +1,39 @@
 namespace MsfsRemoteButtons.Profiles;
 
+// ============================================================================
+// GESTIONNAIRE DE PROFILS
+// ============================================================================
+//
+// Ce module gère la collection de profils d'avion disponibles et la détection
+// automatique du profil approprié basée sur le titre de l'avion dans MSFS.
+//
+// Pour ajouter un nouvel avion:
+// 1. Créer une classe qui implémente IAircraftProfile (voir Cessna172G1000Profile)
+// 2. L'ajouter dans la liste _profiles ci-dessous
+// 3. Définir des DetectionPatterns pour la détection automatique
+//
+// ============================================================================
+
 /// <summary>
 /// Gestionnaire des profils d'avion disponibles
+/// Responsable de:
+/// - Stocker la liste des profils supportés
+/// - Détecter automatiquement le profil selon le titre MSFS
+/// - Fournir un profil par défaut si aucune correspondance
 /// </summary>
 public static class ProfileManager
 {
+    // Liste des profils disponibles - Ordre important pour la détection
+    // Le premier profil avec un pattern qui matche sera utilisé
     private static readonly List<IAircraftProfile> _profiles = new()
     {
         new Cessna172G1000Profile(),
-        // Ajouter d'autres profils ici plus tard:
+        // ----------------------------------------
+        // AJOUTER D'AUTRES PROFILS ICI:
+        // ----------------------------------------
         // new Boeing737Profile(),
         // new A320NeoProfile(),
+        // new TBM930Profile(),
     };
 
     /// <summary>
@@ -34,7 +57,18 @@ public static class ProfileManager
 
     /// <summary>
     /// Détecte automatiquement le profil basé sur le titre de l'avion MSFS
+    ///
+    /// Algorithme:
+    /// 1. Parcourt tous les profils dans l'ordre de _profiles
+    /// 2. Pour chaque profil, vérifie ses DetectionPatterns
+    /// 3. Retourne le premier profil dont un pattern correspond
+    ///
+    /// Exemples de titres MSFS:
+    /// - "Cessna 172 Skyhawk G1000 Asobo" → Cessna172G1000Profile
+    /// - "Boeing 737-800" → Boeing737Profile (si défini)
     /// </summary>
+    /// <param name="aircraftTitle">Titre de l'avion depuis SimVar TITLE</param>
+    /// <returns>Le profil correspondant ou null si aucun match</returns>
     public static IAircraftProfile? DetectProfile(string aircraftTitle)
     {
         if (string.IsNullOrWhiteSpace(aircraftTitle))
@@ -44,6 +78,7 @@ public static class ProfileManager
         {
             foreach (var pattern in profile.DetectionPatterns)
             {
+                // Contains = substring match, sinon exact match
                 bool match = pattern.Contains
                     ? aircraftTitle.Contains(pattern.Pattern, StringComparison.OrdinalIgnoreCase)
                     : aircraftTitle.Equals(pattern.Pattern, StringComparison.OrdinalIgnoreCase);
@@ -53,11 +88,13 @@ public static class ProfileManager
             }
         }
 
-        return null;
+        return null;  // Aucun profil trouvé - SimConnectService utilisera DefaultProfile
     }
 
     /// <summary>
     /// Affiche le menu de sélection de profil (mode console)
+    /// Note: Non utilisé actuellement car la détection est automatique
+    /// Conservé pour le debug ou une future sélection manuelle
     /// </summary>
     public static IAircraftProfile? SelectProfile()
     {

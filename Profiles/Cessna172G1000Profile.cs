@@ -1,5 +1,31 @@
 namespace MsfsRemoteButtons.Profiles;
 
+// ============================================================================
+// PROFIL CESSNA 172 SKYHAWK G1000
+// ============================================================================
+//
+// Ce fichier définit toutes les commandes disponibles pour le Cessna 172
+// avec cockpit Garmin G1000 dans MSFS 2024.
+//
+// STRUCTURE D'UNE COMMANDE:
+// - Id: Identifiant unique utilisé partout (WebSocket, états, etc.)
+// - Name: Nom affiché dans l'interface web
+// - SimEvent: K:Event SimConnect pour déclencher l'action
+// - SimEventOn/Off: Events séparés pour ON et OFF (si nécessaire)
+// - SimVar: Variable SimConnect pour lire l'état actuel
+// - SimVarUnit: Unité de la SimVar (Bool, Number, Knots, Feet, Degrees, etc.)
+// - Category: Groupe d'affichage dans l'interface
+// - ControlType: Toggle (ON/OFF), Selector (multi-positions), Momentary (appui bref)
+// - Hidden: true = lit l'état mais n'affiche pas de bouton (pour les afficheurs)
+// - IsMomentary: true = simule press+release (nécessaire pour certains events)
+//
+// COMMENT TROUVER LES EVENTS ET SIMVARS:
+// - Documentation MSFS SDK: https://docs.flightsimulator.com
+// - Outil MSFS DevMode > SimConnect Inspector
+// - Fichier exporté: Desktop/SimEvents/C172_SimEvents.txt
+//
+// ============================================================================
+
 /// <summary>
 /// Profil pour le Cessna 172 Skyhawk G1000
 /// </summary>
@@ -9,27 +35,44 @@ public class Cessna172G1000Profile : IAircraftProfile
     public string AircraftId => "C172";
     public string Description => "Cessna 172 avec cockpit Garmin G1000";
 
-    // Patterns pour détecter automatiquement cet avion
+    // Patterns pour détecter automatiquement cet avion via le titre MSFS
+    // Le premier pattern qui matche est utilisé (ordre important)
     public List<AircraftPattern> DetectionPatterns => new()
     {
-        new AircraftPattern { Pattern = "Cessna Skyhawk G1000", Contains = true },
+        new AircraftPattern { Pattern = "Cessna Skyhawk G1000", Contains = true },  // Pattern spécifique en premier
         new AircraftPattern { Pattern = "C172", Contains = true },
-        new AircraftPattern { Pattern = "Cessna 172", Contains = true },
+        new AircraftPattern { Pattern = "Cessna 172", Contains = true },            // Pattern générique en dernier
     };
 
+    // Ordre d'affichage des catégories dans l'interface web
     public List<string> Categories => new()
     {
-        "AUTOPILOT",
+        "AUTOPILOT",    // En haut car le plus utilisé en vol
         "LUMIÈRES",
         "VOLETS",
         "ÉLECTRIQUE",
     };
+
+    // ========================================================================
+    // LISTE DES COMMANDES
+    // ========================================================================
+    // Organisation:
+    // 1. LUMIÈRES - Feux de navigation, anticollision, atterrissage
+    // 2. ÉLECTRIQUE - Batterie, alternateur, pompe à carburant
+    // 3. VOLETS - Sélecteur de position des volets
+    // 4. AUTOPILOT - Modes AP, boutons de contrôle, afficheurs (hidden)
+    // ========================================================================
 
     public List<AircraftCommand> Commands => new()
     {
         // ============================================
         // LUMIÈRES
         // ============================================
+        // Tous les feux utilisent des events TOGGLE_* qui inversent l'état
+        // SimVar retourne 0 (éteint) ou 1 (allumé)
+        // ============================================
+
+        // Feux de navigation (bouts d'ailes: rouge gauche, vert droite, blanc arrière)
         new AircraftCommand
         {
             Id = "nav_lights",
@@ -42,6 +85,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "1",
             ControlType = ControlType.Toggle
         },
+        // Feu anticollision rouge (gyrophare sur le ventre/dos)
         new AircraftCommand
         {
             Id = "beacon",
@@ -54,6 +98,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "2",
             ControlType = ControlType.Toggle
         },
+
+        // Feux stroboscopiques blancs (haute intensité, bouts d'ailes)
         new AircraftCommand
         {
             Id = "strobe",
@@ -66,6 +112,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "3",
             ControlType = ControlType.Toggle
         },
+
+        // Phare d'atterrissage (haute puissance, sur l'aile gauche)
         new AircraftCommand
         {
             Id = "landing_light",
@@ -78,6 +126,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "4",
             ControlType = ControlType.Toggle
         },
+
+        // Phare de roulage (moins puissant, pour le taxiway)
         new AircraftCommand
         {
             Id = "taxi_light",
@@ -94,6 +144,10 @@ public class Cessna172G1000Profile : IAircraftProfile
         // ============================================
         // ÉLECTRIQUE
         // ============================================
+        // Gestion de l'alimentation électrique de l'avion
+        // ============================================
+
+        // Batterie principale - Alimente les systèmes quand le moteur est éteint
         new AircraftCommand
         {
             Id = "master_battery",
@@ -106,18 +160,24 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "B",
             ControlType = ControlType.Toggle
         },
+
+        // Alternateur - Recharge la batterie et alimente les systèmes moteur tournant
         new AircraftCommand
         {
             Id = "master_alternator",
             Name = "Alternator",
             SimEvent = "TOGGLE_MASTER_ALTERNATOR",
-            SimVar = "GENERAL ENG MASTER ALTERNATOR:1",
+            SimVar = "GENERAL ENG MASTER ALTERNATOR:1",  // :1 = moteur n°1
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
             Key = ConsoleKey.A,
             KeyDisplay = "A",
             ControlType = ControlType.Toggle
         },
+
+        // Pompe à carburant électrique - Pour amorçage et secours
+        // ATTENTION: Utilise SimEventOn/Off car FUELSYSTEM_PUMP_TOGGLE n'existe pas
+        // IsMomentary = true car ces events nécessitent un press+release
         new AircraftCommand
         {
             Id = "fuel_pump",
@@ -136,6 +196,11 @@ public class Cessna172G1000Profile : IAircraftProfile
         // ============================================
         // VOLETS (Sélecteur + boutons)
         // ============================================
+        // Le Cessna 172 a 4 positions de volets: UP, 10°, 20°, FULL (30°)
+        // L'interface affiche: bouton [-] + sélecteur + bouton [+]
+        // ============================================
+
+        // Bouton pour rétracter les volets d'un cran
         new AircraftCommand
         {
             Id = "flaps_decr",
@@ -146,6 +211,9 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "",
             ControlType = ControlType.Momentary
         },
+
+        // Sélecteur de position des volets
+        // SimVar retourne l'index (0-3), les options définissent l'event pour chaque position
         new AircraftCommand
         {
             Id = "flaps",
@@ -158,12 +226,14 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Selector,
             SelectorOptions = new List<SelectorOption>
             {
-                new SelectorOption { Label = "UP", SimEvent = "FLAPS_UP", Value = 0 },
-                new SelectorOption { Label = "10°", SimEvent = "FLAPS_1", Value = 1 },
-                new SelectorOption { Label = "20°", SimEvent = "FLAPS_2", Value = 2 },
-                new SelectorOption { Label = "30°", SimEvent = "FLAPS_3", Value = 3 },
+                new SelectorOption { Label = "UP", SimEvent = "FLAPS_UP", Value = 0 },    // Volets rentrés
+                new SelectorOption { Label = "10°", SimEvent = "FLAPS_1", Value = 1 },   // Premier cran
+                new SelectorOption { Label = "20°", SimEvent = "FLAPS_2", Value = 2 },   // Approche
+                new SelectorOption { Label = "30°", SimEvent = "FLAPS_3", Value = 3 },   // Atterrissage (FULL)
             }
         },
+
+        // Bouton pour sortir les volets d'un cran
         new AircraftCommand
         {
             Id = "flaps_incr",
@@ -178,6 +248,11 @@ public class Cessna172G1000Profile : IAircraftProfile
         // ============================================
         // AUTOPILOT
         // ============================================
+        // Le G1000 a un autopilot complet avec plusieurs modes
+        // Les boutons principaux sont affichés, les contrôles de valeurs sont hidden
+        // ============================================
+
+        // AP Master - Active/désactive l'autopilot
         new AircraftCommand
         {
             Id = "ap_master",
@@ -190,6 +265,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "Z",
             ControlType = ControlType.Toggle
         },
+
+        // Flight Director - Affiche les barres de guidage sur le PFD
         new AircraftCommand
         {
             Id = "ap_fd",
@@ -202,6 +279,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "D",
             ControlType = ControlType.Toggle
         },
+
+        // Flight Level Change - Maintient la vitesse en montée/descente
         new AircraftCommand
         {
             Id = "ap_flc",
@@ -214,6 +293,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
+
+        // Heading Hold - Maintient le cap sélectionné (HDG bug)
         new AircraftCommand
         {
             Id = "ap_hdg",
@@ -226,6 +307,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "H",
             ControlType = ControlType.Toggle
         },
+
+        // Altitude Hold - Maintient l'altitude sélectionnée
         new AircraftCommand
         {
             Id = "ap_alt",
@@ -238,6 +321,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "T",
             ControlType = ControlType.Toggle
         },
+
+        // NAV Hold - Suit la route GPS/VOR NAV1
         new AircraftCommand
         {
             Id = "ap_nav",
@@ -250,6 +335,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "N",
             ControlType = ControlType.Toggle
         },
+
+        // Approach Hold - Mode approche ILS/RNAV
         new AircraftCommand
         {
             Id = "ap_apr",
@@ -262,6 +349,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "R",
             ControlType = ControlType.Toggle
         },
+
+        // Vertical Speed Hold - Maintient le taux de montée/descente sélectionné
         new AircraftCommand
         {
             Id = "ap_vs",
@@ -278,6 +367,12 @@ public class Cessna172G1000Profile : IAircraftProfile
         // ============================================
         // CONTRÔLES AUTOPILOT (Hidden)
         // ============================================
+        // Ces commandes ne sont pas affichées comme boutons mais sont utilisées
+        // par l'interface web pour les boutons +/- des valeurs AP
+        // ============================================
+
+        // --- VITESSE (SPD) ---
+        // Incrément/décrément de la vitesse cible (pour FLC)
         new AircraftCommand
         {
             Id = "spd_inc",
@@ -300,6 +395,10 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Momentary,
             Hidden = true
         },
+
+        // --- CAP (HDG) ---
+        // hdg_inc/dec_1: Incrément unitaire (1°)
+        // hdg_inc/dec_10: Géré dans SimConnectService (répète 10x hdg_inc/dec_1)
         new AircraftCommand
         {
             Id = "hdg_inc_1",
@@ -322,6 +421,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Momentary,
             Hidden = true
         },
+        // NOTE: hdg_inc_10 et hdg_dec_10 utilisent le même SimEvent
+        // La répétition x10 est gérée dans SimConnectService.SendCommand()
         new AircraftCommand
         {
             Id = "hdg_inc_10",
@@ -344,6 +445,10 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Momentary,
             Hidden = true
         },
+
+        // --- ALTITUDE (ALT) ---
+        // alt_inc/dec_100: Incrément unitaire (100ft)
+        // alt_inc/dec_1000: Géré dans SimConnectService (répète 10x alt_inc/dec_100)
         new AircraftCommand
         {
             Id = "alt_inc_100",
@@ -366,6 +471,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Momentary,
             Hidden = true
         },
+        // NOTE: alt_inc_1000 utilise le même SimEvent, répété 10x
         new AircraftCommand
         {
             Id = "alt_inc_1000",
@@ -388,6 +494,9 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Momentary,
             Hidden = true
         },
+
+        // --- VITESSE VERTICALE (VS) ---
+        // Incrément: +100 ft/min, Décrément: -100 ft/min
         new AircraftCommand
         {
             Id = "vs_inc",
@@ -414,6 +523,12 @@ public class Cessna172G1000Profile : IAircraftProfile
         // ============================================
         // AFFICHEURS AUTOPILOT (Hidden)
         // ============================================
+        // Ces commandes n'ont pas de SimEvent, elles servent uniquement
+        // à lire les valeurs affichées sur le panneau AP (SPD, HDG, ALT, VS)
+        // L'interface web utilise ces valeurs pour les afficheurs numériques
+        // ============================================
+
+        // Afficheur vitesse (en noeuds)
         new AircraftCommand
         {
             Id = "display_spd",
@@ -423,9 +538,11 @@ public class Cessna172G1000Profile : IAircraftProfile
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
-            ControlType = ControlType.Toggle,
+            ControlType = ControlType.Toggle,  // ControlType ignoré pour Hidden
             Hidden = true
         },
+
+        // Afficheur cap (en degrés, 0-359)
         new AircraftCommand
         {
             Id = "display_hdg",
@@ -438,6 +555,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle,
             Hidden = true
         },
+
+        // Afficheur altitude (en pieds)
         new AircraftCommand
         {
             Id = "display_alt",
@@ -450,6 +569,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle,
             Hidden = true
         },
+
+        // Afficheur vitesse verticale (en ft/min, positif = montée, négatif = descente)
         new AircraftCommand
         {
             Id = "display_vs",
@@ -464,8 +585,19 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
     };
 
+    // ========================================================================
+    // MÉTHODES UTILITAIRES
+    // ========================================================================
+
     /// <summary>
-    /// Exporte les SimEvents du profil dans un fichier texte
+    /// Exporte tous les SimEvents du profil dans un fichier texte
+    ///
+    /// Utile pour:
+    /// - Débugger les events qui ne fonctionnent pas
+    /// - Documenter les events utilisés
+    /// - Référence rapide sans ouvrir le code
+    ///
+    /// Fichier créé: Desktop/SimEvents/{AircraftId}_SimEvents.txt
     /// </summary>
     public void ExportSimEventsToFile(string? outputDirectory = null)
     {
