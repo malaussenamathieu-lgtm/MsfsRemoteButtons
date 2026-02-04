@@ -22,7 +22,6 @@ public class Cessna172G1000Profile : IAircraftProfile
         "AUTOPILOT",
         "LUMIÈRES",
         "VOLETS",
-        "MOTEUR",
         "ÉLECTRIQUE",
     };
 
@@ -119,10 +118,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "A",
             ControlType = ControlType.Toggle
         },
-
-        // ============================================
-        // MOTEUR
-        // ============================================
         new AircraftCommand
         {
             Id = "fuel_pump",
@@ -131,7 +126,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimEventOff = "FUELSYSTEM_PUMP_OFF",
             SimVar = "FUELSYSTEM PUMP SWITCH:1",
             SimVarUnit = "Bool",
-            Category = "MOTEUR",
+            Category = "ÉLECTRIQUE",
             Key = ConsoleKey.P,
             KeyDisplay = "P",
             ControlType = ControlType.Toggle,
@@ -257,18 +252,6 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
         new AircraftCommand
         {
-            Id = "ap_vnav",
-            Name = "VNAV",
-            SimEvent = "AP_VNAV_PUSH",
-            SimVar = "AUTOPILOT VERTICAL HOLD",
-            SimVarUnit = "Bool",
-            Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
-            ControlType = ControlType.Toggle
-        },
-        new AircraftCommand
-        {
             Id = "ap_apr",
             Name = "APR",
             SimEvent = "AP_APR_HOLD",
@@ -290,6 +273,142 @@ public class Cessna172G1000Profile : IAircraftProfile
             Key = ConsoleKey.W,
             KeyDisplay = "W",
             ControlType = ControlType.Toggle
+        },
+
+        // ============================================
+        // CONTRÔLES AUTOPILOT (Hidden)
+        // ============================================
+        new AircraftCommand
+        {
+            Id = "spd_inc",
+            Name = "SPD+",
+            SimEvent = "AP_SPD_VAR_INC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "spd_dec",
+            Name = "SPD-",
+            SimEvent = "AP_SPD_VAR_DEC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "hdg_inc_1",
+            Name = "HDG+1",
+            SimEvent = "HEADING_BUG_INC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "hdg_dec_1",
+            Name = "HDG-1",
+            SimEvent = "HEADING_BUG_DEC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "hdg_inc_10",
+            Name = "HDG+10",
+            SimEvent = "HEADING_BUG_INC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "hdg_dec_10",
+            Name = "HDG-10",
+            SimEvent = "HEADING_BUG_DEC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "alt_inc_100",
+            Name = "ALT+100",
+            SimEvent = "AP_ALT_VAR_INC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "alt_dec_100",
+            Name = "ALT-100",
+            SimEvent = "AP_ALT_VAR_DEC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "alt_inc_1000",
+            Name = "ALT+1000",
+            SimEvent = "AP_ALT_VAR_INC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "alt_dec_1000",
+            Name = "ALT-1000",
+            SimEvent = "AP_ALT_VAR_DEC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "vs_inc",
+            Name = "VS UP",
+            SimEvent = "AP_VS_VAR_INC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
+        },
+        new AircraftCommand
+        {
+            Id = "vs_dec",
+            Name = "VS DN",
+            SimEvent = "AP_VS_VAR_DEC",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Momentary,
+            Hidden = true
         },
 
         // ============================================

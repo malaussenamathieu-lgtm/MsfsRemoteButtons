@@ -6,7 +6,7 @@
 }
 
 body {
-    font-family: 'Segoe UI', 'Arial', sans-serif;
+    font-family: 'Consolas', 'Courier New', monospace;
     background: #0a0a0a;
     color: #eee;
     min-height: 100vh;
@@ -89,24 +89,24 @@ body {
 }
 
 .category-buttons > * {
-    flex: 1 1 80px;
-    max-width: 100px;
+    flex: 1 1 90px;
+    max-width: 120px;
 }
 
-/* A320 Style Toggle Button */
+/* A320 Style Toggle Button - Touch optimized */
 .btn-toggle {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    padding: 8px 6px;
+    padding: 10px 8px;
     border: 1px solid #444;
     border-radius: 3px;
     cursor: pointer;
     transition: all 0.1s ease;
     background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
     box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-    min-height: 65px;
+    min-height: 80px;
 }
 
 .btn-toggle:active {
@@ -137,10 +137,10 @@ body {
 }
 
 .btn-toggle .label {
-    font-size: 0.7em;
+    font-size: 1.1em;
     color: #ccc;
     text-align: center;
-    font-weight: 500;
+    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -195,20 +195,20 @@ body {
     box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
 }
 
-/* Momentary Button */
+/* Momentary Button - Touch optimized */
 .btn-momentary {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 10px 6px;
+    padding: 12px 8px;
     border: 1px solid #444;
     border-radius: 3px;
     cursor: pointer;
     transition: all 0.1s ease;
     background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
     box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    min-height: 65px;
+    min-height: 80px;
     color: #888;
 }
 
@@ -220,8 +220,8 @@ body {
 }
 
 .btn-momentary .label {
-    font-size: 0.7em;
-    font-weight: 500;
+    font-size: 1.1em;
+    font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
@@ -368,25 +368,50 @@ body {
     padding: 10px;
 }
 
+.autopilot-panel .category-buttons {
+    display: flex;
+    gap: 6px;
+    border: none;
+    padding: 0;
+    background: transparent;
+    flex-wrap: nowrap;
+}
+
+.autopilot-panel .btn-toggle {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    flex: none;
+}
+
 .displays-row {
     display: flex;
     gap: 6px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+.display-column {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 70px;
+    min-width: 70px;
 }
 
 .display-spacer {
-    flex: 1 1 80px;
-    max-width: 100px;
+    width: 70px;
+    min-width: 70px;
 }
 
 .display-box {
-    flex: 1 1 80px;
-    max-width: 100px;
+    width: 70px;
+    min-width: 70px;
     background: #050505;
     border: 1px solid #333;
     border-radius: 2px;
     padding: 4px 6px;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .display-label {
@@ -397,14 +422,72 @@ body {
 }
 
 .display-value {
-    font-size: 1em;
+    font-size: 1.1em;
     color: #00ff00;
     font-family: 'Consolas', 'Courier New', monospace;
     font-weight: bold;
 }
 
-.autopilot-panel .category-buttons {
-    border: none;
-    padding: 0;
-    background: transparent;
+.control-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+}
+
+.control-buttons.two-buttons {
+    grid-template-columns: 1fr 1fr;
+}
+
+.ctrl-btn {
+    padding: 8px 2px;
+    border: 1px solid #444;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 0.75em;
+    font-weight: bold;
+    background: linear-gradient(180deg, #2a2a2a, #1a1a1a);
+    color: #888;
+    font-family: 'Consolas', monospace;
+}
+
+.ctrl-btn:active {
+    background: #00aa00;
+    border-color: #00ff00;
+    color: #fff;
+}
+
+/* Controls row - below autopilot buttons */
+.controls-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.control-spacer {
+    width: 70px;
+    min-width: 70px;
+}
+
+.control-group {
+    width: 70px;
+    min-width: 70px;
+    display: flex;
+    gap: 3px;
+}
+
+.control-group .ctrl-btn {
+    flex: 1;
+    padding: 6px 2px;
+    font-size: 0.7em;
+}
+
+.control-group.grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+}
+
+.control-group.grid-2x2 .ctrl-btn {
+    padding: 4px 1px;
+    font-size: 0.55em;
 }

@@ -195,10 +195,33 @@ public class SimConnectService : IDisposable
             return;
         }
 
+        // Gestion spéciale pour les incréments multiples (HDG +/-10, ALT +/-1000)
+        int repeatCount = 1;
+        int delayMs = 50;
+        string? actualCommandId = commandId;
+
+        if (commandId == "hdg_inc_10") { actualCommandId = "hdg_inc_1"; repeatCount = 10; delayMs = 50; }
+        else if (commandId == "hdg_dec_10") { actualCommandId = "hdg_dec_1"; repeatCount = 10; delayMs = 50; }
+        else if (commandId == "alt_inc_1000") { actualCommandId = "alt_inc_100"; repeatCount = 10; delayMs = 100; }
+        else if (commandId == "alt_dec_1000") { actualCommandId = "alt_dec_100"; repeatCount = 10; delayMs = 100; }
+
         // Récupérer la commande
-        var command = _activeProfile.Commands.FirstOrDefault(c => c.Id == commandId);
+        var command = _activeProfile.Commands.FirstOrDefault(c => c.Id == actualCommandId);
         if (command == null) return;
 
+        // Exécuter plusieurs fois si nécessaire (avec délai pour que MSFS traite chaque event)
+        for (int i = 0; i < repeatCount; i++)
+        {
+            ExecuteCommand(command, actualCommandId);
+            if (repeatCount > 1 && i < repeatCount - 1)
+            {
+                Thread.Sleep(delayMs);
+            }
+        }
+    }
+
+    private void ExecuteCommand(AircraftCommand command, string commandId)
+    {
         // Si SimEventOn/Off sont définis, utiliser l'état courant pour choisir
         if (!string.IsNullOrEmpty(command.SimEventOn) && !string.IsNullOrEmpty(command.SimEventOff))
         {

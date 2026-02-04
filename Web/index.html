@@ -137,17 +137,17 @@
                 // Special layout for AUTOPILOT with displays
                 if (category === 'AUTOPILOT') {
                     html += `<div class="autopilot-panel">`;
+                    // Displays row - ABOVE buttons (displays only)
                     html += `<div class="displays-row">`;
                     html += `<div class="display-spacer"></div>`; // AP
                     html += `<div class="display-spacer"></div>`; // FD
-                    html += `<div class="display-box"><div class="display-label">SPD</div><div class="display-value" id="display-spd">---</div></div>`; // FLC
-                    html += `<div class="display-box"><div class="display-label">HDG</div><div class="display-value" id="display-hdg">---</div></div>`; // HDG
-                    html += `<div class="display-box"><div class="display-label">ALT</div><div class="display-value" id="display-alt">-----</div></div>`; // ALT
+                    html += `<div class="display-box"><div class="display-label">SPD</div><div class="display-value" id="display-spd">---</div></div>`;
+                    html += `<div class="display-box"><div class="display-label">HDG</div><div class="display-value" id="display-hdg">---</div></div>`;
+                    html += `<div class="display-box"><div class="display-label">ALT</div><div class="display-value" id="display-alt">-----</div></div>`;
                     html += `<div class="display-spacer"></div>`; // NAV
-                    html += `<div class="display-spacer"></div>`; // VNAV
                     html += `<div class="display-spacer"></div>`; // APR
-                    html += `<div class="display-box"><div class="display-label">VS</div><div class="display-value" id="display-vs">----</div></div>`; // VS
-                    html += `</div>`;
+                    html += `<div class="display-box"><div class="display-label">VS</div><div class="display-value" id="display-vs">----</div></div>`;
+                    html += `</div>`; // close displays-row
                 }
 
                 html += `<div class="category-buttons">`;
@@ -163,7 +163,23 @@
                 }
 
                 html += `</div>`; // close category-buttons
+
+                // Control buttons row - BELOW main buttons
                 if (category === 'AUTOPILOT') {
+                    html += `<div class="controls-row">`;
+                    html += `<div class="control-spacer"></div>`; // AP
+                    html += `<div class="control-spacer"></div>`; // FD
+                    // SPD controls
+                    html += `<div class="control-group"><button class="ctrl-btn" onclick="sendToggle('spd_dec')">−</button><button class="ctrl-btn" onclick="sendToggle('spd_inc')">+</button></div>`;
+                    // HDG controls (2x2 grid)
+                    html += `<div class="control-group grid-2x2"><button class="ctrl-btn" onclick="sendToggle('hdg_dec_10')">−10</button><button class="ctrl-btn" onclick="sendToggle('hdg_inc_10')">+10</button><button class="ctrl-btn" onclick="sendToggle('hdg_dec_1')">−1</button><button class="ctrl-btn" onclick="sendToggle('hdg_inc_1')">+1</button></div>`;
+                    // ALT controls (2x2 grid)
+                    html += `<div class="control-group grid-2x2"><button class="ctrl-btn" onclick="sendToggle('alt_dec_1000')">−1000</button><button class="ctrl-btn" onclick="sendToggle('alt_inc_1000')">+1000</button><button class="ctrl-btn" onclick="sendToggle('alt_dec_100')">−100</button><button class="ctrl-btn" onclick="sendToggle('alt_inc_100')">+100</button></div>`;
+                    html += `<div class="control-spacer"></div>`; // NAV
+                    html += `<div class="control-spacer"></div>`; // APR
+                    // VS controls
+                    html += `<div class="control-group"><button class="ctrl-btn" onclick="sendToggle('vs_dec')">DN</button><button class="ctrl-btn" onclick="sendToggle('vs_inc')">UP</button></div>`;
+                    html += `</div>`; // close controls-row
                     html += `</div>`; // close autopilot-panel
                 }
                 html += `</div>`; // close category
@@ -266,7 +282,8 @@
             // Autopilot displays
             if (id === 'display_spd') {
                 const el = document.getElementById('display-spd');
-                if (el) el.textContent = Math.round(value);
+                const flcActive = states['ap_flc'] > 0.5;
+                if (el) el.textContent = flcActive ? Math.round(value) : '---';
             }
             if (id === 'display_hdg') {
                 const el = document.getElementById('display-hdg');
@@ -274,11 +291,23 @@
             }
             if (id === 'display_alt') {
                 const el = document.getElementById('display-alt');
-                if (el) el.textContent = Math.round(value);
+                if (el) el.textContent = Math.round(value).toString().padStart(5, '0');
             }
             if (id === 'display_vs') {
                 const el = document.getElementById('display-vs');
-                if (el) el.textContent = (value >= 0 ? '+' : '') + Math.round(value);
+                const vsActive = states['ap_vs'] > 0.5;
+                if (el) el.textContent = vsActive ? ((value >= 0 ? '+' : '') + Math.round(value)) : '----';
+            }
+            // Update displays when button state changes
+            if (id === 'ap_flc') {
+                const el = document.getElementById('display-spd');
+                const spdValue = states['display_spd'] || 0;
+                if (el) el.textContent = value > 0.5 ? Math.round(spdValue) : '---';
+            }
+            if (id === 'ap_vs') {
+                const el = document.getElementById('display-vs');
+                const vsValue = states['display_vs'] || 0;
+                if (el) el.textContent = value > 0.5 ? ((vsValue >= 0 ? '+' : '') + Math.round(vsValue)) : '----';
             }
         }
 
