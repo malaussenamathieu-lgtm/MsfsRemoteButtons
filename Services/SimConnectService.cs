@@ -66,6 +66,9 @@ public class SimConnectService : IDisposable
     private readonly Dictionary<string, double> _buttonStates = new();      // commandId -> valeur actuelle (0.0 ou 1.0 pour Bool)
     private readonly object _stateLock = new();                             // Verrou pour accès thread-safe
 
+    // THREAD-SAFETY: SimConnect n'est pas thread-safe (documentation Microsoft). Tous les appels _simConnect.* doivent être dans lock (_simConnectLock).
+    private readonly object _simConnectLock = new();
+
     // === ÉVÉNEMENTS PUBLICS ===
     // Ces événements permettent aux autres services (WebServer) de réagir aux changements
     public event Action<bool>? ConnectionChanged;           // Déclenché quand connexion/déconnexion MSFS
@@ -293,7 +296,7 @@ public class SimConnectService : IDisposable
         }
 
         // === CAS 2: Event simple (Toggle) ===
-        if (_eventIds.TryGetValue(commandId, out int eventId))
+        if (_eventIds.TryGetValue(commandId, out int eventId) && _simConnect != null)
         {
             try
             {
@@ -356,6 +359,42 @@ public class SimConnectService : IDisposable
         catch (Exception ex)
         {
             Log($"⚠️ Erreur refresh SimVar pour {commandId}: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Envoie une valeur à un B: event (Input Event) identifié par son hash.
+    /// Équivalent SimConnect_SetInputEvent : définit la valeur d'un input event sans générer d'event de réponse.
+    /// Gestion erreurs : le wrapper managé lève COMException ; les codes SIMCONNECT_EXCEPTION (ex. GET_INPUT_EVENT_FAILED) sont documentés dans le SDK.
+    /// </summary>
+    /// <param name="hash">Hash de l'event (obtenu via EnumerateInputEvents).</param>
+    /// <param name="value">Valeur à envoyer (ex: 0.0, 1.0 pour booléen; valeur FLOAT64 pour sélecteurs).</param>
+    // B: EVENT: Uses modern Input Events API (SetInputEvent)
+    // THREAD-SAFETY: Protected by _simConnectLock
+    public void SetInputEvent(ulong hash, double value)
+    {
+        if (_simConnect == null || !_isConnected) return;
+
+        lock (_simConnectLock)
+        {
+            try
+            {
+                _simConnect.SetInputEvent(hash, value);
+
+#if DEBUG
+                Log($"[DEBUG] SetInputEvent: hash={hash} value={value}");
+#endif
+            }
+            catch (COMException ex)
+            {
+                // Échec HRESULT SimConnect (hash invalide, erreur interne) — doc SDK SimConnect_SetInputEvent
+                Log($"❌ SetInputEvent (hash={hash}): {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Gestion SimConnectException ou toute autre exception levée par le SDK (ex: GET_INPUT_EVENT_FAILED)
+                Log($"❌ SetInputEvent (hash={hash}): {ex.Message}");
+            }
         }
     }
 
