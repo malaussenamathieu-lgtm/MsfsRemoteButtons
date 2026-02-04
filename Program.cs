@@ -29,6 +29,10 @@ class Program
     static WebServerService? _webServer;     // Serveur HTTP/WebSocket
     static bool _running = true;             // Flag pour arrêter les boucles
 
+    // Console key input: désactivé si pas de console (redirect, IDE, etc.)
+    static bool _consoleInputUnavailable;
+    static bool _consoleInputWarningLogged;
+
     /// <summary>
     /// Point d'entrée de l'application
     /// </summary>
@@ -69,10 +73,26 @@ class Program
         // Le serveur web tourne en arrière-plan via EmbedIO
         while (_running)
         {
-            if (Console.KeyAvailable)
+            if (!_consoleInputUnavailable)
             {
-                var key = Console.ReadKey(true).Key;  // true = ne pas afficher la touche
-                HandleKey(key);
+                try
+                {
+                    if (Console.KeyAvailable)
+                    {
+                        var key = Console.ReadKey(true).Key;  // true = ne pas afficher la touche
+                        HandleKey(key);
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                    // Pas de console (redirect, IDE, etc.) : désactiver la lecture clavier
+                    _consoleInputUnavailable = true;
+                    if (!_consoleInputWarningLogged)
+                    {
+                        Console.WriteLine("⚠️ Entrée clavier indisponible (console absente ou redirigée). Touches [C],[D],[R],[Q] désactivées.");
+                        _consoleInputWarningLogged = true;
+                    }
+                }
             }
             Thread.Sleep(50);  // Éviter de consommer 100% CPU
         }

@@ -32,6 +32,10 @@ public class AircraftCommand
     public string? SimEventOff { get; set; }           // K:Event pour "éteindre" (optionnel)
     public string? SimVar { get; set; }                // Variable SimConnect pour lire l'état
     public string? SimVarUnit { get; set; } = "Bool";  // Unité de la SimVar
+    /// <summary>Nom de l'Input Event B: (ex: LIGHTING_NAV_0). Si défini, prioritaire sur SimEvent quand le hash est disponible.</summary>
+    public string? InputEvent { get; set; }
+    /// <summary>Hash de l'Input Event B: (optionnel). Si 0 ou null, résolu à l'exécution via EnumerateInputEvents.</summary>
+    public ulong? InputEventHash { get; set; }
     public string Category { get; set; } = "";         // Catégorie (Lights, Electrical, etc.)
     public ConsoleKey Key { get; set; }                // Touche clavier (pour mode console)
     public string KeyDisplay { get; set; } = "";       // Affichage de la touche
