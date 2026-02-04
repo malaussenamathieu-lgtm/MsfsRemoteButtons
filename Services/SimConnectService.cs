@@ -82,46 +82,110 @@ public class SimConnectService : IDisposable
     public string CurrentAircraftTitle { get; private set; } = "";
 
     /// <summary>
-    /// Tente de se connecter à MSFS
+    /// Tente de se connecter à MSFS avec retry automatique (3 tentatives, délais 0 / 2 s / 5 s).
     /// </summary>
     public bool Connect()
     {
         if (_isConnected) return true;
 
+        const int maxAttempts = 3;
+        int[] retryDelaysMs = { 0, 2000, 5000 }; // 0 ms avant 1ère, 2 s avant 2e, 5 s avant 3e
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            Log($"Tentative de connexion {attempt}/{maxAttempts}...");
+
+            if (attempt > 1)
+            {
+                int waitMs = retryDelaysMs[attempt - 1];
+                int waitSec = waitMs / 1000;
+                Log($"   Attente de {waitSec} s avant la prochaine tentative...");
+                for (int s = waitSec; s > 0; s--)
+                {
+                    Thread.Sleep(1000);
+                    Log($"   {s} s...");
+                }
+            }
+
+            if (AttemptConnection())
+                return true;
+        }
+
+        Log("❌ Échec après 3 tentatives. Connexion impossible.");
+        Log("   → Vérifiez que MSFS 2024 est lancé et entièrement chargé (écran de vol ou menu).");
+        Log("   → Vous pouvez réessayer plus tard avec la touche [C].");
+        return false;
+    }
+
+    /// <summary>
+    /// Effectue une tentative de connexion SimConnect (création, attente RECV_OPEN, gestion erreurs).
+    /// </summary>
+    private bool AttemptConnection()
+    {
         try
         {
-            Log("Tentative de connexion à MSFS 2024...");
-            _simConnect = new SimConnect("MSFS Remote Buttons", IntPtr.Zero, WM_USER_SIMCONNECT, null, 0);
+            Log("   Connexion à Microsoft Flight Simulator 2024 en cours...");
 
-            // Callbacks
-            _simConnect.OnRecvOpen += OnRecvOpen;
-            _simConnect.OnRecvQuit += OnRecvQuit;
-            _simConnect.OnRecvException += OnRecvException;
-            _simConnect.OnRecvSimobjectData += OnRecvSimobjectData;
+            lock (_simConnectLock)
+            {
+                _simConnect = new SimConnect("MSFS Remote Buttons", IntPtr.Zero, WM_USER_SIMCONNECT, null, 0);
 
-            // Enregistrer la requête pour le titre de l'avion
-            _simConnect.AddToDataDefinition(
-                (DefineId)AIRCRAFT_TITLE_DEFINITION,
-                "TITLE",
-                null,
-                SIMCONNECT_DATATYPE.STRING256,
-                0,
-                SimConnect.SIMCONNECT_UNUSED
-            );
-            _simConnect.RegisterDataDefineStruct<AircraftTitleData>((DefineId)AIRCRAFT_TITLE_DEFINITION);
+                _simConnect.OnRecvOpen += OnRecvOpen;
+                _simConnect.OnRecvQuit += OnRecvQuit;
+                _simConnect.OnRecvException += OnRecvException;
+                _simConnect.OnRecvSimobjectData += OnRecvSimobjectData;
 
-            _isConnected = true;
-            Log("✅ Connecté à MSFS 2024");
-            ConnectionChanged?.Invoke(true);
+                _simConnect.AddToDataDefinition(
+                    (DefineId)AIRCRAFT_TITLE_DEFINITION,
+                    "TITLE",
+                    null,
+                    SIMCONNECT_DATATYPE.STRING256,
+                    0,
+                    SimConnect.SIMCONNECT_UNUSED
+                );
+                _simConnect.RegisterDataDefineStruct<AircraftTitleData>((DefineId)AIRCRAFT_TITLE_DEFINITION);
+            }
 
-            // Demander le titre de l'avion
-            RequestAircraftTitle();
+            Log("   En attente de la confirmation du simulateur (max. 10 s)...");
+
+            var timeout = TimeSpan.FromSeconds(10);
+            var startTime = DateTime.UtcNow;
+
+            while (!_isConnected && (DateTime.UtcNow - startTime) < timeout)
+            {
+                lock (_simConnectLock)
+                {
+                    _simConnect?.ReceiveMessage();
+                }
+                Thread.Sleep(10);
+            }
+
+            if (!_isConnected)
+            {
+                Log("   ❌ Le simulateur n'a pas répondu à temps.");
+                Log("   → Vérifiez que MSFS 2024 est bien lancé et entièrement chargé.");
+                lock (_simConnectLock)
+                {
+                    _simConnect?.Dispose();
+                    _simConnect = null;
+                }
+                return false;
+            }
 
             return true;
         }
         catch (COMException ex)
         {
-            Log($"❌ Erreur de connexion: {ex.Message}");
+            int hr = ex.HResult;
+            Log($"   ❌ Erreur (code 0x{hr:X8}) : {ex.Message}");
+
+            if (hr == unchecked((int)0x80004005))
+                Log("   → MSFS 2024 n'est probablement pas lancé. Lancez-le puis réessayez.");
+            else if (hr == unchecked((int)0x80070005))
+                Log("   → Accès refusé. Essayez « Exécuter en tant qu'administrateur ».");
+            else
+                Log("   → Vérifiez que MSFS 2024 est installé et à jour.");
+
             return false;
         }
     }
@@ -556,11 +620,21 @@ public class SimConnectService : IDisposable
     // ========================================================================
 
     /// <summary>
-    /// Callback: Connexion SimConnect établie
+    /// Callback: Connexion SimConnect confirmée par MSFS (RECV_OPEN).
+    /// C'est ici que l'état connecté est établi après la réponse du simulateur.
     /// </summary>
     private void OnRecvOpen(SimConnect sender, SIMCONNECT_RECV_OPEN data)
     {
-        Log($"   → MSFS: {data.szApplicationName}");
+        _isConnected = true;
+        Log("✅ Connexion réussie à Microsoft Flight Simulator 2024.");
+        Log($"   Application : {data.szApplicationName}");
+        Log($"   Version MSFS : {data.dwApplicationVersionMajor}.{data.dwApplicationVersionMinor} (build {data.dwApplicationBuildMajor}.{data.dwApplicationBuildMinor})");
+        Log($"   Version SimConnect : {data.dwSimConnectVersionMajor}.{data.dwSimConnectVersionMinor}");
+
+        ConnectionChanged?.Invoke(true);
+
+        // Demander le titre de l'avion une fois la connexion confirmée
+        RequestAircraftTitle();
     }
 
     /// <summary>
