@@ -1,6 +1,16 @@
-# MSFS Remote Buttons
+# MSFS 2024 Remote Buttons
 
-Telecommande web pour Microsoft Flight Simulator 2024. Permet de controler les systemes d'un avion depuis n'importe quel navigateur web sur le reseau local.
+**Interface web de contrôle pour Microsoft Flight Simulator 2024**
+
+---
+
+## 🤖 Pour les IA / Développeurs
+
+**IMPORTANT**: Avant toute modification du code, lire:
+- [**Instructions IA**](.github/AI_INSTRUCTIONS.md) - Règles critiques thread-safety
+- [**Conformité SimConnect SDK**](.github/SIMCONNECT_COMPLIANCE.md) - Documentation complète
+
+⚠️ **SimConnect n'est PAS thread-safe** - Tous les appels doivent être protégés par lock.
 
 ---
 
