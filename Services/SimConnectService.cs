@@ -195,6 +195,20 @@ public class SimConnectService : IDisposable
             return;
         }
 
+        // Gestion spéciale pour les events G1000 ALT (outer knob)
+        if (commandId == "alt_inc_1000")
+        {
+            SendEventByName("AS1000_ALTITUDE_OUTER_PFD_Inc", value: 1, momentary: false);
+            Log($"→ {commandId} (AS1000_ALTITUDE_OUTER_PFD_Inc)");
+            return;
+        }
+        else if (commandId == "alt_dec_1000")
+        {
+            SendEventByName("AS1000_ALTITUDE_OUTER_PFD_Dec", value: 1, momentary: false);
+            Log($"→ {commandId} (AS1000_ALTITUDE_OUTER_PFD_Dec)");
+            return;
+        }
+
         // Gestion spéciale pour les incréments multiples (HDG +/-10)
         int repeatCount = 1;
         string? actualCommandId = commandId;
