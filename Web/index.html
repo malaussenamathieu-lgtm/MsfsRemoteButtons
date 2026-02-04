@@ -137,49 +137,17 @@
                 // Special layout for AUTOPILOT with displays
                 if (category === 'AUTOPILOT') {
                     html += `<div class="autopilot-panel">`;
-                    // Displays row with control buttons - ABOVE buttons
+                    // Displays row - ABOVE buttons (displays only)
                     html += `<div class="displays-row">`;
                     html += `<div class="display-spacer"></div>`; // AP
                     html += `<div class="display-spacer"></div>`; // FD
-                    // SPD
-                    html += `<div class="display-column">
-                        <div class="display-box"><div class="display-label">SPD</div><div class="display-value" id="display-spd">---</div></div>
-                        <div class="control-buttons two-buttons">
-                            <button class="ctrl-btn" onclick="sendToggle('spd_dec')">-</button>
-                            <button class="ctrl-btn" onclick="sendToggle('spd_inc')">+</button>
-                        </div>
-                    </div>`;
-                    // HDG
-                    html += `<div class="display-column">
-                        <div class="display-box"><div class="display-label">HDG</div><div class="display-value" id="display-hdg">---</div></div>
-                        <div class="control-buttons">
-                            <button class="ctrl-btn" onclick="sendToggle('hdg_dec_10')">-10</button>
-                            <button class="ctrl-btn" onclick="sendToggle('hdg_inc_10')">+10</button>
-                            <button class="ctrl-btn" onclick="sendToggle('hdg_dec_1')">-1</button>
-                            <button class="ctrl-btn" onclick="sendToggle('hdg_inc_1')">+1</button>
-                        </div>
-                    </div>`;
-                    // ALT
-                    html += `<div class="display-column">
-                        <div class="display-box"><div class="display-label">ALT</div><div class="display-value" id="display-alt">-----</div></div>
-                        <div class="control-buttons">
-                            <button class="ctrl-btn" onclick="sendToggle('alt_dec_1000')">-1000</button>
-                            <button class="ctrl-btn" onclick="sendToggle('alt_inc_1000')">+1000</button>
-                            <button class="ctrl-btn" onclick="sendToggle('alt_dec_100')">-100</button>
-                            <button class="ctrl-btn" onclick="sendToggle('alt_inc_100')">+100</button>
-                        </div>
-                    </div>`;
+                    html += `<div class="display-box"><div class="display-label">SPD</div><div class="display-value" id="display-spd">---</div></div>`;
+                    html += `<div class="display-box"><div class="display-label">HDG</div><div class="display-value" id="display-hdg">---</div></div>`;
+                    html += `<div class="display-box"><div class="display-label">ALT</div><div class="display-value" id="display-alt">-----</div></div>`;
                     html += `<div class="display-spacer"></div>`; // NAV
                     html += `<div class="display-spacer"></div>`; // VNAV
                     html += `<div class="display-spacer"></div>`; // APR
-                    // VS
-                    html += `<div class="display-column">
-                        <div class="display-box"><div class="display-label">VS</div><div class="display-value" id="display-vs">----</div></div>
-                        <div class="control-buttons two-buttons">
-                            <button class="ctrl-btn" onclick="sendToggle('vs_dec')">DN</button>
-                            <button class="ctrl-btn" onclick="sendToggle('vs_inc')">UP</button>
-                        </div>
-                    </div>`;
+                    html += `<div class="display-box"><div class="display-label">VS</div><div class="display-value" id="display-vs">----</div></div>`;
                     html += `</div>`; // close displays-row
                 }
 
@@ -196,7 +164,24 @@
                 }
 
                 html += `</div>`; // close category-buttons
+
+                // Control buttons row - BELOW main buttons
                 if (category === 'AUTOPILOT') {
+                    html += `<div class="controls-row">`;
+                    html += `<div class="control-spacer"></div>`; // AP
+                    html += `<div class="control-spacer"></div>`; // FD
+                    // SPD controls
+                    html += `<div class="control-group"><button class="ctrl-btn" onclick="sendToggle('spd_dec')">−</button><button class="ctrl-btn" onclick="sendToggle('spd_inc')">+</button></div>`;
+                    // HDG controls (2x2 grid)
+                    html += `<div class="control-group grid-2x2"><button class="ctrl-btn" onclick="sendToggle('hdg_dec_10')">−10</button><button class="ctrl-btn" onclick="sendToggle('hdg_inc_10')">+10</button><button class="ctrl-btn" onclick="sendToggle('hdg_dec_1')">−1</button><button class="ctrl-btn" onclick="sendToggle('hdg_inc_1')">+1</button></div>`;
+                    // ALT controls (2x2 grid)
+                    html += `<div class="control-group grid-2x2"><button class="ctrl-btn" onclick="sendToggle('alt_dec_1000')">−1000</button><button class="ctrl-btn" onclick="sendToggle('alt_inc_1000')">+1000</button><button class="ctrl-btn" onclick="sendToggle('alt_dec_100')">−100</button><button class="ctrl-btn" onclick="sendToggle('alt_inc_100')">+100</button></div>`;
+                    html += `<div class="control-spacer"></div>`; // NAV
+                    html += `<div class="control-spacer"></div>`; // VNAV
+                    html += `<div class="control-spacer"></div>`; // APR
+                    // VS controls
+                    html += `<div class="control-group"><button class="ctrl-btn" onclick="sendToggle('vs_dec')">DN</button><button class="ctrl-btn" onclick="sendToggle('vs_inc')">UP</button></div>`;
+                    html += `</div>`; // close controls-row
                     html += `</div>`; // close autopilot-panel
                 }
                 html += `</div>`; // close category

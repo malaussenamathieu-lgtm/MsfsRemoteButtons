@@ -452,3 +452,39 @@ body {
     border-color: #00ff00;
     color: #fff;
 }
+
+/* Controls row - below autopilot buttons */
+.controls-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.control-spacer {
+    width: 70px;
+    min-width: 70px;
+}
+
+.control-group {
+    width: 70px;
+    min-width: 70px;
+    display: flex;
+    gap: 3px;
+}
+
+.control-group .ctrl-btn {
+    flex: 1;
+    padding: 6px 2px;
+    font-size: 0.7em;
+}
+
+.control-group.grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+}
+
+.control-group.grid-2x2 .ctrl-btn {
+    padding: 4px 1px;
+    font-size: 0.55em;
+}
