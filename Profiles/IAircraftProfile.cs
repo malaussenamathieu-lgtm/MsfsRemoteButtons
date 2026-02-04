@@ -30,7 +30,6 @@ public class AircraftCommand
     public string SimEvent { get; set; } = "";         // K:Event SimConnect pour toggle
     public string? SimEventOn { get; set; }            // K:Event pour "allumer" (optionnel)
     public string? SimEventOff { get; set; }           // K:Event pour "éteindre" (optionnel)
-    public string? InputEvent { get; set; }            // B:Event (Input Event MSFS 2024)
     public string? SimVar { get; set; }                // Variable SimConnect pour lire l'état
     public string? SimVarUnit { get; set; } = "Bool";  // Unité de la SimVar
     public string Category { get; set; } = "";         // Catégorie (Lights, Electrical, etc.)
@@ -40,7 +39,6 @@ public class AircraftCommand
     public List<SelectorOption>? SelectorOptions { get; set; }  // Options pour les sélecteurs
     public bool Hidden { get; set; } = false;          // Cacher de l'interface (lecture état uniquement)
     public bool IsMomentary { get; set; } = false;     // Press+release au lieu d'un seul press
-    public bool UseSimVarWrite { get; set; } = false;  // Écrire directement la SimVar
 }
 
 /// <summary>

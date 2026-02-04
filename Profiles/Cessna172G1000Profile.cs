@@ -252,18 +252,6 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
         new AircraftCommand
         {
-            Id = "ap_vnav",
-            Name = "VNV",
-            SimEvent = "AS1000_AUTOPILOT_VERTICAL_NAVIGATION_PFD_TOGGLE",
-            SimVar = "AUTOPILOT VERTICAL HOLD",
-            SimVarUnit = "Bool",
-            Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
-            ControlType = ControlType.Toggle
-        },
-        new AircraftCommand
-        {
             Id = "ap_apr",
             Name = "APR",
             SimEvent = "AP_APR_HOLD",
@@ -272,18 +260,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Category = "AUTOPILOT",
             Key = ConsoleKey.R,
             KeyDisplay = "R",
-            ControlType = ControlType.Toggle
-        },
-        new AircraftCommand
-        {
-            Id = "ap_bc",
-            Name = "BC",
-            SimEvent = "AS1000_AUTOPILOT_BACKCOURSE_PFD_TOGGLE",
-            SimVar = "AUTOPILOT BACKCOURSE HOLD",
-            SimVarUnit = "Bool",
-            Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
         new AircraftCommand

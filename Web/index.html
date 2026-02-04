@@ -145,9 +145,7 @@
                     html += `<div class="display-box"><div class="display-label">HDG</div><div class="display-value" id="display-hdg">---</div></div>`;
                     html += `<div class="display-box"><div class="display-label">ALT</div><div class="display-value" id="display-alt">-----</div></div>`;
                     html += `<div class="display-spacer"></div>`; // NAV
-                    html += `<div class="display-spacer"></div>`; // VNV
                     html += `<div class="display-spacer"></div>`; // APR
-                    html += `<div class="display-spacer"></div>`; // BC
                     html += `<div class="display-box"><div class="display-label">VS</div><div class="display-value" id="display-vs">----</div></div>`;
                     html += `</div>`; // close displays-row
                 }
@@ -178,9 +176,7 @@
                     // ALT controls (2x2 grid)
                     html += `<div class="control-group grid-2x2"><button class="ctrl-btn" onclick="sendToggle('alt_dec_1000')">−1000</button><button class="ctrl-btn" onclick="sendToggle('alt_inc_1000')">+1000</button><button class="ctrl-btn" onclick="sendToggle('alt_dec_100')">−100</button><button class="ctrl-btn" onclick="sendToggle('alt_inc_100')">+100</button></div>`;
                     html += `<div class="control-spacer"></div>`; // NAV
-                    html += `<div class="control-spacer"></div>`; // VNV
                     html += `<div class="control-spacer"></div>`; // APR
-                    html += `<div class="control-spacer"></div>`; // BC
                     // VS controls
                     html += `<div class="control-group"><button class="ctrl-btn" onclick="sendToggle('vs_dec')">DN</button><button class="ctrl-btn" onclick="sendToggle('vs_inc')">UP</button></div>`;
                     html += `</div>`; // close controls-row
