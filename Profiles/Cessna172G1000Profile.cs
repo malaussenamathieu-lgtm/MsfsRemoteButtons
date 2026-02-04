@@ -276,13 +276,14 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
 
         // Flight Director - Affiche les barres de guidage sur le PFD
+        // Action: B: event AS1000_AUTOPILOT_FD_PFD. Feedback LED: SimVar global AUTOPILOT FLIGHT DIRECTOR ACTIVE:1
         new AircraftCommand
         {
             Id = "ap_fd",
             Name = "FD",
             SimEvent = "TOGGLE_FLIGHT_DIRECTOR",
             InputEvent = "AS1000_AUTOPILOT_FD_PFD",
-            SimVar = "AUTOPILOT FLIGHT DIRECTOR ACTIVE",
+            SimVar = "AUTOPILOT FLIGHT DIRECTOR ACTIVE:1",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
             Key = ConsoleKey.D,

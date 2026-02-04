@@ -99,7 +99,7 @@
       "inputEvent": "AS1000_AUTOPILOT_FD_PFD",
       "inputEventHash": 0,
       "type": "toggle",
-      "simVar": "AUTOPILOT FLIGHT DIRECTOR ACTIVE",
+      "simVar": "AUTOPILOT FLIGHT DIRECTOR ACTIVE:1",
       "simVarUnit": "Bool"
     },
     {
