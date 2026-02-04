@@ -195,26 +195,14 @@ public class SimConnectService : IDisposable
             return;
         }
 
-        // Gestion spéciale pour les events G1000 ALT (outer knob)
-        if (commandId == "alt_inc_1000")
-        {
-            SendEventByName("AS1000_ALTITUDE_OUTER_PFD_Inc", value: 1, momentary: false);
-            Log($"→ {commandId} (AS1000_ALTITUDE_OUTER_PFD_Inc)");
-            return;
-        }
-        else if (commandId == "alt_dec_1000")
-        {
-            SendEventByName("AS1000_ALTITUDE_OUTER_PFD_Dec", value: 1, momentary: false);
-            Log($"→ {commandId} (AS1000_ALTITUDE_OUTER_PFD_Dec)");
-            return;
-        }
-
-        // Gestion spéciale pour les incréments multiples (HDG +/-10)
+        // Gestion spéciale pour les incréments multiples (HDG +/-10, ALT +/-1000)
         int repeatCount = 1;
         string? actualCommandId = commandId;
 
         if (commandId == "hdg_inc_10") { actualCommandId = "hdg_inc_1"; repeatCount = 10; }
         else if (commandId == "hdg_dec_10") { actualCommandId = "hdg_dec_1"; repeatCount = 10; }
+        else if (commandId == "alt_inc_1000") { actualCommandId = "alt_inc_100"; repeatCount = 10; }
+        else if (commandId == "alt_dec_1000") { actualCommandId = "alt_dec_100"; repeatCount = 10; }
 
         // Récupérer la commande
         var command = _activeProfile.Commands.FirstOrDefault(c => c.Id == actualCommandId);
@@ -226,7 +214,7 @@ public class SimConnectService : IDisposable
             ExecuteCommand(command, actualCommandId);
             if (repeatCount > 1 && i < repeatCount - 1)
             {
-                Thread.Sleep(20); // 20ms entre chaque event
+                Thread.Sleep(50); // 50ms entre chaque event
             }
         }
     }

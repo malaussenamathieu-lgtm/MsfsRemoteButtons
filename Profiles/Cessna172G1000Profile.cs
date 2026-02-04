@@ -22,7 +22,6 @@ public class Cessna172G1000Profile : IAircraftProfile
         "AUTOPILOT",
         "LUMIÈRES",
         "VOLETS",
-        "MOTEUR",
         "ÉLECTRIQUE",
     };
 
@@ -118,24 +117,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Key = ConsoleKey.A,
             KeyDisplay = "A",
             ControlType = ControlType.Toggle
-        },
-
-        // ============================================
-        // MOTEUR
-        // ============================================
-        new AircraftCommand
-        {
-            Id = "fuel_pump",
-            Name = "Fuel Pump",
-            SimEventOn = "FUELSYSTEM_PUMP_ON",
-            SimEventOff = "FUELSYSTEM_PUMP_OFF",
-            SimVar = "FUELSYSTEM PUMP SWITCH:1",
-            SimVarUnit = "Bool",
-            Category = "MOTEUR",
-            Key = ConsoleKey.P,
-            KeyDisplay = "P",
-            ControlType = ControlType.Toggle,
-            IsMomentary = true
         },
 
         // ============================================
@@ -387,7 +368,7 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "alt_inc_1000",
             Name = "ALT+1000",
-            SimEvent = "AS1000_ALTITUDE_OUTER_PFD_Inc",
+            SimEvent = "AP_ALT_VAR_INC",
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
@@ -398,7 +379,7 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "alt_dec_1000",
             Name = "ALT-1000",
-            SimEvent = "AS1000_ALTITUDE_OUTER_PFD_Dec",
+            SimEvent = "AP_ALT_VAR_DEC",
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
