@@ -118,6 +118,20 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "A",
             ControlType = ControlType.Toggle
         },
+        new AircraftCommand
+        {
+            Id = "fuel_pump",
+            Name = "Fuel Pump",
+            SimEventOn = "FUELSYSTEM_PUMP_ON",
+            SimEventOff = "FUELSYSTEM_PUMP_OFF",
+            SimVar = "FUELSYSTEM PUMP SWITCH:1",
+            SimVarUnit = "Bool",
+            Category = "ÉLECTRIQUE",
+            Key = ConsoleKey.P,
+            KeyDisplay = "P",
+            ControlType = ControlType.Toggle,
+            IsMomentary = true
+        },
 
         // ============================================
         // VOLETS (Sélecteur + boutons)
