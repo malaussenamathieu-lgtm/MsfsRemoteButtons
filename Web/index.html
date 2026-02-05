@@ -184,6 +184,11 @@
             for (const category of profile.categories) {
                 const commands = profile.commands.filter(c => c.category === category && !c.hidden);
                 if (commands.length === 0) continue;
+                
+                // Debug pour VOLETS
+                if (category === 'VOLETS') {
+                    console.log('[DEBUG] VOLETS commands:', commands.map(c => ({ id: c.id, subCategory: c.subCategory, hidden: c.hidden })));
+                }
 
                 html += `<div class="category" data-category="${category}">`;
                 html += `<div class="category-title">${category}</div>`;
@@ -215,41 +220,68 @@
                     html += `</div>`; // close category-buttons
                 }
 
-                // Special layout for INTERIOR LIGHTS with sections
-                if (category === 'INTERIOR LIGHTS') {
-                    html += `<div class="interior-lights-container">`;
-                    html += `<div class="interior-lights-section section-1">`;
-                    html += `<div class="interior-lights-section-title">DIMMING</div>`;
-                    html += `<div class="interior-lights-grid">`;
+                // Layout spécial pour LUMIÈRES : DIMMING (gauche) + LIGHTS (milieu) + CABIN (droite)
+                if (category === 'LUMIÈRES') {
+                    // Séparer les switches toggle (lumières extérieures) des potentiomètres
+                    const toggleCommands = commands.filter(c => c.controlType === 'toggle');
+                    const allPotentiometers = commands.filter(c => c.controlType === 'potentiometer');
                     
-                    // Rendre les 4 potentiomètres en 2x2
-                    const potentiometers = commands.filter(c => c.controlType === 'potentiometer');
-                    for (const cmd of potentiometers) {
-                        html += renderPotentiometer(cmd);
+                    // Séparer DIMMING (4 premiers) et CABIN (2 derniers)
+                    const dimmingIds = ['interior_panels', 'interior_stby_ind', 'interior_pedestal', 'interior_avionics'];
+                    const cabinIds = ['cabin_1', 'cabin_2'];
+                    const dimmingPotentiometers = allPotentiometers.filter(c => dimmingIds.includes(c.id));
+                    const cabinPotentiometers = allPotentiometers.filter(c => cabinIds.includes(c.id));
+                    
+                    // Conteneur flex pour placer DIMMING, LIGHTS et CABIN côte à côte
+                    html += `<div class="lights-wrapper">`;
+                    
+                    // Partie 1: DIMMING à gauche avec le même style de cadre blanc
+                    if (dimmingPotentiometers.length > 0) {
+                        html += `<div class="lights-container">`;
+                        html += `<div class="lights-title">DIMMING</div>`;
+                        html += `<div class="interior-lights-grid">`;
+                        
+                        // Rendre les 4 potentiomètres en 2x2
+                        for (const cmd of dimmingPotentiometers) {
+                            html += renderPotentiometer(cmd);
+                        }
+                        
+                        html += `</div>`; // close interior-lights-grid
+                        html += `</div>`; // close lights-container
                     }
                     
-                    html += `</div>`; // close interior-lights-grid
-                    html += `</div>`; // close section-1
-                    html += `</div>`; // close interior-lights-container
-                } else if (category === 'LUMIÈRES') {
-                    // Layout spécial pour LUMIÈRES : switches cylindriques dans un cadre avec titre
-                    html += `<div class="lights-wrapper">`;
+                    // Partie 2: LIGHTS au milieu avec switches cylindriques
                     html += `<div class="lights-container">`;
                     html += `<div class="lights-title">LIGHTS</div>`;
                     html += `<div class="lights-switches">`;
                     
                     // Ordre spécifique : BEACON, LAND, TAXI, NAV, STROBE
                     const lightsOrder = ['beacon', 'landing_light', 'taxi_light', 'nav_lights', 'strobe'];
-                    const lightsCommands = lightsOrder.map(id => commands.find(c => c.id === id)).filter(c => c);
+                    const lightsCommands = lightsOrder.map(id => toggleCommands.find(c => c.id === id)).filter(c => c);
                     
                     for (const cmd of lightsCommands) {
-                        if (cmd.controlType === 'toggle') {
-                            html += renderCylindricalSwitch(cmd, true); // true = pour les lumières
-                        }
+                        html += renderCylindricalSwitch(cmd, true); // true = pour les lumières
                     }
                     
                     html += `</div>`; // close lights-switches
                     html += `</div>`; // close lights-container
+                    
+                    // Partie 3: CABIN à droite avec le même style de cadre blanc
+                    if (cabinPotentiometers.length > 0) {
+                        html += `<div class="lights-container">`;
+                        html += `<div class="lights-title">CABIN</div>`;
+                        html += `<div class="interior-lights-grid">`;
+                        
+                        // Rendre les 2 potentiomètres avec la même largeur que DIMMING (grille 2 colonnes)
+                        // Les items occuperont seulement la première colonne, mais auront la même largeur
+                        for (const cmd of cabinPotentiometers) {
+                            html += renderPotentiometer(cmd);
+                        }
+                        
+                        html += `</div>`; // close interior-lights-grid
+                        html += `</div>`; // close lights-container
+                    }
+                    
                     html += `</div>`; // close lights-wrapper
                 } else if (category === 'ÉLECTRIQUE') {
                     // Layout spécial pour ÉLECTRIQUE : switches double-toggle côte à côte
@@ -295,6 +327,47 @@
                     }
                     
                     html += `</div>`; // close electrical-container
+                } else if (category === 'VOLETS') {
+                    // Layout spécial pour VOLETS : sélecteur de volets + frein de parking
+                    html += `<div class="volets-container">`;
+                    
+                    // Sélecteur de volets
+                    const flapsCmd = commands.find(c => c.id === 'flaps');
+                    if (flapsCmd) {
+                        html += renderSelector(flapsCmd);
+                    }
+                    
+                    // Boutons +/- pour les volets (cachés car intégrés dans le sélecteur)
+                    const flapsIncr = commands.find(c => c.id === 'flaps_incr');
+                    const flapsDecr = commands.find(c => c.id === 'flaps_decr');
+                    
+                    // Frein de parking (sous-catégorie ou par ID)
+                    // Chercher d'abord par subCategory, puis par ID
+                    let parkingBrakeCmd = commands.find(c => {
+                        if (c.subCategory && c.subCategory.toLowerCase() === 'parking brake') return true;
+                        if (c.id === 'parking_brake') return true;
+                        return false;
+                    });
+                    
+                    if (parkingBrakeCmd) {
+                        html += `<div class="parking-brake-section">`;
+                        html += renderRotatingHandle(parkingBrakeCmd);
+                        html += `</div>`; // close parking-brake-section
+                    }
+                    
+                    // Sélecteur de carburant (sous-catégorie)
+                    const fuelSelectorCmd = commands.find(c => 
+                        (c.subCategory && c.subCategory.toLowerCase() === 'fuel selector') || 
+                        c.id === 'fuel_selector'
+                    );
+                    
+                    if (fuelSelectorCmd) {
+                        html += `<div class="fuel-selector-section">`;
+                        html += renderFuelSelector(fuelSelectorCmd);
+                        html += `</div>`; // close fuel-selector-section
+                    }
+                    
+                    html += `</div>`; // close volets-container
                 } else if (category !== 'AUTOPILOT') {
                     // Layout normal pour les autres catégories (sauf AUTOPILOT qui a son propre layout)
                     html += `<div class="category-buttons">`;
@@ -518,19 +591,50 @@
                 `;
             }
 
-            // Special layout for flaps: vertical selector with +/- buttons on right
+            // Special layout for flaps: realistic vertical lever selector with +/- buttons
             if (cmd.id === 'flaps') {
+                const currentValue = states[cmd.id] || 0;
+                // Calculer la position du levier (0 = UP, 1 = 10°, 2 = 20°, 3 = FULL)
+                const leverPosition = Math.round(currentValue);
+                // Positions non-linéaires : 10° à 40%, 20° à 60%
+                // UP (0): top = 0% + 8px/184px ≈ 4.3% (un peu moins haut)
+                // 10° (1): top = 40% - 16px/184px ≈ 31.3%
+                // 20° (2): top = 60% - 16px/184px ≈ 51.3%
+                // FULL (3): top = 100% - 32px/184px ≈ 82.6%
+                const leverPercent = leverPosition === 0 ? 4.3 : leverPosition === 1 ? 31.3 : leverPosition === 2 ? 51.3 : 82.6;
+                
                 return `
-                    <div class="flaps-control" data-id="${cmd.id}">
-                        <span class="selector-label">${cmd.name}</span>
-                        <div class="flaps-content">
-                            <div class="selector-options">
-                                ${optionsHtml}
+                    <div class="flaps-control-realistic" data-id="${cmd.id}">
+                        <div class="flaps-title">WINGS FLAPS</div>
+                        <div class="flaps-mechanical-panel">
+                            <div class="flaps-track">
+                                <div class="flaps-speed-zone flaps-speed-110">110</div>
+                                <div class="flaps-speed-zone flaps-speed-85">85</div>
+                                <div class="flaps-markings">
+                                    <div class="flaps-marking flaps-marking-up">
+                                        <span class="flaps-label">UP</span>
+                                    </div>
+                                    <div class="flaps-marking flaps-marking-10">
+                                        <span class="flaps-angle">10°</span>
+                                    </div>
+                                    <div class="flaps-marking flaps-marking-20">
+                                        <span class="flaps-angle">20°</span>
+                                    </div>
+                                    <div class="flaps-marking flaps-marking-full">
+                                        <span class="flaps-label">FULL</span>
+                                    </div>
+                                </div>
+                                <div class="flaps-lever-track">
+                                    <div class="flaps-lever" style="top: ${leverPercent}%"></div>
+                                </div>
                             </div>
-                            <div class="flaps-buttons">
+                            <div class="flaps-control-buttons">
                                 <button class="flaps-btn" onclick="sendToggle('flaps_decr')">−</button>
                                 <button class="flaps-btn" onclick="sendToggle('flaps_incr')">+</button>
                             </div>
+                        </div>
+                        <div class="flaps-click-zones">
+                            ${optionsHtml}
                         </div>
                     </div>
                 `;
@@ -630,6 +734,77 @@
         }
 
         /**
+         * Génère le HTML pour une poignée rotative (frein de parking)
+         * @param {Object} cmd - AircraftCommand
+         */
+        function renderRotatingHandle(cmd) {
+            const state = states[cmd.id] || 0;
+            const isOn = state > 0.5;
+            // Rotation : 0° quand OFF (horizontal), -90° quand ON (anti-horaire vers le bas)
+            const rotation = isOn ? -90 : 0;
+            
+            return `
+                <div class="rotating-handle-container" data-id="${cmd.id}">
+                    <div class="rotating-handle-panel">
+                        <div class="rotating-handle-title">PARKING BRAKE</div>
+                        <div class="rotating-handle-wrapper">
+                            <div class="rotating-handle" 
+                                 style="transform-origin: calc(100% - 16.5px) center; transform: rotate(${rotation}deg);"
+                                 data-id="${cmd.id}"
+                                 onclick="sendToggle('${cmd.id}')">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Génère le HTML pour le sélecteur de carburant (3 positions)
+         * @param {Object} cmd - AircraftCommand
+         */
+        function renderFuelSelector(cmd) {
+            const currentValue = states[cmd.id] || 0;
+            const position = Math.round(currentValue);
+            // Positions : 0 = Gauche, 1 = Haut, 2 = Droite
+            // Axe de rotation au centre du cercle (poignée)
+            // Rotation pour pointer vers le haut quand position = 1 (180° depuis le bas)
+            // Utiliser des rotations positives (0-360) pour éviter les problèmes de chemin le plus court
+            // LEFT (0) = 90°, TOP (1) = 180°, RIGHT (2) = 270°
+            const rotationRaw = position === 0 ? 90 : position === 1 ? 180 : 270;
+            const rotation = rotationRaw; // Déjà positif (0-360)
+            
+            return `
+                <div class="fuel-selector-panel" data-id="${cmd.id}">
+                    <div class="rotating-handle-title">FUEL SELECTOR</div>
+                    <div class="fuel-selector-wrapper">
+                        <div class="fuel-selector-base">
+                            <div class="fuel-selector-lever" 
+                                 style="transform-origin: center 0px; transform: rotate(${rotation}deg);"
+                                 data-id="${cmd.id}"
+                                 data-current-rotation="${rotation}">
+                            </div>
+                            <div class="fuel-selector-labels">
+                                <div class="fuel-selector-label fuel-selector-left ${position === 0 ? 'active' : ''}" 
+                                     onclick="${cmd.options[0].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[0].simEvent}', 0)` : ''}">
+                                    LEFT
+                                </div>
+                                <div class="fuel-selector-label fuel-selector-top ${position === 1 ? 'active' : ''}" 
+                                     onclick="${cmd.options[1].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[1].simEvent}', 1)` : ''}">
+                                    TAKEOFF<br>LANDING
+                                </div>
+                                <div class="fuel-selector-label fuel-selector-right ${position === 2 ? 'active' : ''}" 
+                                     onclick="${cmd.options[2].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[2].simEvent}', 2)` : ''}">
+                                    RIGHT
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
          * Génère le HTML pour un Potentiometer (slider 0-100%)
          */
         function renderPotentiometer(cmd) {
@@ -710,14 +885,105 @@
             }
 
             // Selector options (including flaps-control)
-            const selector = document.querySelector(`.selector[data-id="${id}"], .flaps-control[data-id="${id}"]`);
+            const selector = document.querySelector(`.selector[data-id="${id}"], .flaps-control[data-id="${id}"], .flaps-control-realistic[data-id="${id}"]`);
             if (selector) {
-                const options = selector.querySelectorAll('.selector-option');
-                options.forEach(opt => {
-                    const optValue = parseFloat(opt.dataset.value);
-                    opt.classList.toggle('active', Math.abs(value - optValue) < 0.5);
-                });
+                // Mise à jour du levier pour le sélecteur réaliste
+                if (selector.classList.contains('flaps-control-realistic')) {
+                    const lever = selector.querySelector('.flaps-lever');
+                    const indicator = selector.querySelector('.flaps-indicator');
+                    const leverPosition = Math.round(value);
+                    // Positions non-linéaires : 10° à 40%, 20° à 60%
+                    // UP (0): un peu moins haut (4.3%)
+                    const leverPercent = leverPosition === 0 ? 4.3 : leverPosition === 1 ? 31.3 : leverPosition === 2 ? 51.3 : 82.6;
+                    
+                    if (lever) {
+                        lever.style.top = `${leverPercent}%`;
+                }
             }
+            
+            const options = selector.querySelectorAll('.selector-option');
+            options.forEach(opt => {
+                const optValue = parseFloat(opt.dataset.value);
+                opt.classList.toggle('active', Math.abs(value - optValue) < 0.5);
+            });
+        }
+
+        // Mise à jour de la poignée rotative (frein de parking)
+        const rotatingHandle = document.querySelector(`.rotating-handle[data-id="${id}"]`);
+        if (rotatingHandle) {
+            const isOn = value > 0.5;
+            const rotation = isOn ? -90 : 0; // Anti-horaire
+            rotatingHandle.style.transformOrigin = 'calc(100% - 16.5px) center'; // Centre du cercle gris clair
+            rotatingHandle.style.transform = `rotate(${rotation}deg)`;
+        }
+
+        // Mise à jour du sélecteur de carburant
+        const fuelSelector = document.querySelector(`.fuel-selector-panel[data-id="${id}"]`);
+        if (fuelSelector) {
+            const position = Math.round(value);
+            // Rotation pour pointer vers le haut quand position = 1 (180° depuis le bas)
+            // Positions: 0 = LEFT (90°), 1 = TOP (180°), 2 = RIGHT (270°)
+            const targetRotation = position === 0 ? 90 : position === 1 ? 180 : 270;
+            
+            const lever = fuelSelector.querySelector('.fuel-selector-lever');
+            if (lever) {
+                let currentRotation = parseFloat(lever.dataset.currentRotation || '0');
+                
+                // Normaliser la rotation actuelle entre 0 et 360
+                currentRotation = ((currentRotation % 360) + 360) % 360;
+                
+                // Déterminer le sens de rotation souhaité en fonction des positions
+                // Pour éviter que CSS choisisse le mauvais chemin (ex: 180° → 90° via 270°)
+                let finalRotation;
+                
+                // Cas spéciaux pour forcer le bon sens de rotation
+                if (currentRotation === 180 && targetRotation === 270) {
+                    // De haut (180°) à droite (270°) : forcer le chemin horaire direct
+                    finalRotation = 270;
+                } else if (currentRotation === 270 && targetRotation === 180) {
+                    // De droite (270°) à haut (180°) : forcer le chemin anti-horaire direct
+                    finalRotation = 180;
+                } else if (currentRotation === 180 && targetRotation === 90) {
+                    // De haut (180°) à gauche (90°) : forcer le chemin anti-horaire direct
+                    finalRotation = 90;
+                } else if (currentRotation === 90 && targetRotation === 180) {
+                    // De gauche (90°) à haut (180°) : forcer le chemin horaire direct
+                    finalRotation = 180;
+                } else if (currentRotation === 90 && targetRotation === 270) {
+                    // De gauche (90°) à droite (270°) : forcer le chemin horaire direct
+                    finalRotation = 270;
+                } else if (currentRotation === 270 && targetRotation === 90) {
+                    // De droite (270°) à gauche (90°) : forcer le chemin anti-horaire direct
+                    finalRotation = 90;
+                } else {
+                    // Pour les autres cas, utiliser le chemin le plus court
+                    let diffClockwise = targetRotation - currentRotation;
+                    if (diffClockwise < 0) diffClockwise += 360;
+                    
+                    let diffCounterClockwise = currentRotation - targetRotation;
+                    if (diffCounterClockwise < 0) diffCounterClockwise += 360;
+                    
+                    if (diffClockwise <= diffCounterClockwise) {
+                        finalRotation = currentRotation + diffClockwise;
+                    } else {
+                        finalRotation = currentRotation - diffCounterClockwise;
+                    }
+                }
+                
+                // Normaliser entre 0 et 360
+                finalRotation = ((finalRotation % 360) + 360) % 360;
+                
+                lever.dataset.currentRotation = finalRotation.toString();
+                lever.style.transformOrigin = 'center 0px'; // Centre du cercle noir
+                lever.style.transform = `rotate(${finalRotation}deg)`;
+            }
+            
+            // Mettre à jour les labels actifs
+            const labels = fuelSelector.querySelectorAll('.fuel-selector-label');
+            labels.forEach((label, index) => {
+                label.classList.toggle('active', index === position);
+            });
+        }
 
             // === AFFICHEURS AUTOPILOT ===
             // Ces IDs correspondent aux commandes "hidden" du profil

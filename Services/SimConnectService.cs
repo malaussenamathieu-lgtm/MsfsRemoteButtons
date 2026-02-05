@@ -424,13 +424,14 @@ public class SimConnectService : IDisposable
                 0, 0, 0
             );
 
-            // Mise à jour automatique toutes les frames visuelles (seulement sur changement)
-            // Cela évite le "pile up" de requêtes multiples
+            // Mise à jour automatique toutes les secondes (seulement sur changement)
+            // Note: SECOND au lieu de VISUAL_FRAME pour éviter le pileup - l'OAT ne change pas si rapidement
+            // Le flag CHANGED évite les notifications inutiles
             _simConnect.RequestDataOnSimObject(
                 (RequestId)ENVIRONMENT_DATA_REQUEST,
                 (DefineId)ENVIRONMENT_DATA_DEFINITION,
                 SimConnect.SIMCONNECT_OBJECT_ID_USER,
-                SIMCONNECT_PERIOD.VISUAL_FRAME,
+                SIMCONNECT_PERIOD.SECOND,
                 SIMCONNECT_DATA_REQUEST_FLAG.CHANGED,
                 0, 0, 0
             );
@@ -478,8 +479,10 @@ public class SimConnectService : IDisposable
         RegisterProfileSimVars();
 
         // B: EVENT: Énumérer les Input Events disponibles (nécessite Developer Mode dans MSFS)
+        // Note: Cette opération est asynchrone et ne bloque pas la connexion
         Log("🔍 Énumération des Input Events disponibles...");
         Log("   Commandes : K: events (toujours disponibles). B: events si Developer Mode activé dans MSFS.");
+        // L'énumération se fait en arrière-plan et n'attend pas la réponse
         EnumerateInputEvents();
 
         // LocalVars : initialiser l'état pour les commandes sans SimVar (avec protection)
@@ -836,7 +839,7 @@ public class SimConnectService : IDisposable
                 _simConnect.SetInputEvent(hash, value);
 
 #if DEBUG
-                Log($"[DEBUG] SetInputEvent: hash={hash} value={value}");
+                Console.WriteLine($"[DEBUG] SetInputEvent: hash={hash} value={value}");
 #endif
             }
             catch (COMException ex)
@@ -969,7 +972,10 @@ public class SimConnectService : IDisposable
                     _eventIds[command.Id] = eventId;
                     _simConnect.MapClientEventToSimEvent((EventId)eventId, command.SimEvent);
                 }
-                Log($"   ✓ {command.SimEvent} ({command.Id})");  // Log chaque événement mappé
+#if DEBUG
+                // Log seulement en mode DEBUG pour éviter le spam pendant le chargement
+                Log($"   ✓ {command.SimEvent} ({command.Id})");
+#endif
             }
             catch (COMException ex)
             {
@@ -991,6 +997,12 @@ public class SimConnectService : IDisposable
         }
 
         Log($"   → {_eventIds.Count} événements enregistrés");
+        
+        // Afficher un résumé si beaucoup d'events (pour éviter le spam de logs)
+        if (_eventIds.Count > 10)
+        {
+            Log($"   ℹ️ Les events sont prêts. Utilisez le mode DEBUG pour voir les détails.");
+        }
     }
 
     /// <summary>
@@ -1030,7 +1042,10 @@ public class SimConnectService : IDisposable
                     );
                     _simConnect.RegisterDataDefineStruct<SimVarData>((DefineId)defId);
 
+#if DEBUG
+                    // Log seulement en mode DEBUG pour éviter le spam pendant le chargement
                     Log($"   ✓ SimVar enregistrée: {command.SimVar} ({command.SimVarUnit ?? "Bool"}) → {command.Id} (defId={defId})");
+#endif
 
                     // Lecture initiale immédiate pour obtenir l'état actuel
                     _simConnect.RequestDataOnSimObject(
@@ -1075,6 +1090,12 @@ public class SimConnectService : IDisposable
         }
 
         Log($"   → {_simVarDefinitions.Count} SimVars enregistrées");
+        
+        // Afficher un résumé si beaucoup de SimVars (pour éviter le spam de logs)
+        if (_simVarDefinitions.Count > 10)
+        {
+            Log($"   ℹ️ Les SimVars sont prêtes. Utilisez le mode DEBUG pour voir les détails.");
+        }
         
         // Forcer une relecture de toutes les SimVars après un court délai
         // pour s'assurer que les valeurs initiales sont reçues
@@ -1397,8 +1418,14 @@ public class SimConnectService : IDisposable
     /// </summary>
     private void OnRecvSimobjectData(SimConnect sender, SIMCONNECT_RECV_SIMOBJECT_DATA data)
     {
-        // Log pour debug: voir tous les callbacks reçus
-        Log($"[DEBUG] OnRecvSimobjectData: RequestID={data.dwRequestID}");
+#if DEBUG
+        // Log pour debug: voir tous les callbacks reçus (seulement en mode DEBUG)
+        // Ne pas logger RequestID=2 (OAT) pour éviter le spam - il est déjà géré avec seuil
+        if (data.dwRequestID != ENVIRONMENT_DATA_REQUEST)
+        {
+            Console.WriteLine($"[DEBUG] OnRecvSimobjectData: RequestID={data.dwRequestID}");
+        }
+#endif
         
         // === CAS 1: Titre de l'avion ===
         if (data.dwRequestID == AIRCRAFT_TITLE_REQUEST)
@@ -1410,6 +1437,8 @@ public class SimConnectService : IDisposable
                 Log($"🛫 Avion détecté: {CurrentAircraftTitle}");
 
                 // Auto-détection du profil
+                // Note: SetProfile est appelé de manière synchrone pour garantir la cohérence de l'état
+                // mais les logs individuels sont réduits pour accélérer le chargement
                 var profile = ProfileManager.DetectProfile(CurrentAircraftTitle);
                 if (profile != null)
                 {
@@ -1432,9 +1461,14 @@ public class SimConnectService : IDisposable
             var envData = (EnvironmentData)data.dwData[0];
             var newOAT = envData.OutsideAirTemperature;
             
-            if (double.IsNaN(CurrentOAT) || Math.Abs(CurrentOAT - newOAT) > 0.1)
+            // Seuil de 0.5°C pour éviter les notifications dues aux petites variations de précision float
+            // L'OAT ne change pas si rapidement en vol réel
+            if (double.IsNaN(CurrentOAT) || Math.Abs(CurrentOAT - newOAT) > 0.5)
             {
                 CurrentOAT = newOAT;
+#if DEBUG
+                Console.WriteLine($"[DEBUG] OAT: {CurrentOAT:F1}°C");
+#endif
                 Task.Run(() => EnvironmentDataChanged?.Invoke(CurrentOAT));
             }
             return;
@@ -1454,19 +1488,21 @@ public class SimConnectService : IDisposable
                 if (Math.Abs(oldValue - simVarData.Value) > 0.001)
                 {
                     _buttonStates[commandId] = simVarData.Value;
-                    Log($"[DEBUG] SimVar {commandId}: {oldValue} → {simVarData.Value}");
+#if DEBUG
+                    Console.WriteLine($"[DEBUG] SimVar {commandId}: {oldValue} → {simVarData.Value}");
+#endif
                     Task.Run(() => StateChanged?.Invoke(commandId, simVarData.Value));  // Notifier l'interface web sans bloquer SimConnect
                 }
-                else
-                {
-                    Log($"[DEBUG] SimVar {commandId}: valeur inchangée ({simVarData.Value}), seuil non dépassé");
-                }
+                // Ne pas logger les valeurs inchangées pour éviter le pileup de logs
             }
         }
+#if DEBUG
         else
         {
-            Log($"[DEBUG] SimVar RequestId {requestId} non trouvé dans _simVarDefinitions");
+            // Log seulement en mode DEBUG pour éviter le spam
+            Console.WriteLine($"[DEBUG] SimVar RequestId {requestId} non trouvé dans _simVarDefinitions");
         }
+#endif
     }
 
     /// <summary>

@@ -298,6 +298,10 @@ body {
 /* Lights Wrapper - même padding que electrical-container */
 .lights-wrapper {
     padding: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    flex-wrap: wrap;
 }
 
 /* Lights Container */
@@ -667,10 +671,533 @@ body {
     box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
 }
 
+/* VOLETS RÉALISTE - Sélecteur mécanique avec levier vertical */
+.flaps-control-realistic {
+    background: rgba(45, 45, 45, 0.5);
+    border: 1px solid #fff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 200px;
+    height: 246px; /* Hauteur fixe identique au rotating-handle-panel */
+}
+
+.flaps-title {
+    font-size: 0.75em;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.flaps-mechanical-panel {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+    justify-content: center;
+}
+
+.flaps-track {
+    position: relative;
+    width: 120px;
+    height: 200px;
+    background: transparent;
+    border: none;
+    padding: 8px;
+    overflow: hidden;
+}
+
+/* Zone bleue de UP à 10° (vitesse 110) */
+.flaps-track::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    width: calc(100% - 16px);
+    height: 50%; /* Zone bleue jusqu'à 50% */
+    background: linear-gradient(180deg, #4a7ba7 0%, #3d6a95 100%);
+    z-index: 1;
+}
+
+/* Zone blanche de 10° à FULL (vitesse 85) */
+.flaps-track::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 50%; /* À partir de 50% */
+    width: calc(100% - 16px);
+    height: 50%; /* De 50% à FULL */
+    background: #ffffff;
+    z-index: 1;
+}
+
+.flaps-markings {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: 100%;
+    height: calc(100% - 16px);
+}
+
+.flaps-marking {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+}
+
+.flaps-marking-up {
+    top: 4px; /* Remonté un peu */
+    transform: translateY(0); /* Pas de translation vers le haut */
+    z-index: 2;
+    color: #fff;
+    right: 56px; /* Encore plus à gauche */
+    left: auto;
+    align-items: flex-end;
+}
+
+.flaps-marking-10 {
+    top: 40%; /* 10° à 40% */
+    transform: translateY(-50%);
+    z-index: 2;
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-marking-20 {
+    top: 60%; /* 20° à 60% */
+    transform: translateY(-50%);
+    z-index: 2;
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-marking-full {
+    bottom: 0;
+    transform: translateY(50%);
+    z-index: 2;
+    right: 56px; /* Encore plus à gauche */
+    left: auto;
+    align-items: flex-end;
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-marking-up .flaps-label {
+    background: transparent; /* Pas de fond, juste le texte blanc */
+    color: #fff;
+    padding: 0;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+
+/* Zones de vitesse alignées à gauche mais centrées verticalement */
+.flaps-speed-zone {
+    position: absolute;
+    left: 8px;
+    color: #fff;
+    font-size: 0.9em;
+    font-weight: bold;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 4px;
+}
+
+.flaps-speed-85 {
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-speed-110 {
+    top: 8px;
+    height: 50%; /* Zone bleue jusqu'à 50% */
+}
+
+.flaps-speed-85 {
+    top: 50%; /* À partir de 50% */
+    height: 50%; /* Zone blanche de 50% à FULL */
+}
+
+.flaps-marking-10 .flaps-angle {
+    background: transparent; /* Pas de fond, juste le texte noir */
+    color: #000;
+    padding: 0;
+    font-size: 0.65em;
+    font-weight: bold;
+}
+
+.flaps-marking-20 .flaps-angle {
+    background: transparent; /* Pas de fond, juste le texte noir */
+    color: #000;
+    padding: 0;
+    font-size: 0.65em;
+    font-weight: bold;
+}
+
+.flaps-marking-full .flaps-label {
+    background: transparent; /* Pas de fond, juste le texte noir */
+    color: #000;
+    padding: 0;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+
+
+.flaps-lever-track {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: 40px;
+    background: #1f1f1f;
+    border: 1px solid #555;
+    border-radius: 2px;
+    z-index: 2;
+}
+
+/* Ajuster la position des marquages 10° et 20° pour être juste à gauche du levier */
+.flaps-marking-10,
+.flaps-marking-20 {
+    right: 50px; /* Juste à gauche du track du levier (40px de largeur + 8px de padding + 2px d'espace) */
+    left: auto;
+    align-items: flex-end;
+}
+
+.flaps-lever {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 32px;
+    background: linear-gradient(135deg, #c0c0c0, #808080);
+    border: 2px solid #555;
+    border-radius: 3px;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.5),
+        0 0 0 1px #333;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    z-index: 10;
+    /* Position calculée pour centrer le levier sur les marquages */
+    /* UP (0%): top = 0% (le levier monte jusqu'en haut) */
+    /* 10° (40%): top = 40% - 16px/184px ≈ 31.3% */
+    /* 20° (60%): top = 60% - 16px/184px ≈ 51.3% */
+    /* FULL (100%): top = 100% - 32px/184px ≈ 82.6% */
+}
+
+.flaps-lever::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+    border-radius: 2px;
+}
+
+.flaps-indicator-strip {
+    display: none; /* Cacher l'indicateur numérique */
+}
+
+.flaps-indicator {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    color: #000;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    font-weight: bold;
+    border: 1px solid #333;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+    transform: translateY(-50%);
+}
+
+.flaps-control-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.flaps-control-realistic .flaps-btn {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flaps-click-zones {
+    display: none; /* Les zones cliquables sont cachées, on utilise les boutons +/- */
+}
+
 /* Hide default flaps +/- buttons rendered outside */
 .btn-momentary[data-id="flaps_decr"],
 .btn-momentary[data-id="flaps_incr"] {
     display: none;
+}
+
+/* Conteneur VOLETS */
+.volets-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end; /* Aligner les cadres en bas */
+    flex-wrap: wrap;
+}
+
+.parking-brake-section,
+.fuel-selector-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Poignée rotative pour le frein de parking */
+.rotating-handle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.rotating-handle-panel {
+    position: relative;
+    width: 180px;
+    /* Hauteur identique au flaps-control-realistic */
+    /* Structure flaps-control-realistic: padding (8px) + titre (~20px) + margin-bottom (10px) + track (200px) + padding (8px) = 246px */
+    /* Structure rotating-handle-panel: padding (8px) + titre (~20px) + margin-bottom (10px) + wrapper (flex:1) + padding (8px) */
+    /* Pour avoir la même hauteur totale, le wrapper doit faire 200px comme le track */
+    height: 246px; /* Hauteur fixe identique au flaps-control-realistic */
+    background: rgba(45, 45, 45, 0.5);
+    border: 1px solid #fff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0; /* Pas de gap, le margin-bottom du titre gère l'espacement */
+}
+
+.rotating-handle-title {
+    font-size: 0.75em;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 10px; /* Même margin-bottom que flaps-title */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.rotating-handle-wrapper {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: flex-start; /* Aligné en haut pour correspondre au padding du flaps-track */
+    justify-content: center;
+    padding-top: 0; /* Le padding est géré par le panneau */
+}
+
+.rotating-handle {
+    position: relative;
+    width: 150px; /* 50px * 3 */
+    height: 48px; /* 16px * 3 */
+    background: linear-gradient(135deg, #3a3a3a, #1a1a1a);
+    border: 2px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+    /* Point de rotation au centre du cercle gris clair (à droite) */
+    /* Le cercle est à right: 12px, donc son centre est à 12px + 4.5px (rayon) = 16.5px depuis la droite */
+    /* En pourcentage depuis la droite : (12px + 4.5px) / 150px ≈ 11% */
+    transform-origin: calc(100% - 16.5px) center; /* Centre du cercle gris clair */
+    transform: rotate(0deg);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.05),
+        0 4px 8px rgba(0, 0, 0, 0.6);
+    z-index: 10;
+    /* Style mat/texturé comme dans l'image */
+    background-image: 
+        repeating-linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.1) 0px,
+            transparent 2px,
+            transparent 4px,
+            rgba(0, 0, 0, 0.1) 6px
+        );
+}
+
+.rotating-handle::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent);
+    border-radius: 4px;
+}
+
+.rotating-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 12px; /* Position originale à droite */
+    width: 9px; /* 3px * 3 */
+    height: 9px; /* 3px * 3 */
+    background: #888;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.rotating-handle:hover {
+    background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
+}
+
+.rotating-handle:active {
+    transform-origin: calc(100% - 16.5px) center; /* Centre du cercle gris clair */
+    transform: rotate(-90deg) scale(0.98); /* Anti-horaire */
+}
+
+/* Sélecteur de carburant (3 positions) */
+.fuel-selector-panel {
+    position: relative;
+    width: 180px;
+    height: 246px; /* Même hauteur que les autres cadres */
+    background: rgba(45, 45, 45, 0.5);
+    border: 1px solid #fff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+}
+
+.fuel-selector-wrapper {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 0;
+}
+
+.fuel-selector-base {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10px;
+}
+
+.fuel-selector-lever {
+    position: absolute;
+    width: 8px;
+    height: 70px;
+    background: linear-gradient(135deg, #c0c0c0, #808080);
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    /* Axe de rotation au centre du cercle noir (poignée) */
+    /* Le cercle est à top: -8px et fait 16px de haut, donc son centre est à 0px du haut de la poignée */
+    transform-origin: center 0px;
+    transform: rotate(0deg);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+    box-shadow: 
+        inset 0 1px 2px rgba(255, 255, 255, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.5);
+    /* Position intermédiaire : entre le haut et le bas des boutons LEFT et RIGHT */
+    top: 80px;
+    left: 50%;
+    margin-left: -4px; /* Moitié de la largeur pour centrer */
+}
+
+.fuel-selector-lever::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
+    border: 2px solid #555;
+    border-radius: 50%;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.1),
+        0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.fuel-selector-labels {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+}
+
+.fuel-selector-label {
+    font-size: 0.65em;
+    color: #888;
+    text-align: center;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+    line-height: 1.2;
+}
+
+.fuel-selector-label:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.fuel-selector-label.active {
+    color: #fff;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.fuel-selector-left {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    margin-left: 5px;
+}
+
+.fuel-selector-top {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    align-self: start;
+    margin-top: -10px;
+    padding-top: 0;
+}
+
+.fuel-selector-right {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+    margin-right: 5px;
 }
 
 /* Loading */
