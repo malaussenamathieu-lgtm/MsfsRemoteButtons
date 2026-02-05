@@ -461,11 +461,20 @@ public class SimConnectService : IDisposable
         string? eventName = command.InputEvent;
         bool isToggleOnly = commandId.StartsWith("ap_", StringComparison.OrdinalIgnoreCase) ||
                            (eventName?.Contains("AS1000_AUTOPILOT", StringComparison.OrdinalIgnoreCase) ?? false);
+        bool isBreakerEvent = eventName?.Contains("BREAKER", StringComparison.OrdinalIgnoreCase) ?? false;
 
         if (isToggleOnly)
         {
             SetInputEvent(hash, 1.0);
             Log($"→ {commandId} (B: EVENT toggle: {eventName} = 1)");
+        }
+        else if (isBreakerEvent)
+        {
+            // Breaker events: 0 = ON, 1 = OFF (inverse de la logique normale)
+            double currentState = GetState(commandId);
+            double newValue = currentState > 0.5 ? 1.0 : 0.0; // Si ON → envoyer 1 (OFF), si OFF → envoyer 0 (ON)
+            SetInputEvent(hash, newValue);
+            Log($"→ {commandId} (B: BREAKER {eventName} = {newValue}, état={currentState})");
         }
         else
         {
