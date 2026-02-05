@@ -103,6 +103,20 @@ body {
     max-width: 120px;
 }
 
+/* Le wrapper toggle-wrapper doit se comporter comme un enfant direct */
+.category-buttons > .toggle-wrapper {
+    flex: 1 1 90px;
+    max-width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.category-buttons > .toggle-wrapper > .btn-toggle {
+    flex: 1;
+    width: 100%;
+}
+
 /* INTERIOR LIGHTS: Structure avec sections */
 .interior-lights-container {
     display: flex;
@@ -314,6 +328,15 @@ body {
     justify-content: center;
 }
 
+/* Cylindrical Switch Wrapper - pour contenir la LED d'avertissement OAT */
+.cylindrical-switch-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+}
+
 /* Cylindrical Switch (style cockpit) */
 .cylindrical-switch {
     display: flex;
@@ -414,6 +437,13 @@ body {
 
 .cylindrical-switch-lever:hover {
     opacity: 0.9;
+}
+
+.cylindrical-switch-state-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
 }
 
 .cylindrical-switch-state {
@@ -1062,4 +1092,56 @@ body {
 .potentiometer-slider::-moz-range-track {
     background: transparent;
     height: 8px;
+}
+
+/* OAT Warning LED - LED rouge sous le bouton pitot_heat quand OAT < 4.4°C */
+.toggle-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+/* S'assurer que le wrapper ne casse pas le layout dans autopilot */
+.autopilot-panel .category-buttons > .toggle-wrapper {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    flex: none;
+}
+
+.oat-warning-led {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+/* LED active (allumée) quand OAT < 4.4°C */
+.oat-warning-led.active {
+    background: #ff3333;
+    border: 1px solid #ff6666;
+    box-shadow: 0 0 8px #ff3333, 0 0 16px rgba(255, 51, 51, 0.5);
+    animation: pulse-red 1.5s ease-in-out infinite;
+}
+
+/* LED inactive (éteinte) quand OAT >= 4.4°C */
+.oat-warning-led.inactive {
+    background: #333333;
+    border: 1px solid #555555;
+    box-shadow: none;
+    animation: none;
+    opacity: 0.5;
+}
+
+@keyframes pulse-red {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 8px #ff3333, 0 0 16px rgba(255, 51, 51, 0.5);
+    }
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 12px #ff3333, 0 0 24px rgba(255, 51, 51, 0.7);
+    }
 }

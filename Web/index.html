@@ -58,6 +58,7 @@
         let profile = null;          // Profil d'avion actuel (commandes, catégories)
         let states = {};             // Cache des états: { commandId: valeur }
         let reconnectTimeout = null; // Timer pour reconnexion auto
+        let currentOAT = null;       // Température extérieure actuelle (OAT)
 
         // === ÉLÉMENTS DOM ===
         const controlsEl = document.getElementById('controls');
@@ -152,7 +153,9 @@
                 case 'environmentUpdate':
                     if (msg.data && msg.data.oat !== undefined) {
                         const oat = parseFloat(msg.data.oat);
+                        currentOAT = oat;
                         oatDisplayEl.textContent = `OAT: ${oat.toFixed(1)}°C`;
+                        updateOATWarningLED();
                     }
                     break;
 
@@ -445,6 +448,9 @@
             for (const [id, value] of Object.entries(states)) {
                 updateControlState(id, value);
             }
+
+            // Mettre à jour la LED d'avertissement OAT si l'OAT est déjà disponible
+            updateOATWarningLED();
         }
 
         /**
@@ -453,12 +459,41 @@
         function renderToggle(cmd) {
             const state = states[cmd.id] || 0;
             const stateClass = state > 0.5 ? 'on' : 'off';
+            
+            // LED rouge pour pitot_heat quand OAT < 4.4°C (éteinte par défaut)
+            const showOATWarning = cmd.id === 'pitot_heat' ? '<div class="oat-warning-led inactive" id="oat-warning-pitot"></div>' : '';
+            
             return `
-                <button class="btn-toggle ${stateClass}" data-id="${cmd.id}" onclick="sendToggle('${cmd.id}')">
-                    <div class="indicator"></div>
-                    <span class="label">${cmd.name}</span>
-                </button>
+                <div class="toggle-wrapper" data-toggle-id="${cmd.id}">
+                    <button class="btn-toggle ${stateClass}" data-id="${cmd.id}" onclick="sendToggle('${cmd.id}')">
+                        <div class="indicator"></div>
+                        <span class="label">${cmd.name}</span>
+                    </button>
+                    ${showOATWarning}
+                </div>
             `;
+        }
+
+        /**
+         * Met à jour la LED d'avertissement OAT sous le bouton pitot_heat
+         * La LED s'allume en rouge quand OAT < 4.4°C
+         */
+        function updateOATWarningLED() {
+            const ledEl = document.getElementById('oat-warning-pitot');
+            if (!ledEl) {
+                console.log('[DEBUG] OAT Warning LED: élément non trouvé');
+                return;
+            }
+            
+            console.log(`[DEBUG] OAT Warning LED: OAT=${currentOAT}, affichage=${currentOAT !== null && currentOAT < 4.4 ? 'OUI' : 'NON'}`);
+            
+            if (currentOAT !== null && currentOAT < 4.4) {
+                ledEl.classList.add('active');
+                ledEl.classList.remove('inactive');
+            } else {
+                ledEl.classList.remove('active');
+                ledEl.classList.add('inactive');
+            }
         }
 
         /**
@@ -571,17 +606,25 @@
             const leverColor = cmd.id === 'pitot_heat' ? 'green' : 'white';
             const indicatorClass = isOn ? (isLightSwitch ? 'on-indicator-light' : 'on-indicator') : '';
             
+            // LED rouge pour pitot_heat quand OAT < 4.4°C (éteinte par défaut)
+            const showOATWarning = cmd.id === 'pitot_heat' ? '<div class="oat-warning-led inactive" id="oat-warning-pitot"></div>' : '';
+            
             return `
-                <div class="cylindrical-switch" data-id="${cmd.id}">
-                    <div class="cylindrical-switch-label">${cmd.name}</div>
-                    <div class="cylindrical-switch-lever-wrapper">
-                        <div class="cylindrical-switch-bezel ${indicatorClass}">
-                            <div class="cylindrical-switch-lever ${leverColor} ${isOn ? 'on' : 'off'}" 
-                                 data-id="${cmd.id}">
+                <div class="cylindrical-switch-wrapper" data-switch-id="${cmd.id}">
+                    <div class="cylindrical-switch" data-id="${cmd.id}">
+                        <div class="cylindrical-switch-label">${cmd.name}</div>
+                        <div class="cylindrical-switch-lever-wrapper">
+                            <div class="cylindrical-switch-bezel ${indicatorClass}">
+                                <div class="cylindrical-switch-lever ${leverColor} ${isOn ? 'on' : 'off'}" 
+                                     data-id="${cmd.id}">
+                                </div>
                             </div>
                         </div>
+                        <div class="cylindrical-switch-state-wrapper">
+                            <div class="cylindrical-switch-state">OFF</div>
+                            ${showOATWarning}
+                        </div>
                     </div>
-                    <div class="cylindrical-switch-state">${isOn ? 'ON' : 'OFF'}</div>
                 </div>
             `;
         }
@@ -661,9 +704,9 @@
                         bezel.classList.add(isLightSwitch ? 'on-indicator-light' : 'on-indicator');
                     }
                 }
-                if (stateLabel) {
-                    stateLabel.textContent = isOn ? 'ON' : 'OFF';
-                }
+                // Le texte reste toujours "OFF" comme dans l'avion réel
+                // L'état est indiqué uniquement par la position du levier
+                // Pas de modification du texte stateLabel
             }
 
             // Selector options (including flaps-control)
