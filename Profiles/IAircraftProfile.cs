@@ -7,7 +7,8 @@ public enum ControlType
 {
     Toggle,      // Bouton ON/OFF simple
     Selector,    // Sélecteur multi-positions (ex: magnetos)
-    Momentary    // Bouton poussoir (appui momentané)
+    Momentary,   // Bouton poussoir (appui momentané)
+    Potentiometer // 0-100% gradual control
 }
 
 /// <summary>
