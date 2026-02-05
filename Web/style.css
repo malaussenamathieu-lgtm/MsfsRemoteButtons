@@ -680,6 +680,7 @@ body {
     flex-direction: column;
     align-items: center;
     min-width: 200px;
+    height: 246px; /* Hauteur fixe identique au rotating-handle-panel */
 }
 
 .flaps-title {
@@ -945,6 +946,127 @@ body {
 .btn-momentary[data-id="flaps_decr"],
 .btn-momentary[data-id="flaps_incr"] {
     display: none;
+}
+
+/* Conteneur VOLETS */
+.volets-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end; /* Aligner les cadres en bas */
+    flex-wrap: wrap;
+}
+
+.parking-brake-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Poignée rotative pour le frein de parking */
+.rotating-handle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.rotating-handle-panel {
+    position: relative;
+    width: 180px;
+    /* Hauteur identique au flaps-control-realistic */
+    /* Structure flaps-control-realistic: padding (8px) + titre (~20px) + margin-bottom (10px) + track (200px) + padding (8px) = 246px */
+    /* Structure rotating-handle-panel: padding (8px) + titre (~20px) + margin-bottom (10px) + wrapper (flex:1) + padding (8px) */
+    /* Pour avoir la même hauteur totale, le wrapper doit faire 200px comme le track */
+    height: 246px; /* Hauteur fixe identique au flaps-control-realistic */
+    background: rgba(45, 45, 45, 0.5);
+    border: 1px solid #fff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0; /* Pas de gap, le margin-bottom du titre gère l'espacement */
+}
+
+.rotating-handle-title {
+    font-size: 0.75em;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 10px; /* Même margin-bottom que flaps-title */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.rotating-handle-wrapper {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: flex-start; /* Aligné en haut pour correspondre au padding du flaps-track */
+    justify-content: center;
+    padding-top: 0; /* Le padding est géré par le panneau */
+}
+
+.rotating-handle {
+    position: relative;
+    width: 150px; /* 50px * 3 */
+    height: 48px; /* 16px * 3 */
+    background: linear-gradient(135deg, #3a3a3a, #1a1a1a);
+    border: 2px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+    /* Point de rotation au centre du cercle gris clair (à droite) */
+    /* Le cercle est à right: 12px, donc son centre est à 12px + 4.5px (rayon) = 16.5px depuis la droite */
+    /* En pourcentage depuis la droite : (12px + 4.5px) / 150px ≈ 11% */
+    transform-origin: calc(100% - 16.5px) center; /* Centre du cercle gris clair */
+    transform: rotate(0deg);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.05),
+        0 4px 8px rgba(0, 0, 0, 0.6);
+    z-index: 10;
+    /* Style mat/texturé comme dans l'image */
+    background-image: 
+        repeating-linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.1) 0px,
+            transparent 2px,
+            transparent 4px,
+            rgba(0, 0, 0, 0.1) 6px
+        );
+}
+
+.rotating-handle::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent);
+    border-radius: 4px;
+}
+
+.rotating-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 12px; /* Position originale à droite */
+    width: 9px; /* 3px * 3 */
+    height: 9px; /* 3px * 3 */
+    background: #888;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.rotating-handle:hover {
+    background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
+}
+
+.rotating-handle:active {
+    transform-origin: calc(100% - 16.5px) center; /* Centre du cercle gris clair */
+    transform: rotate(-90deg) scale(0.98); /* Anti-horaire */
 }
 
 /* Loading */

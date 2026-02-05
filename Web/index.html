@@ -184,6 +184,11 @@
             for (const category of profile.categories) {
                 const commands = profile.commands.filter(c => c.category === category && !c.hidden);
                 if (commands.length === 0) continue;
+                
+                // Debug pour VOLETS
+                if (category === 'VOLETS') {
+                    console.log('[DEBUG] VOLETS commands:', commands.map(c => ({ id: c.id, subCategory: c.subCategory, hidden: c.hidden })));
+                }
 
                 html += `<div class="category" data-category="${category}">`;
                 html += `<div class="category-title">${category}</div>`;
@@ -322,6 +327,35 @@
                     }
                     
                     html += `</div>`; // close electrical-container
+                } else if (category === 'VOLETS') {
+                    // Layout spécial pour VOLETS : sélecteur de volets + frein de parking
+                    html += `<div class="volets-container">`;
+                    
+                    // Sélecteur de volets
+                    const flapsCmd = commands.find(c => c.id === 'flaps');
+                    if (flapsCmd) {
+                        html += renderSelector(flapsCmd);
+                    }
+                    
+                    // Boutons +/- pour les volets (cachés car intégrés dans le sélecteur)
+                    const flapsIncr = commands.find(c => c.id === 'flaps_incr');
+                    const flapsDecr = commands.find(c => c.id === 'flaps_decr');
+                    
+                    // Frein de parking (sous-catégorie ou par ID)
+                    // Chercher d'abord par subCategory, puis par ID
+                    let parkingBrakeCmd = commands.find(c => {
+                        if (c.subCategory && c.subCategory.toLowerCase() === 'parking brake') return true;
+                        if (c.id === 'parking_brake') return true;
+                        return false;
+                    });
+                    
+                    if (parkingBrakeCmd) {
+                        html += `<div class="parking-brake-section">`;
+                        html += renderRotatingHandle(parkingBrakeCmd);
+                        html += `</div>`; // close parking-brake-section
+                    }
+                    
+                    html += `</div>`; // close volets-container
                 } else if (category !== 'AUTOPILOT') {
                     // Layout normal pour les autres catégories (sauf AUTOPILOT qui a son propre layout)
                     html += `<div class="category-buttons">`;
@@ -688,6 +722,32 @@
         }
 
         /**
+         * Génère le HTML pour une poignée rotative (frein de parking)
+         * @param {Object} cmd - AircraftCommand
+         */
+        function renderRotatingHandle(cmd) {
+            const state = states[cmd.id] || 0;
+            const isOn = state > 0.5;
+            // Rotation : 0° quand OFF (horizontal), -90° quand ON (anti-horaire vers le bas)
+            const rotation = isOn ? -90 : 0;
+            
+            return `
+                <div class="rotating-handle-container" data-id="${cmd.id}">
+                    <div class="rotating-handle-panel">
+                        <div class="rotating-handle-title">PARKING BRAKE</div>
+                        <div class="rotating-handle-wrapper">
+                            <div class="rotating-handle" 
+                                 style="transform-origin: calc(100% - 16.5px) center; transform: rotate(${rotation}deg);"
+                                 data-id="${cmd.id}"
+                                 onclick="sendToggle('${cmd.id}')">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
          * Génère le HTML pour un Potentiometer (slider 0-100%)
          */
         function renderPotentiometer(cmd) {
@@ -781,15 +841,24 @@
                     
                     if (lever) {
                         lever.style.top = `${leverPercent}%`;
-                    }
                 }
-                
-                const options = selector.querySelectorAll('.selector-option');
-                options.forEach(opt => {
-                    const optValue = parseFloat(opt.dataset.value);
-                    opt.classList.toggle('active', Math.abs(value - optValue) < 0.5);
-                });
             }
+            
+            const options = selector.querySelectorAll('.selector-option');
+            options.forEach(opt => {
+                const optValue = parseFloat(opt.dataset.value);
+                opt.classList.toggle('active', Math.abs(value - optValue) < 0.5);
+            });
+        }
+
+        // Mise à jour de la poignée rotative (frein de parking)
+        const rotatingHandle = document.querySelector(`.rotating-handle[data-id="${id}"]`);
+        if (rotatingHandle) {
+            const isOn = value > 0.5;
+            const rotation = isOn ? -90 : 0; // Anti-horaire
+            rotatingHandle.style.transformOrigin = 'calc(100% - 16.5px) center'; // Centre du cercle gris clair
+            rotatingHandle.style.transform = `rotate(${rotation}deg)`;
+        }
 
             // === AFFICHEURS AUTOPILOT ===
             // Ces IDs correspondent aux commandes "hidden" du profil

@@ -328,6 +328,44 @@ public class Cessna172G1000Profile : IAircraftProfile
             Hidden = false
         },
 
+        // CABIN (Potentiomètres éclairage cabine)
+        // ============================================
+        // 2 potentiomètres pour l'éclairage de la cabine
+        // Layout: 1 colonne x 2 lignes
+        // ============================================
+
+        // CABIN LEFT
+        new AircraftCommand
+        {
+            Id = "cabin_1",
+            Name = "CABIN LEFT",
+            SimVar = null,
+            SimVarUnit = null,
+            InputEvent = "LIGHTING_CABIN_1",
+            InputEventHash = 9884642386677037074UL,
+            Category = "LUMIÈRES",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Potentiometer,
+            Hidden = false
+        },
+
+        // CABIN RIGHT
+        new AircraftCommand
+        {
+            Id = "cabin_2",
+            Name = "CABIN RIGHT",
+            SimVar = null,
+            SimVarUnit = null,
+            InputEvent = "LIGHTING_CABIN_2",
+            InputEventHash = 5637503832156611495UL,
+            Category = "LUMIÈRES",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Potentiometer,
+            Hidden = false
+        },
+
         // ============================================
         // VOLETS (Sélecteur + boutons)
         // ============================================
@@ -378,6 +416,23 @@ public class Cessna172G1000Profile : IAircraftProfile
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
             ControlType = ControlType.Momentary
+        },
+
+        // Frein de parking
+        new AircraftCommand
+        {
+            Id = "parking_brake",
+            Name = "Parking Brake",
+            SimEvent = "PARKING_BRAKE",
+            InputEvent = "LANDING_GEAR_PARKINGBRAKE",
+            InputEventHash = 0x7A6EA9FCD6091E2D,
+            SimVar = "BRAKE PARKING POSITION",
+            SimVarUnit = "Bool",
+            Category = "VOLETS",
+            SubCategory = "parking brake",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
         },
 
         // ============================================

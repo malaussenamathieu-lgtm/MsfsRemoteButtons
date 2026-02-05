@@ -42,6 +42,7 @@ public class AircraftCommand
     /// <summary>Hash de l'Input Event B: (optionnel). Si 0 ou null, résolu à l'exécution via EnumerateInputEvents.</summary>
     public ulong? InputEventHash { get; set; }
     public string Category { get; set; } = "";         // Catégorie (Lights, Electrical, etc.)
+    public string? SubCategory { get; set; }            // Sous-catégorie (optionnel)
     public ConsoleKey Key { get; set; }                // Touche clavier (pour mode console)
     public string KeyDisplay { get; set; } = "";       // Affichage de la touche
     public ControlType ControlType { get; set; } = ControlType.Toggle;
