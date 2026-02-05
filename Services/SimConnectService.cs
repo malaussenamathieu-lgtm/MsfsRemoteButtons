@@ -430,13 +430,13 @@ public class SimConnectService : IDisposable
     private void SendInputEventCommand(string commandId, AircraftCommand command, ulong hash)
     {
         string? eventName = command.InputEvent;
-        bool isAS1000Toggle = commandId.StartsWith("ap_", StringComparison.OrdinalIgnoreCase) ||
-                              (eventName?.Contains("AS1000_AUTOPILOT", StringComparison.OrdinalIgnoreCase) ?? false);
+        bool isToggleOnly = commandId.StartsWith("ap_", StringComparison.OrdinalIgnoreCase) ||
+                           (eventName?.Contains("AS1000_AUTOPILOT", StringComparison.OrdinalIgnoreCase) ?? false);
 
-        if (isAS1000Toggle)
+        if (isToggleOnly)
         {
             SetInputEvent(hash, 1.0);
-            Log($"→ {commandId} (B: EVENT AS1000: {eventName} = 1)");
+            Log($"→ {commandId} (B: EVENT toggle: {eventName} = 1)");
         }
         else
         {

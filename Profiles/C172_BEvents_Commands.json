@@ -56,11 +56,10 @@
       "id": "master_battery",
       "name": "Battery",
       "category": "ÉLECTRIQUE",
-      "inputEvent": "ELECTRICAL_BATTERY_1",
-      "inputEventHash": 0,
       "type": "toggle",
       "simVar": "ELECTRICAL MASTER BATTERY",
-      "simVarUnit": "Bool"
+      "simVarUnit": "Bool",
+      "_note": "Uses K: TOGGLE_MASTER_BATTERY only - B: event does not update SimVar, LED would not update"
     },
     {
       "id": "master_alternator",
@@ -70,6 +69,26 @@
       "inputEventHash": 0,
       "type": "toggle",
       "simVar": "GENERAL ENG MASTER ALTERNATOR:1",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "avionics_bus_1",
+      "name": "Avionics Bus 1",
+      "category": "ÉLECTRIQUE",
+      "inputEvent": "ELECTRICAL_LINE_BUS_1_TO_AVIONICS_BUS_1",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "LINE CONNECTION ON:'BUS_1_To_AVIONICS_BUS_1'_n",
+      "simVarUnit": "Bool"
+    },
+    {
+      "id": "avionics_bus_2",
+      "name": "Avionics Bus 2",
+      "category": "ÉLECTRIQUE",
+      "inputEvent": "ELECTRICAL_LINE_BUS_2_TO_AVIONICS_BUS_2",
+      "inputEventHash": 0,
+      "type": "toggle",
+      "simVar": "LINE CONNECTION ON:'BUS_2_To_AVIONICS_BUS_2'_n",
       "simVarUnit": "Bool"
     },
     {
