@@ -183,6 +183,20 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle
         },
 
+        // Chauffe-sonde Pitot - évite le givrage
+        new AircraftCommand
+        {
+            Id = "pitot_heat",
+            Name = "Pitot Heat",
+            SimEvent = "TOGGLE_PITOT_HEATER",
+            SimVar = "PITOT HEAT SWITCH:1",
+            SimVarUnit = "Bool",
+            Category = "ÉLECTRIQUE",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
+        },
+
         // Pompe à carburant électrique - Pour amorçage et secours
         // B: FUEL_PUMP_1 ou K: SimEventOn/Off (press+release)
         new AircraftCommand
