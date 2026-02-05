@@ -24,19 +24,42 @@ body {
     margin: 0 auto;
 }
 
-/* Header */
+/* Header - 2 lignes */
 .header {
     text-align: center;
-    padding: 12px;
+    padding: 10px 12px;
     background: #333333;
     border: 1px solid #444;
     margin-bottom: 15px;
 }
 
+.header-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.header-line-1 {
+    margin-bottom: 6px;
+}
+
+.header-line-2 {
+    font-size: 0.85em;
+    color: #ccc;
+    gap: 20px;
+}
+
+.header-line-2 .aircraft-name {
+    font-weight: 600;
+    color: #00ff00;
+}
+
 .header h1 {
     font-size: 1.1em;
     color: #00ff00;
-    margin-bottom: 5px;
+    margin: 0;
     font-weight: normal;
     letter-spacing: 2px;
 }

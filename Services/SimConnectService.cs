@@ -839,6 +839,13 @@ public class SimConnectService : IDisposable
                 }
             }
         }
+        // === CAS 3: Fallback si l'event n'est pas dans _eventIds ===
+        // Utiliser SendEventByName directement avec command.SimEvent
+        else if (!string.IsNullOrEmpty(command.SimEvent))
+        {
+            SendEventByName(command.SimEvent, value: 0, momentary: command.IsMomentary);
+            RefreshSimVarForCommand(commandId);  // Forcer la relecture de l'état
+        }
     }
 
     /// <summary>

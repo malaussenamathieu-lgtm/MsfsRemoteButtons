@@ -604,6 +604,8 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "ap_flc",
             Name = "FLC",
+            InputEvent = "AS1000_AUTOPILOT_FLIGHTLEVELCHANGE_PFD",
+            InputEventHash = 14970840394202116082UL, // 0xCFC31C05057C6FF2
             SimEvent = "FLIGHT_LEVEL_CHANGE",
             SimVar = "AUTOPILOT FLIGHT LEVEL CHANGE",
             SimVarUnit = "Bool",
