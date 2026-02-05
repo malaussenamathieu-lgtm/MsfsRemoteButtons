@@ -215,23 +215,29 @@
                     html += `</div>`; // close category-buttons
                 }
 
-                // Layout spécial pour LUMIÈRES : DIMMING à gauche + LIGHTS à droite
+                // Layout spécial pour LUMIÈRES : DIMMING (gauche) + LIGHTS (milieu) + CABIN (droite)
                 if (category === 'LUMIÈRES') {
-                    // Séparer les switches toggle (lumières extérieures) des potentiomètres (DIMMING)
+                    // Séparer les switches toggle (lumières extérieures) des potentiomètres
                     const toggleCommands = commands.filter(c => c.controlType === 'toggle');
-                    const potentiometers = commands.filter(c => c.controlType === 'potentiometer');
+                    const allPotentiometers = commands.filter(c => c.controlType === 'potentiometer');
                     
-                    // Conteneur flex pour placer DIMMING et LIGHTS côte à côte
+                    // Séparer DIMMING (4 premiers) et CABIN (2 derniers)
+                    const dimmingIds = ['interior_panels', 'interior_stby_ind', 'interior_pedestal', 'interior_avionics'];
+                    const cabinIds = ['cabin_1', 'cabin_2'];
+                    const dimmingPotentiometers = allPotentiometers.filter(c => dimmingIds.includes(c.id));
+                    const cabinPotentiometers = allPotentiometers.filter(c => cabinIds.includes(c.id));
+                    
+                    // Conteneur flex pour placer DIMMING, LIGHTS et CABIN côte à côte
                     html += `<div class="lights-wrapper">`;
                     
                     // Partie 1: DIMMING à gauche avec le même style de cadre blanc
-                    if (potentiometers.length > 0) {
+                    if (dimmingPotentiometers.length > 0) {
                         html += `<div class="lights-container">`;
                         html += `<div class="lights-title">DIMMING</div>`;
                         html += `<div class="interior-lights-grid">`;
                         
                         // Rendre les 4 potentiomètres en 2x2
-                        for (const cmd of potentiometers) {
+                        for (const cmd of dimmingPotentiometers) {
                             html += renderPotentiometer(cmd);
                         }
                         
@@ -239,7 +245,7 @@
                         html += `</div>`; // close lights-container
                     }
                     
-                    // Partie 2: LIGHTS à droite avec switches cylindriques
+                    // Partie 2: LIGHTS au milieu avec switches cylindriques
                     html += `<div class="lights-container">`;
                     html += `<div class="lights-title">LIGHTS</div>`;
                     html += `<div class="lights-switches">`;
@@ -254,6 +260,23 @@
                     
                     html += `</div>`; // close lights-switches
                     html += `</div>`; // close lights-container
+                    
+                    // Partie 3: CABIN à droite avec le même style de cadre blanc
+                    if (cabinPotentiometers.length > 0) {
+                        html += `<div class="lights-container">`;
+                        html += `<div class="lights-title">CABIN</div>`;
+                        html += `<div class="interior-lights-grid">`;
+                        
+                        // Rendre les 2 potentiomètres avec la même largeur que DIMMING (grille 2 colonnes)
+                        // Les items occuperont seulement la première colonne, mais auront la même largeur
+                        for (const cmd of cabinPotentiometers) {
+                            html += renderPotentiometer(cmd);
+                        }
+                        
+                        html += `</div>`; // close interior-lights-grid
+                        html += `</div>`; // close lights-container
+                    }
+                    
                     html += `</div>`; // close lights-wrapper
                 } else if (category === 'ÉLECTRIQUE') {
                     // Layout spécial pour ÉLECTRIQUE : switches double-toggle côte à côte
@@ -522,19 +545,50 @@
                 `;
             }
 
-            // Special layout for flaps: vertical selector with +/- buttons on right
+            // Special layout for flaps: realistic vertical lever selector with +/- buttons
             if (cmd.id === 'flaps') {
+                const currentValue = states[cmd.id] || 0;
+                // Calculer la position du levier (0 = UP, 1 = 10°, 2 = 20°, 3 = FULL)
+                const leverPosition = Math.round(currentValue);
+                // Positions non-linéaires : 10° à 40%, 20° à 60%
+                // UP (0): top = 0% + 8px/184px ≈ 4.3% (un peu moins haut)
+                // 10° (1): top = 40% - 16px/184px ≈ 31.3%
+                // 20° (2): top = 60% - 16px/184px ≈ 51.3%
+                // FULL (3): top = 100% - 32px/184px ≈ 82.6%
+                const leverPercent = leverPosition === 0 ? 4.3 : leverPosition === 1 ? 31.3 : leverPosition === 2 ? 51.3 : 82.6;
+                
                 return `
-                    <div class="flaps-control" data-id="${cmd.id}">
-                        <span class="selector-label">${cmd.name}</span>
-                        <div class="flaps-content">
-                            <div class="selector-options">
-                                ${optionsHtml}
+                    <div class="flaps-control-realistic" data-id="${cmd.id}">
+                        <div class="flaps-title">WINGS FLAPS</div>
+                        <div class="flaps-mechanical-panel">
+                            <div class="flaps-track">
+                                <div class="flaps-speed-zone flaps-speed-110">110</div>
+                                <div class="flaps-speed-zone flaps-speed-85">85</div>
+                                <div class="flaps-markings">
+                                    <div class="flaps-marking flaps-marking-up">
+                                        <span class="flaps-label">UP</span>
+                                    </div>
+                                    <div class="flaps-marking flaps-marking-10">
+                                        <span class="flaps-angle">10°</span>
+                                    </div>
+                                    <div class="flaps-marking flaps-marking-20">
+                                        <span class="flaps-angle">20°</span>
+                                    </div>
+                                    <div class="flaps-marking flaps-marking-full">
+                                        <span class="flaps-label">FULL</span>
+                                    </div>
+                                </div>
+                                <div class="flaps-lever-track">
+                                    <div class="flaps-lever" style="top: ${leverPercent}%"></div>
+                                </div>
                             </div>
-                            <div class="flaps-buttons">
+                            <div class="flaps-control-buttons">
                                 <button class="flaps-btn" onclick="sendToggle('flaps_decr')">−</button>
                                 <button class="flaps-btn" onclick="sendToggle('flaps_incr')">+</button>
                             </div>
+                        </div>
+                        <div class="flaps-click-zones">
+                            ${optionsHtml}
                         </div>
                     </div>
                 `;
@@ -714,8 +768,22 @@
             }
 
             // Selector options (including flaps-control)
-            const selector = document.querySelector(`.selector[data-id="${id}"], .flaps-control[data-id="${id}"]`);
+            const selector = document.querySelector(`.selector[data-id="${id}"], .flaps-control[data-id="${id}"], .flaps-control-realistic[data-id="${id}"]`);
             if (selector) {
+                // Mise à jour du levier pour le sélecteur réaliste
+                if (selector.classList.contains('flaps-control-realistic')) {
+                    const lever = selector.querySelector('.flaps-lever');
+                    const indicator = selector.querySelector('.flaps-indicator');
+                    const leverPosition = Math.round(value);
+                    // Positions non-linéaires : 10° à 40%, 20° à 60%
+                    // UP (0): un peu moins haut (4.3%)
+                    const leverPercent = leverPosition === 0 ? 4.3 : leverPosition === 1 ? 31.3 : leverPosition === 2 ? 51.3 : 82.6;
+                    
+                    if (lever) {
+                        lever.style.top = `${leverPercent}%`;
+                    }
+                }
+                
                 const options = selector.querySelectorAll('.selector-option');
                 options.forEach(opt => {
                     const optValue = parseFloat(opt.dataset.value);

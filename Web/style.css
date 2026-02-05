@@ -671,6 +671,276 @@ body {
     box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
 }
 
+/* VOLETS RÉALISTE - Sélecteur mécanique avec levier vertical */
+.flaps-control-realistic {
+    background: rgba(45, 45, 45, 0.5);
+    border: 1px solid #fff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 200px;
+}
+
+.flaps-title {
+    font-size: 0.75em;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.flaps-mechanical-panel {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+    justify-content: center;
+}
+
+.flaps-track {
+    position: relative;
+    width: 120px;
+    height: 200px;
+    background: transparent;
+    border: none;
+    padding: 8px;
+    overflow: hidden;
+}
+
+/* Zone bleue de UP à 10° (vitesse 110) */
+.flaps-track::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    width: calc(100% - 16px);
+    height: 50%; /* Zone bleue jusqu'à 50% */
+    background: linear-gradient(180deg, #4a7ba7 0%, #3d6a95 100%);
+    z-index: 1;
+}
+
+/* Zone blanche de 10° à FULL (vitesse 85) */
+.flaps-track::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 50%; /* À partir de 50% */
+    width: calc(100% - 16px);
+    height: 50%; /* De 50% à FULL */
+    background: #ffffff;
+    z-index: 1;
+}
+
+.flaps-markings {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: 100%;
+    height: calc(100% - 16px);
+}
+
+.flaps-marking {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+}
+
+.flaps-marking-up {
+    top: 4px; /* Remonté un peu */
+    transform: translateY(0); /* Pas de translation vers le haut */
+    z-index: 2;
+    color: #fff;
+    right: 56px; /* Encore plus à gauche */
+    left: auto;
+    align-items: flex-end;
+}
+
+.flaps-marking-10 {
+    top: 40%; /* 10° à 40% */
+    transform: translateY(-50%);
+    z-index: 2;
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-marking-20 {
+    top: 60%; /* 20° à 60% */
+    transform: translateY(-50%);
+    z-index: 2;
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-marking-full {
+    bottom: 0;
+    transform: translateY(50%);
+    z-index: 2;
+    right: 56px; /* Encore plus à gauche */
+    left: auto;
+    align-items: flex-end;
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-marking-up .flaps-label {
+    background: transparent; /* Pas de fond, juste le texte blanc */
+    color: #fff;
+    padding: 0;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+
+/* Zones de vitesse alignées à gauche mais centrées verticalement */
+.flaps-speed-zone {
+    position: absolute;
+    left: 8px;
+    color: #fff;
+    font-size: 0.9em;
+    font-weight: bold;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 4px;
+}
+
+.flaps-speed-85 {
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-speed-110 {
+    top: 8px;
+    height: 50%; /* Zone bleue jusqu'à 50% */
+}
+
+.flaps-speed-85 {
+    top: 50%; /* À partir de 50% */
+    height: 50%; /* Zone blanche de 50% à FULL */
+}
+
+.flaps-marking-10 .flaps-angle {
+    background: transparent; /* Pas de fond, juste le texte noir */
+    color: #000;
+    padding: 0;
+    font-size: 0.65em;
+    font-weight: bold;
+}
+
+.flaps-marking-20 .flaps-angle {
+    background: transparent; /* Pas de fond, juste le texte noir */
+    color: #000;
+    padding: 0;
+    font-size: 0.65em;
+    font-weight: bold;
+}
+
+.flaps-marking-full .flaps-label {
+    background: transparent; /* Pas de fond, juste le texte noir */
+    color: #000;
+    padding: 0;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+
+
+.flaps-lever-track {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: 40px;
+    background: #1f1f1f;
+    border: 1px solid #555;
+    border-radius: 2px;
+    z-index: 2;
+}
+
+/* Ajuster la position des marquages 10° et 20° pour être juste à gauche du levier */
+.flaps-marking-10,
+.flaps-marking-20 {
+    right: 50px; /* Juste à gauche du track du levier (40px de largeur + 8px de padding + 2px d'espace) */
+    left: auto;
+    align-items: flex-end;
+}
+
+.flaps-lever {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 32px;
+    background: linear-gradient(135deg, #c0c0c0, #808080);
+    border: 2px solid #555;
+    border-radius: 3px;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.5),
+        0 0 0 1px #333;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    z-index: 10;
+    /* Position calculée pour centrer le levier sur les marquages */
+    /* UP (0%): top = 0% (le levier monte jusqu'en haut) */
+    /* 10° (40%): top = 40% - 16px/184px ≈ 31.3% */
+    /* 20° (60%): top = 60% - 16px/184px ≈ 51.3% */
+    /* FULL (100%): top = 100% - 32px/184px ≈ 82.6% */
+}
+
+.flaps-lever::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+    border-radius: 2px;
+}
+
+.flaps-indicator-strip {
+    display: none; /* Cacher l'indicateur numérique */
+}
+
+.flaps-indicator {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    color: #000;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    font-weight: bold;
+    border: 1px solid #333;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+    transform: translateY(-50%);
+}
+
+.flaps-control-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.flaps-control-realistic .flaps-btn {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flaps-click-zones {
+    display: none; /* Les zones cliquables sont cachées, on utilise les boutons +/- */
+}
+
 /* Hide default flaps +/- buttons rendered outside */
 .btn-momentary[data-id="flaps_decr"],
 .btn-momentary[data-id="flaps_incr"] {
