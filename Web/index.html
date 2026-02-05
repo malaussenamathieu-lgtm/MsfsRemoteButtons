@@ -355,6 +355,18 @@
                         html += `</div>`; // close parking-brake-section
                     }
                     
+                    // Sélecteur de carburant (sous-catégorie)
+                    const fuelSelectorCmd = commands.find(c => 
+                        (c.subCategory && c.subCategory.toLowerCase() === 'fuel selector') || 
+                        c.id === 'fuel_selector'
+                    );
+                    
+                    if (fuelSelectorCmd) {
+                        html += `<div class="fuel-selector-section">`;
+                        html += renderFuelSelector(fuelSelectorCmd);
+                        html += `</div>`; // close fuel-selector-section
+                    }
+                    
                     html += `</div>`; // close volets-container
                 } else if (category !== 'AUTOPILOT') {
                     // Layout normal pour les autres catégories (sauf AUTOPILOT qui a son propre layout)
@@ -748,6 +760,51 @@
         }
 
         /**
+         * Génère le HTML pour le sélecteur de carburant (3 positions)
+         * @param {Object} cmd - AircraftCommand
+         */
+        function renderFuelSelector(cmd) {
+            const currentValue = states[cmd.id] || 0;
+            const position = Math.round(currentValue);
+            // Positions : 0 = Gauche, 1 = Haut, 2 = Droite
+            // Axe de rotation au centre du cercle (poignée)
+            // Rotation pour pointer vers le haut quand position = 1 (180° depuis le bas)
+            // Utiliser des rotations positives (0-360) pour éviter les problèmes de chemin le plus court
+            // LEFT (0) = 90°, TOP (1) = 180°, RIGHT (2) = 270°
+            const rotationRaw = position === 0 ? 90 : position === 1 ? 180 : 270;
+            const rotation = rotationRaw; // Déjà positif (0-360)
+            
+            return `
+                <div class="fuel-selector-panel" data-id="${cmd.id}">
+                    <div class="rotating-handle-title">FUEL SELECTOR</div>
+                    <div class="fuel-selector-wrapper">
+                        <div class="fuel-selector-base">
+                            <div class="fuel-selector-lever" 
+                                 style="transform-origin: center 0px; transform: rotate(${rotation}deg);"
+                                 data-id="${cmd.id}"
+                                 data-current-rotation="${rotation}">
+                            </div>
+                            <div class="fuel-selector-labels">
+                                <div class="fuel-selector-label fuel-selector-left ${position === 0 ? 'active' : ''}" 
+                                     onclick="${cmd.options[0].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[0].simEvent}', 0)` : ''}">
+                                    LEFT
+                                </div>
+                                <div class="fuel-selector-label fuel-selector-top ${position === 1 ? 'active' : ''}" 
+                                     onclick="${cmd.options[1].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[1].simEvent}', 1)` : ''}">
+                                    TAKEOFF<br>LANDING
+                                </div>
+                                <div class="fuel-selector-label fuel-selector-right ${position === 2 ? 'active' : ''}" 
+                                     onclick="${cmd.options[2].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[2].simEvent}', 2)` : ''}">
+                                    RIGHT
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
          * Génère le HTML pour un Potentiometer (slider 0-100%)
          */
         function renderPotentiometer(cmd) {
@@ -858,6 +915,74 @@
             const rotation = isOn ? -90 : 0; // Anti-horaire
             rotatingHandle.style.transformOrigin = 'calc(100% - 16.5px) center'; // Centre du cercle gris clair
             rotatingHandle.style.transform = `rotate(${rotation}deg)`;
+        }
+
+        // Mise à jour du sélecteur de carburant
+        const fuelSelector = document.querySelector(`.fuel-selector-panel[data-id="${id}"]`);
+        if (fuelSelector) {
+            const position = Math.round(value);
+            // Rotation pour pointer vers le haut quand position = 1 (180° depuis le bas)
+            // Positions: 0 = LEFT (90°), 1 = TOP (180°), 2 = RIGHT (270°)
+            const targetRotation = position === 0 ? 90 : position === 1 ? 180 : 270;
+            
+            const lever = fuelSelector.querySelector('.fuel-selector-lever');
+            if (lever) {
+                let currentRotation = parseFloat(lever.dataset.currentRotation || '0');
+                
+                // Normaliser la rotation actuelle entre 0 et 360
+                currentRotation = ((currentRotation % 360) + 360) % 360;
+                
+                // Déterminer le sens de rotation souhaité en fonction des positions
+                // Pour éviter que CSS choisisse le mauvais chemin (ex: 180° → 90° via 270°)
+                let finalRotation;
+                
+                // Cas spéciaux pour forcer le bon sens de rotation
+                if (currentRotation === 180 && targetRotation === 270) {
+                    // De haut (180°) à droite (270°) : forcer le chemin horaire direct
+                    finalRotation = 270;
+                } else if (currentRotation === 270 && targetRotation === 180) {
+                    // De droite (270°) à haut (180°) : forcer le chemin anti-horaire direct
+                    finalRotation = 180;
+                } else if (currentRotation === 180 && targetRotation === 90) {
+                    // De haut (180°) à gauche (90°) : forcer le chemin anti-horaire direct
+                    finalRotation = 90;
+                } else if (currentRotation === 90 && targetRotation === 180) {
+                    // De gauche (90°) à haut (180°) : forcer le chemin horaire direct
+                    finalRotation = 180;
+                } else if (currentRotation === 90 && targetRotation === 270) {
+                    // De gauche (90°) à droite (270°) : forcer le chemin horaire direct
+                    finalRotation = 270;
+                } else if (currentRotation === 270 && targetRotation === 90) {
+                    // De droite (270°) à gauche (90°) : forcer le chemin anti-horaire direct
+                    finalRotation = 90;
+                } else {
+                    // Pour les autres cas, utiliser le chemin le plus court
+                    let diffClockwise = targetRotation - currentRotation;
+                    if (diffClockwise < 0) diffClockwise += 360;
+                    
+                    let diffCounterClockwise = currentRotation - targetRotation;
+                    if (diffCounterClockwise < 0) diffCounterClockwise += 360;
+                    
+                    if (diffClockwise <= diffCounterClockwise) {
+                        finalRotation = currentRotation + diffClockwise;
+                    } else {
+                        finalRotation = currentRotation - diffCounterClockwise;
+                    }
+                }
+                
+                // Normaliser entre 0 et 360
+                finalRotation = ((finalRotation % 360) + 360) % 360;
+                
+                lever.dataset.currentRotation = finalRotation.toString();
+                lever.style.transformOrigin = 'center 0px'; // Centre du cercle noir
+                lever.style.transform = `rotate(${finalRotation}deg)`;
+            }
+            
+            // Mettre à jour les labels actifs
+            const labels = fuelSelector.querySelectorAll('.fuel-selector-label');
+            labels.forEach((label, index) => {
+                label.classList.toggle('active', index === position);
+            });
         }
 
             // === AFFICHEURS AUTOPILOT ===
