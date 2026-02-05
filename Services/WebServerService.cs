@@ -130,10 +130,6 @@ public class WebServerService : IDisposable
     /// </summary>
     private void OnStateChanged(string commandId, double value)
     {
-#if DEBUG
-        // Log seulement en mode DEBUG pour éviter le pileup de messages
-        Console.WriteLine($"[DEBUG] WebServer: Envoi état {commandId} = {value}");
-#endif
         Broadcast(new WsMessage
         {
             Type = "state",
@@ -229,7 +225,6 @@ public class WebServerService : IDisposable
 
 /// <summary>
 /// Module WebSocket pour la communication temps réel avec les clients
-///
 /// Messages reçus (client → serveur):
 /// - { type: "command", data: { id: "nav_lights" } }          → Exécuter une commande
 /// - { type: "command", data: { id: "flaps", simEvent: "FLAPS_2", value: 2 } } → Sélecteur
@@ -333,7 +328,6 @@ public class SimConnectWebSocket : WebSocketModule
 
             if (cmd != null)
             {
-                Console.WriteLine($"[DEBUG] WebServer: Received command id={cmd.Id}, simEvent={cmd.SimEvent}, value={cmd.Value}");
                 _simConnect.SendCommand(cmd.Id, cmd.SimEvent, cmd.Value);
             }
         }

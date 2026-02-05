@@ -43,8 +43,6 @@ public class AircraftCommand
     public ulong? InputEventHash { get; set; }
     public string Category { get; set; } = "";         // Catégorie (Lights, Electrical, etc.)
     public string? SubCategory { get; set; }            // Sous-catégorie (optionnel)
-    public ConsoleKey Key { get; set; }                // Touche clavier (pour mode console)
-    public string KeyDisplay { get; set; } = "";       // Affichage de la touche
     public ControlType ControlType { get; set; } = ControlType.Toggle;
     public List<SelectorOption>? SelectorOptions { get; set; }  // Options pour les sélecteurs
     public bool Hidden { get; set; } = false;          // Cacher de l'interface (lecture état uniquement)

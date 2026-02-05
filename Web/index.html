@@ -205,10 +205,6 @@
                 const commands = profile.commands.filter(c => c.category === category && !c.hidden);
                 if (commands.length === 0) continue;
                 
-                // Debug pour VOLETS
-                if (category === 'VOLETS') {
-                    console.log('[DEBUG] VOLETS commands:', commands.map(c => ({ id: c.id, subCategory: c.subCategory, hidden: c.hidden })));
-                }
 
                 html += `<div class="category" data-category="${category}">`;
                 html += `<div class="category-title">${category}</div>`;
@@ -415,10 +411,7 @@
                         } else if (cmd.controlType === 'momentary') {
                             html += renderMomentary(cmd);
                         } else if (cmd.controlType === 'potentiometer') {
-                            console.log(`[DEBUG] Rendering potentiometer: ${cmd.id} (${cmd.name})`);
                             html += renderPotentiometer(cmd);
-                        } else {
-                            console.log(`[DEBUG] Unknown controlType: ${cmd.controlType} for ${cmd.id}`);
                         }
                     }
 
@@ -478,7 +471,6 @@
                     
                     // Envoi de commande seulement si la valeur a changé
                     if (lastSentValue !== value) {
-                        console.log(`[DEBUG] Potentiometer ${cmdId}: sending value ${value} during drag`);
                         sendPotentiometer(cmdId, value);
                         lastSentValue = value;
                     }
@@ -531,7 +523,6 @@
                     const value = parseInt(e.target.value);
                     // Envoyer seulement si la valeur finale est différente de la dernière envoyée
                     if (lastSentValue !== value) {
-                        console.log(`[DEBUG] Potentiometer ${cmdId}: sending final value ${value}`);
                         sendPotentiometer(cmdId, value);
                         lastSentValue = value;
                     }
@@ -1168,19 +1159,9 @@
                 const fillBar = potentiometer.querySelector('.potentiometer-fill');
                 const slider = potentiometer.querySelector('.potentiometer-slider');
                 
-                console.log(`[DEBUG] Potentiometer ${id}: updating to ${percentValue}%`);
-                
                 if (valueLabel) valueLabel.textContent = `${percentValue}%`;
                 if (fillBar) fillBar.style.width = `${percentValue}%`;
                 if (slider) slider.value = percentValue;
-            } else {
-                // Debug: vérifier si l'élément existe avec un autre sélecteur
-                const altSelector = document.querySelector(`[data-cmd-id="${id}"]`);
-                if (altSelector) {
-                    console.log(`[DEBUG] Potentiometer ${id}: found element but not .potentiometer-control`, altSelector);
-                } else {
-                    console.log(`[DEBUG] Potentiometer ${id}: element not found`);
-                }
             }
         }
 
@@ -1231,15 +1212,13 @@
          */
         function sendPotentiometer(id, value) {
             if (!ws || ws.readyState !== WebSocket.OPEN) {
-                console.log(`[DEBUG] Potentiometer ${id}: WebSocket not ready, state=${ws?.readyState}`);
                 return;
             }
-
+            
             const message = {
                 type: 'command',
                 data: { id: id, value: value }
             };
-            console.log(`[DEBUG] Potentiometer ${id}: sending command`, message);
             ws.send(JSON.stringify(message));
         }
 

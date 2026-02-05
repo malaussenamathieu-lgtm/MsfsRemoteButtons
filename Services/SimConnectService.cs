@@ -559,44 +559,27 @@ public class SimConnectService : IDisposable
         // L'énumération se fait en arrière-plan et n'attend pas la réponse
         EnumerateInputEvents();
 
-        // LocalVars : initialiser l'état pour les commandes sans SimVar (avec protection)
-        // NOTE: Désactivé temporairement au chargement pour éviter les crashes SimConnect
-        // Les LocalVars seront lues à la demande via RefreshSimVarForCommand
-        // foreach (var cmd in _activeProfile.Commands)
+        // LocalVars : désactivé - ExecuteCalculatorCode non disponible dans MSFS 2024 SimConnect.dll
+        // Les LocalVars seront lues à la demande via RefreshSimVarForCommand si nécessaire
+
+        // Export SimEvents désactivé (non souhaité)
+        // try
         // {
-        //     if (string.IsNullOrEmpty(cmd.SimVar) && !string.IsNullOrEmpty(cmd.LocalVar))
+        //     profile.ExportSimEventsToFile();
+        //     Log($"📄 SimEvents exportés");
+        // }
+        // catch (Exception ex)
+        // {
+        //     Log($"❌ Erreur export SimEvents: {ex.GetType().Name} - {ex.Message}");
+        //     if (ex is UnauthorizedAccessException)
         //     {
-        //         try
-        //         {
-        //             RefreshLocalVarState(cmd.Id, cmd.LocalVar, cmd.LocalVarUnit);
-        //         }
-        //         catch (Exception ex)
-        //         {
-        //             Log($"⚠️ Erreur lecture LVar {cmd.LocalVar}: {ex.Message}");
-        //         }
+        //         Log("   → Permissions insuffisantes pour écrire le fichier");
+        //     }
+        //     else if (ex is IOException)
+        //     {
+        //         Log("   → Erreur d'accès au fichier - vérifier les permissions du répertoire");
         //     }
         // }
-
-        // Exporter les SimEvents après le chargement du profil
-        try
-        {
-            profile.ExportSimEventsToFile();
-            Log($"📄 SimEvents exportés");
-        }
-        catch (Exception ex)
-        {
-            // Erreur lors de l'export SimEvents
-            Log($"❌ Erreur export SimEvents: {ex.GetType().Name} - {ex.Message}");
-            
-            if (ex is UnauthorizedAccessException)
-            {
-                Log("   → Permissions insuffisantes pour écrire le fichier");
-            }
-            else if (ex is IOException)
-            {
-                Log("   → Erreur d'accès au fichier - vérifier les permissions du répertoire");
-            }
-        }
 
         Log($"✈️ Profil chargé: {profile.AircraftName}");
 
@@ -929,9 +912,6 @@ public class SimConnectService : IDisposable
             {
                 _simConnect.SetInputEvent(hash, value);
 
-#if DEBUG
-                Console.WriteLine($"[DEBUG] SetInputEvent: hash={hash} value={value}");
-#endif
             }
             catch (COMException ex)
             {
@@ -1512,14 +1492,6 @@ public class SimConnectService : IDisposable
     /// </summary>
     private void OnRecvSimobjectData(SimConnect sender, SIMCONNECT_RECV_SIMOBJECT_DATA data)
     {
-#if DEBUG
-        // Log pour debug: voir tous les callbacks reçus (seulement en mode DEBUG)
-        // Ne pas logger RequestID=2 (OAT) pour éviter le spam - il est déjà géré avec seuil
-        if (data.dwRequestID != ENVIRONMENT_DATA_REQUEST)
-        {
-            Console.WriteLine($"[DEBUG] OnRecvSimobjectData: RequestID={data.dwRequestID}");
-        }
-#endif
         
         // === CAS 1: Titre de l'avion ===
         if (data.dwRequestID == AIRCRAFT_TITLE_REQUEST)
@@ -1560,9 +1532,6 @@ public class SimConnectService : IDisposable
             if (double.IsNaN(CurrentOAT) || Math.Abs(CurrentOAT - newOAT) > 0.5)
             {
                 CurrentOAT = newOAT;
-#if DEBUG
-                Console.WriteLine($"[DEBUG] OAT: {CurrentOAT:F1}°C");
-#endif
                 Task.Run(() => EnvironmentDataChanged?.Invoke(CurrentOAT));
             }
             return;
@@ -1593,9 +1562,6 @@ public class SimConnectService : IDisposable
             
             if (changed)
             {
-#if DEBUG
-                Console.WriteLine($"[DEBUG] Fuel: Left={FuelLeftMainGallons:F2}gal, Right={FuelRightMainGallons:F2}gal, Total={FuelTotalGallons:F2}gal");
-#endif
                 Task.Run(() => FuelDataChanged?.Invoke(FuelLeftMainGallons, FuelRightMainGallons, FuelTotalGallons));
             }
             return;
@@ -1615,21 +1581,11 @@ public class SimConnectService : IDisposable
                 if (Math.Abs(oldValue - simVarData.Value) > 0.001)
                 {
                     _buttonStates[commandId] = simVarData.Value;
-#if DEBUG
-                    Console.WriteLine($"[DEBUG] SimVar {commandId}: {oldValue} → {simVarData.Value}");
-#endif
                     Task.Run(() => StateChanged?.Invoke(commandId, simVarData.Value));  // Notifier l'interface web sans bloquer SimConnect
                 }
                 // Ne pas logger les valeurs inchangées pour éviter le pileup de logs
             }
         }
-#if DEBUG
-        else
-        {
-            // Log seulement en mode DEBUG pour éviter le spam
-            Console.WriteLine($"[DEBUG] SimVar RequestId {requestId} non trouvé dans _simVarDefinitions");
-        }
-#endif
     }
 
     /// <summary>

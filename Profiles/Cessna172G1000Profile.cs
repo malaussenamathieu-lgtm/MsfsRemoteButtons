@@ -83,8 +83,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "LIGHT NAV",
             SimVarUnit = "Bool",
             Category = "LUMIÈRES",
-            Key = ConsoleKey.D1,
-            KeyDisplay = "1",
             ControlType = ControlType.Toggle
         },
         // Feu anticollision rouge (gyrophare sur le ventre/dos)
@@ -97,8 +95,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "LIGHT BEACON",
             SimVarUnit = "Bool",
             Category = "LUMIÈRES",
-            Key = ConsoleKey.D2,
-            KeyDisplay = "2",
             ControlType = ControlType.Toggle
         },
 
@@ -112,8 +108,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "LIGHT STROBE",
             SimVarUnit = "Bool",
             Category = "LUMIÈRES",
-            Key = ConsoleKey.D3,
-            KeyDisplay = "3",
             ControlType = ControlType.Toggle
         },
 
@@ -127,8 +121,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "LIGHT LANDING",
             SimVarUnit = "Bool",
             Category = "LUMIÈRES",
-            Key = ConsoleKey.D4,
-            KeyDisplay = "4",
             ControlType = ControlType.Toggle
         },
 
@@ -142,8 +134,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "LIGHT TAXI",
             SimVarUnit = "Bool",
             Category = "LUMIÈRES",
-            Key = ConsoleKey.D5,
-            KeyDisplay = "5",
             ControlType = ControlType.Toggle
         },
 
@@ -163,8 +153,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "ELECTRICAL MASTER BATTERY",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
-            Key = ConsoleKey.B,
-            KeyDisplay = "B",
             ControlType = ControlType.Toggle
         },
 
@@ -178,8 +166,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "GENERAL ENG MASTER ALTERNATOR:1",  // :1 = moteur n°1
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
-            Key = ConsoleKey.A,
-            KeyDisplay = "A",
             ControlType = ControlType.Toggle
         },
 
@@ -193,8 +179,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "PITOT HEAT SWITCH:1",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
 
@@ -210,8 +194,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "FUELSYSTEM PUMP SWITCH:1",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
-            Key = ConsoleKey.P,
-            KeyDisplay = "P",
             ControlType = ControlType.Toggle,
             IsMomentary = true
         },
@@ -225,8 +207,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "LINE CONNECTION ON:'BUS_1_To_AVIONICS_BUS_1'_n",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
 
@@ -239,8 +219,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "LINE CONNECTION ON:'BUS_2_To_AVIONICS_BUS_2'_n",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
 
@@ -274,8 +252,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             InputEvent = "LIGHTING_PANEL_1",
             InputEventHash = 8210702418028666615UL,
             Category = "LUMIÈRES",  // Déplacé de INTERIOR LIGHTS vers LUMIÈRES
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Potentiometer,
             Hidden = false
         },
@@ -290,8 +266,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             InputEvent = "LIGHTING_PANEL_2",
             InputEventHash = 13178487316034110786UL,
             Category = "LUMIÈRES",  // Déplacé de INTERIOR LIGHTS vers LUMIÈRES
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Potentiometer,
             Hidden = false
         },
@@ -306,8 +280,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             InputEvent = "LIGHTING_PEDESTRAL_1",
             InputEventHash = 2385961043412447678UL,
             Category = "LUMIÈRES",  // Déplacé de INTERIOR LIGHTS vers LUMIÈRES
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Potentiometer,
             Hidden = false
         },
@@ -322,8 +294,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             InputEvent = "LIGHTING_POTENTIOMETER_5",
             InputEventHash = 15349620790358860248UL,
             Category = "LUMIÈRES",  // Déplacé de INTERIOR LIGHTS vers LUMIÈRES
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Potentiometer,
             Hidden = false
         },
@@ -344,8 +314,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             InputEvent = "LIGHTING_CABIN_1",
             InputEventHash = 9884642386677037074UL,
             Category = "LUMIÈRES",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Potentiometer,
             Hidden = false
         },
@@ -360,8 +328,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             InputEvent = "LIGHTING_CABIN_2",
             InputEventHash = 5637503832156611495UL,
             Category = "LUMIÈRES",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Potentiometer,
             Hidden = false
         },
@@ -380,8 +346,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "−",
             SimEvent = "FLAPS_DECR",
             Category = "VOLETS",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary
         },
 
@@ -394,8 +358,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "FLAPS HANDLE INDEX:1",
             SimVarUnit = "Number",
             Category = "VOLETS",
-            Key = ConsoleKey.F,
-            KeyDisplay = "F",
             ControlType = ControlType.Selector,
             SelectorOptions = new List<SelectorOption>
             {
@@ -413,8 +375,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "+",
             SimEvent = "FLAPS_INCR",
             Category = "VOLETS",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary
         },
 
@@ -430,8 +390,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVarUnit = "Bool",
             Category = "VOLETS",
             SubCategory = "parking brake",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
 
@@ -448,8 +406,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             // Tentative avec FUELSYSTEM JUNCTION SETTING:'FuelSelector'_1 : ne fonctionne pas
             Category = "VOLETS",
             SubCategory = "fuel selector",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Selector,
             SelectorOptions = new List<SelectorOption>
             {
@@ -476,8 +432,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT MASTER",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.Z,
-            KeyDisplay = "Z",
             ControlType = ControlType.Toggle
         },
 
@@ -492,8 +446,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT FLIGHT DIRECTOR ACTIVE:1",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.D,
-            KeyDisplay = "D",
             ControlType = ControlType.Toggle
         },
 
@@ -507,8 +459,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT HEADING LOCK",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.H,
-            KeyDisplay = "H",
             ControlType = ControlType.Toggle
         },
 
@@ -522,8 +472,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT ALTITUDE LOCK",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.T,
-            KeyDisplay = "T",
             ControlType = ControlType.Toggle
         },
 
@@ -537,8 +485,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT NAV1 LOCK",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.N,
-            KeyDisplay = "N",
             ControlType = ControlType.Toggle
         },
 
@@ -550,8 +496,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             InputEvent = "AS1000_AUTOPILOT_VERTICAL_NAVIGATION_PFD",   // B: event (hash connu)
             InputEventHash = 16400171622324593381UL,                   // 0xE3991D32DC1962E5
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
 
@@ -564,8 +508,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT APPROACH HOLD",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.R,
-            KeyDisplay = "R",
             ControlType = ControlType.Toggle
         },
 
@@ -579,8 +521,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT APPROACH HOLD",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
 
@@ -594,8 +534,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT VERTICAL HOLD",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.W,
-            KeyDisplay = "W",
             ControlType = ControlType.Toggle
         },
 
@@ -610,8 +548,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT FLIGHT LEVEL CHANGE",
             SimVarUnit = "Bool",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
 
@@ -630,8 +566,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "SPD+",
             SimEvent = "AP_SPD_VAR_INC",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -641,8 +575,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "SPD-",
             SimEvent = "AP_SPD_VAR_DEC",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -656,8 +588,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "HDG+1",
             SimEvent = "HEADING_BUG_INC",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -667,8 +597,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "HDG-1",
             SimEvent = "HEADING_BUG_DEC",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -680,8 +608,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "HDG+10",
             SimEvent = "HEADING_BUG_INC",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -691,8 +617,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "HDG-10",
             SimEvent = "HEADING_BUG_DEC",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -706,8 +630,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "ALT+100",
             SimEvent = "AP_ALT_VAR_INC",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -717,8 +639,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "ALT-100",
             SimEvent = "AP_ALT_VAR_DEC",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -729,8 +649,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "ALT+1000",
             SimEvent = "AP_ALT_VAR_INC",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -740,8 +658,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "ALT-1000",
             SimEvent = "AP_ALT_VAR_DEC",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -755,8 +671,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             InputEvent = "AS1000_AUTOPILOT_VERTICALSPEED_UP_PFD",
             InputEventHash = 11862786159055984339UL, // 0xA4A11528F0F3D6D3
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -767,8 +681,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             InputEvent = "AS1000_AUTOPILOT_VERTICALSPEED_DOWN_PFD",
             InputEventHash = 1969240319255845983UL, // 0x1B5425A30A9F1C5F
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Momentary,
             Hidden = true
         },
@@ -789,8 +701,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT AIRSPEED HOLD VAR",
             SimVarUnit = "Knots",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle,  // ControlType ignoré pour Hidden
             Hidden = true
         },
@@ -803,8 +713,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT HEADING LOCK DIR",
             SimVarUnit = "Degrees",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle,
             Hidden = true
         },
@@ -817,8 +725,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT ALTITUDE LOCK VAR",
             SimVarUnit = "Feet",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle,
             Hidden = true
         },
@@ -831,8 +737,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVar = "AUTOPILOT VERTICAL HOLD VAR",
             SimVarUnit = "Feet per minute",
             Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle,
             Hidden = true  // Affichage uniquement, pas de bouton
         },
@@ -846,8 +750,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVarUnit = "Percent Over 100",
             Category = "VOLETS",
             SubCategory = "trim",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
             ControlType = ControlType.Toggle,
             Hidden = true  // Affichage uniquement, pas de bouton
         },
