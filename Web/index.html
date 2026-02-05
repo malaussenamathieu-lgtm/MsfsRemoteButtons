@@ -159,6 +159,14 @@
                     }
                     break;
 
+                case 'fuelUpdate':
+                    if (msg.data) {
+                        const leftGallons = parseFloat(msg.data.left || 0);
+                        const rightGallons = parseFloat(msg.data.right || 0);
+                        updateFuelQuantities(leftGallons, rightGallons);
+                    }
+                    break;
+
                 case 'pong':
                     // Heartbeat OK - Connexion toujours active
                     break;
@@ -548,6 +556,23 @@
         }
 
         /**
+         * Met à jour les quantités de carburant affichées sous les boutons LEFT et RIGHT
+         * @param {number} leftGallons - Quantité dans le réservoir gauche (gallons)
+         * @param {number} rightGallons - Quantité dans le réservoir droit (gallons)
+         */
+        function updateFuelQuantities(leftGallons, rightGallons) {
+            const leftEl = document.getElementById('fuel-left-quantity');
+            const rightEl = document.getElementById('fuel-right-quantity');
+            
+            if (leftEl) {
+                leftEl.textContent = `${leftGallons.toFixed(1)}gal`;
+            }
+            if (rightEl) {
+                rightEl.textContent = `${rightGallons.toFixed(1)}gal`;
+            }
+        }
+
+        /**
          * Met à jour la LED d'avertissement OAT sous le bouton pitot_heat
          * La LED s'allume en rouge quand OAT < 4.4°C
          */
@@ -794,17 +819,23 @@
                                  data-current-rotation="${rotation}">
                             </div>
                             <div class="fuel-selector-labels">
-                                <div class="fuel-selector-label fuel-selector-left ${position === 0 ? 'active' : ''}" 
-                                     onclick="${cmd.options[0].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[0].simEvent}', 0)` : ''}">
-                                    LEFT
+                                <div class="fuel-selector-label-wrapper fuel-selector-left-wrapper">
+                                    <div class="fuel-selector-label fuel-selector-left ${position === 0 ? 'active' : ''}" 
+                                         onclick="${cmd.options[0].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[0].simEvent}', 0)` : ''}">
+                                        LEFT
+                                    </div>
+                                    <div class="fuel-selector-quantity" id="fuel-left-quantity">--</div>
                                 </div>
                                 <div class="fuel-selector-label fuel-selector-top ${position === 1 ? 'active' : ''}" 
                                      onclick="${cmd.options[1].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[1].simEvent}', 1)` : ''}">
                                     TAKEOFF<br>LANDING
                                 </div>
-                                <div class="fuel-selector-label fuel-selector-right ${position === 2 ? 'active' : ''}" 
-                                     onclick="${cmd.options[2].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[2].simEvent}', 2)` : ''}">
-                                    RIGHT
+                                <div class="fuel-selector-label-wrapper fuel-selector-right-wrapper">
+                                    <div class="fuel-selector-label fuel-selector-right ${position === 2 ? 'active' : ''}" 
+                                         onclick="${cmd.options[2].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[2].simEvent}', 2)` : ''}">
+                                        RIGHT
+                                    </div>
+                                    <div class="fuel-selector-quantity" id="fuel-right-quantity">--</div>
                                 </div>
                             </div>
                         </div>

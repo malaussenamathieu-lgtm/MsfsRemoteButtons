@@ -1177,11 +1177,33 @@ body {
     background: rgba(255, 255, 255, 0.15);
 }
 
-.fuel-selector-left {
+.fuel-selector-label-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.fuel-selector-left-wrapper {
     grid-column: 1;
     grid-row: 2;
     justify-self: start;
     margin-left: 5px;
+}
+
+.fuel-selector-right-wrapper {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+    margin-right: 5px;
+}
+
+.fuel-selector-quantity {
+    font-size: 0.55em;
+    color: #aaa;
+    text-align: center;
+    font-weight: normal;
+    margin-top: 2px;
 }
 
 .fuel-selector-top {
@@ -1194,10 +1216,7 @@ body {
 }
 
 .fuel-selector-right {
-    grid-column: 3;
-    grid-row: 2;
-    justify-self: end;
-    margin-right: 5px;
+    /* Le label RIGHT est maintenant dans le wrapper */
 }
 
 /* Loading */

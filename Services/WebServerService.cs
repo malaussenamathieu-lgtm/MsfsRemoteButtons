@@ -43,6 +43,7 @@ public class WebServerService : IDisposable
         _simConnect.AircraftChanged += OnAircraftChanged;
         _simConnect.StateChanged += OnStateChanged;
         _simConnect.EnvironmentDataChanged += OnEnvironmentDataChanged;
+        _simConnect.FuelDataChanged += OnFuelDataChanged;
     }
 
     /// <summary>
@@ -149,6 +150,16 @@ public class WebServerService : IDisposable
         {
             Type = "environmentUpdate",
             Data = new { oat }
+        });
+    }
+
+    private void OnFuelDataChanged(double leftGallons, double rightGallons, double totalGallons)
+    {
+        // Envoyer la mise à jour des données de carburant à tous les clients connectés
+        Broadcast(new WsMessage
+        {
+            Type = "fuelUpdate",
+            Data = new { left = leftGallons, right = rightGallons, total = totalGallons }
         });
     }
 
@@ -382,6 +393,23 @@ public class SimConnectWebSocket : WebSocketModule
                 {
                     Type = "environmentUpdate",
                     Data = new { oat = currentOAT }
+                });
+            }
+
+            // 5. Données de carburant si disponibles
+            var leftGallons = _simConnect.FuelLeftMainGallons;
+            var rightGallons = _simConnect.FuelRightMainGallons;
+            if (leftGallons > 0 || rightGallons > 0)
+            {
+                await SendToClient(context, new WsMessage
+                {
+                    Type = "fuelUpdate",
+                    Data = new 
+                    { 
+                        left = leftGallons, 
+                        right = rightGallons, 
+                        total = _simConnect.FuelTotalGallons 
+                    }
                 });
             }
         }
