@@ -378,6 +378,19 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle
         },
 
+        // Vertical Navigation (VNAV) - Mode VNAV du G1000
+        new AircraftCommand
+        {
+            Id = "ap_vnav",
+            Name = "VNAV",
+            InputEvent = "AS1000_AUTOPILOT_VERTICAL_NAVIGATION_PFD",   // B: event (hash connu)
+            InputEventHash = 16400171622324593381UL,                   // 0xE3991D32DC1962E5
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
+        },
+
         // Approach Hold - Mode approche ILS/RNAV
         new AircraftCommand
         {
@@ -544,7 +557,7 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "vs_inc",
             Name = "VS UP",
-            SimEvent = "AP_VS_VAR_INC",
+            InputEvent = "AS1000_Autopilot_VerticalSpeed_Up_PFD",
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
@@ -555,7 +568,7 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "vs_dec",
             Name = "VS DN",
-            SimEvent = "AP_VS_VAR_DEC",
+            InputEvent = "AS1000_Autopilot_VerticalSpeed_Down_PFD",
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
