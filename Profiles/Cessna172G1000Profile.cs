@@ -184,28 +184,26 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
 
         // Chauffe-sonde Pitot - évite le givrage
-        // B: event ELECTRICAL_BREAKER_BTN_BREAKER_PITOT_HEAT pour écriture, SimVar PITOT HEAT SWITCH:1 pour lecture état
+        // B: event DEICE_Pitot_1_Toggle pour écriture (toggle), SimVar PITOT HEAT SWITCH:1 pour lecture état
         new AircraftCommand
         {
             Id = "pitot_heat",
             Name = "Pitot Heat",
             SimEvent = "TOGGLE_PITOT_HEATER",
-            InputEvent = "ELECTRICAL_BREAKER_BTN_BREAKER_PITOT_HEAT",
-            InputEventHash = 11609134930471255972UL, // 0xA11BEEB620517FA4
+            InputEvent = "DEICE_Pitot_1_Toggle",
             SimVar = "PITOT HEAT SWITCH:1",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
-            ControlType = ControlType.Toggle,
-            IsMomentary = true
+            ControlType = ControlType.Toggle
         },
 
         // Pompe à carburant électrique - Pour amorçage et secours
         // B: FUEL_PUMP_1 ou K: SimEventOn/Off (press+release)
         new AircraftCommand
         {
-            Id = "fuel_pump",
+            Id = "fuel_pumpD
             Name = "Fuel Pump",
             SimEventOn = "FUELSYSTEM_PUMP_ON",
             SimEventOff = "FUELSYSTEM_PUMP_OFF",
