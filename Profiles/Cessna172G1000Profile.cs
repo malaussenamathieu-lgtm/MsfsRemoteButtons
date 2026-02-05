@@ -154,12 +154,12 @@ public class Cessna172G1000Profile : IAircraftProfile
         // ============================================
 
         // Batterie principale - Alimente les systèmes quand le moteur est éteint
+        // K: event conservé : le B: event ne met pas à jour la SimVar, la LED resterait figée
         new AircraftCommand
         {
             Id = "master_battery",
             Name = "Battery",
             SimEvent = "TOGGLE_MASTER_BATTERY",
-            InputEvent = "ELECTRICAL_BATTERY_1",
             SimVar = "ELECTRICAL MASTER BATTERY",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
@@ -199,6 +199,34 @@ public class Cessna172G1000Profile : IAircraftProfile
             KeyDisplay = "P",
             ControlType = ControlType.Toggle,
             IsMomentary = true
+        },
+
+        // Avionics Bus 1 - B: event toggle
+        new AircraftCommand
+        {
+            Id = "avionics_bus_1",
+            Name = "Avionics Bus 1",
+            InputEvent = "ELECTRICAL_LINE_BUS_1_TO_AVIONICS_BUS_1",
+            SimVar = "LINE CONNECTION ON:'BUS_1_To_AVIONICS_BUS_1'_n",
+            SimVarUnit = "Bool",
+            Category = "ÉLECTRIQUE",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
+        },
+
+        // Avionics Bus 2 - B: event toggle
+        new AircraftCommand
+        {
+            Id = "avionics_bus_2",
+            Name = "Avionics Bus 2",
+            InputEvent = "ELECTRICAL_LINE_BUS_2_TO_AVIONICS_BUS_2",
+            SimVar = "LINE CONNECTION ON:'BUS_2_To_AVIONICS_BUS_2'_n",
+            SimVarUnit = "Bool",
+            Category = "ÉLECTRIQUE",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
         },
 
         // ============================================
