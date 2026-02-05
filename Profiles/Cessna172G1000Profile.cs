@@ -557,7 +557,8 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "vs_inc",
             Name = "VS UP",
-            InputEvent = "AS1000_Autopilot_VerticalSpeed_Up_PFD",
+            InputEvent = "AS1000_AUTOPILOT_VERTICALSPEED_UP_PFD",
+            InputEventHash = 11862786159055984339UL, // 0xA4A11528F0F3D6D3
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
@@ -568,7 +569,8 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "vs_dec",
             Name = "VS DN",
-            InputEvent = "AS1000_Autopilot_VerticalSpeed_Down_PFD",
+            InputEvent = "AS1000_AUTOPILOT_VERTICALSPEED_DOWN_PFD",
+            InputEventHash = 1969240319255845983UL, // 0x1B5425A30A9F1C5F
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
