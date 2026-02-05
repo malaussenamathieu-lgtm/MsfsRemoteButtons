@@ -216,8 +216,11 @@ public class SimConnectService : IDisposable
     {
         if (_simConnect != null)
         {
-            _simConnect.Dispose();
-            _simConnect = null;
+            lock (_simConnectLock)
+            {
+                _simConnect.Dispose();
+                _simConnect = null;
+            }
         }
         _isConnected = false;
         _eventIds.Clear();
@@ -247,7 +250,10 @@ public class SimConnectService : IDisposable
 
         try
         {
-            _simConnect.ReceiveMessage();
+            lock (_simConnectLock)
+            {
+                _simConnect.ReceiveMessage();
+            }
         }
         catch (Exception)
         {
@@ -492,17 +498,20 @@ public class SimConnectService : IDisposable
             {
                 bool momentary = command.IsMomentary;
 
-                if (momentary)
+                lock (_simConnectLock)
                 {
-                    // Simuler un appui physique: envoyer valeur 1 (press) puis 0 (release)
-                    // Nécessaire pour certains interrupteurs qui réagissent au front montant
-                    _simConnect.TransmitClientEvent(0, (EventId)eventId, 1, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
-                    _simConnect.TransmitClientEvent(0, (EventId)eventId, 0, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
-                }
-                else
-                {
-                    // Envoi simple de l'event (la plupart des TOGGLE_* fonctionnent ainsi)
-                    _simConnect.TransmitClientEvent(0, (EventId)eventId, 0, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
+                    if (momentary)
+                    {
+                        // Simuler un appui physique: envoyer valeur 1 (press) puis 0 (release)
+                        // Nécessaire pour certains interrupteurs qui réagissent au front montant
+                        _simConnect.TransmitClientEvent(0, (EventId)eventId, 1, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
+                        _simConnect.TransmitClientEvent(0, (EventId)eventId, 0, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
+                    }
+                    else
+                    {
+                        // Envoi simple de l'event (la plupart des TOGGLE_* fonctionnent ainsi)
+                        _simConnect.TransmitClientEvent(0, (EventId)eventId, 0, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
+                    }
                 }
 
                 Log($"→ {commandId}");
@@ -536,14 +545,17 @@ public class SimConnectService : IDisposable
             if (defId > 0)
             {
                 // Re-demander les données immédiatement
-                _simConnect.RequestDataOnSimObject(
-                    (RequestId)defId,
-                    (DefineId)defId,
-                    SimConnect.SIMCONNECT_OBJECT_ID_USER,
-                    SIMCONNECT_PERIOD.ONCE,
-                    SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT,
-                    0, 0, 0
-                );
+                lock (_simConnectLock)
+                {
+                    _simConnect.RequestDataOnSimObject(
+                        (RequestId)defId,
+                        (DefineId)defId,
+                        SimConnect.SIMCONNECT_OBJECT_ID_USER,
+                        SIMCONNECT_PERIOD.ONCE,
+                        SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT,
+                        0, 0, 0
+                    );
+                }
             }
         }
         catch (Exception ex)
@@ -597,17 +609,20 @@ public class SimConnectService : IDisposable
 
         try
         {
-            int eventId = _nextEventId++;
-            _simConnect.MapClientEventToSimEvent((EventId)eventId, simEvent);
+            lock (_simConnectLock)
+            {
+                int eventId = _nextEventId++;
+                _simConnect.MapClientEventToSimEvent((EventId)eventId, simEvent);
 
-            if (momentary)
-            {
-                _simConnect.TransmitClientEvent(0, (EventId)eventId, 1, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
-                _simConnect.TransmitClientEvent(0, (EventId)eventId, 0, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
-            }
-            else
-            {
-                _simConnect.TransmitClientEvent(0, (EventId)eventId, value, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
+                if (momentary)
+                {
+                    _simConnect.TransmitClientEvent(0, (EventId)eventId, 1, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
+                    _simConnect.TransmitClientEvent(0, (EventId)eventId, 0, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
+                }
+                else
+                {
+                    _simConnect.TransmitClientEvent(0, (EventId)eventId, value, NotificationGroup.Group0, SIMCONNECT_EVENT_FLAG.GROUPID_IS_PRIORITY);
+                }
             }
 
             Log($"→ {simEvent}");
@@ -667,9 +682,12 @@ public class SimConnectService : IDisposable
 
             try
             {
-                int eventId = _nextEventId++;
-                _eventIds[command.Id] = eventId;
-                _simConnect.MapClientEventToSimEvent((EventId)eventId, command.SimEvent);
+                lock (_simConnectLock)
+                {
+                    int eventId = _nextEventId++;
+                    _eventIds[command.Id] = eventId;
+                    _simConnect.MapClientEventToSimEvent((EventId)eventId, command.SimEvent);
+                }
                 Log($"   ✓ {command.SimEvent} ({command.Id})");  // Log chaque événement mappé
             }
             catch (Exception ex)
@@ -703,28 +721,31 @@ public class SimConnectService : IDisposable
 
             try
             {
-                int defId = _nextDefinitionId++;
-                _simVarDefinitions[defId] = command.Id;
+                lock (_simConnectLock)
+                {
+                    int defId = _nextDefinitionId++;
+                    _simVarDefinitions[defId] = command.Id;
 
-                _simConnect.AddToDataDefinition(
-                    (DefineId)defId,
-                    command.SimVar,
-                    command.SimVarUnit ?? "Bool",
-                    SIMCONNECT_DATATYPE.FLOAT64,
-                    0,
-                    SimConnect.SIMCONNECT_UNUSED
-                );
-                _simConnect.RegisterDataDefineStruct<SimVarData>((DefineId)defId);
+                    _simConnect.AddToDataDefinition(
+                        (DefineId)defId,
+                        command.SimVar,
+                        command.SimVarUnit ?? "Bool",
+                        SIMCONNECT_DATATYPE.FLOAT64,
+                        0,
+                        SimConnect.SIMCONNECT_UNUSED
+                    );
+                    _simConnect.RegisterDataDefineStruct<SimVarData>((DefineId)defId);
 
-                // Demander les mises à jour automatiques
-                _simConnect.RequestDataOnSimObject(
-                    (RequestId)defId,
-                    (DefineId)defId,
-                    SimConnect.SIMCONNECT_OBJECT_ID_USER,
-                    SIMCONNECT_PERIOD.VISUAL_FRAME,
-                    SIMCONNECT_DATA_REQUEST_FLAG.CHANGED,
-                    0, 0, 0
-                );
+                    // Demander les mises à jour automatiques
+                    _simConnect.RequestDataOnSimObject(
+                        (RequestId)defId,
+                        (DefineId)defId,
+                        SimConnect.SIMCONNECT_OBJECT_ID_USER,
+                        SIMCONNECT_PERIOD.VISUAL_FRAME,
+                        SIMCONNECT_DATA_REQUEST_FLAG.CHANGED,
+                        0, 0, 0
+                    );
+                }
             }
             catch (Exception ex)
             {
@@ -757,7 +778,7 @@ public class SimConnectService : IDisposable
         Log($"   Version MSFS : {data.dwApplicationVersionMajor}.{data.dwApplicationVersionMinor} (build {data.dwApplicationBuildMajor}.{data.dwApplicationBuildMinor})");
         Log($"   Version SimConnect : {data.dwSimConnectVersionMajor}.{data.dwSimConnectVersionMinor}");
 
-        ConnectionChanged?.Invoke(true);
+        Task.Run(() => ConnectionChanged?.Invoke(true));
 
         // Demander le titre de l'avion une fois la connexion confirmée
         RequestAircraftTitle();
@@ -952,7 +973,7 @@ public class SimConnectService : IDisposable
                     SetProfile(ProfileManager.DefaultProfile);
                 }
 
-                AircraftChanged?.Invoke(CurrentAircraftTitle);
+                Task.Run(() => AircraftChanged?.Invoke(CurrentAircraftTitle));
             }
             return;
         }
@@ -971,7 +992,7 @@ public class SimConnectService : IDisposable
                 if (Math.Abs(oldValue - simVarData.Value) > 0.001)
                 {
                     _buttonStates[commandId] = simVarData.Value;
-                    StateChanged?.Invoke(commandId, simVarData.Value);  // Notifier l'interface web
+                    Task.Run(() => StateChanged?.Invoke(commandId, simVarData.Value));  // Notifier l'interface web sans bloquer SimConnect
                 }
             }
         }
