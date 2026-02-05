@@ -435,6 +435,29 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle
         },
 
+        // Sélecteur de carburant (3 positions)
+        new AircraftCommand
+        {
+            Id = "fuel_selector",
+            Name = "Fuel Selector",
+            SimEvent = "FUEL_SELECTOR_SET",
+            InputEvent = "FUEL_SELECTOR_1",
+            InputEventHash = 0x94DD4F6A97392589,
+            // Pas de SimVar - contrôle uniquement (write-only)
+            // Les L: vars nécessaires ne sont pas accessibles dans MSFS 2024
+            Category = "VOLETS",
+            SubCategory = "fuel selector",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Selector,
+            SelectorOptions = new List<SelectorOption>
+            {
+                new SelectorOption { Label = "LEFT", SimEvent = "FUEL_SELECTOR_SET", Value = 1 }, // Position gauche visuelle = valeur 1 (haut dans le sim)
+                new SelectorOption { Label = "TAKEOFF LANDING", SimEvent = "FUEL_SELECTOR_SET", Value = 2 }, // Position haut visuelle = valeur 2 (right dans le sim)
+                new SelectorOption { Label = "RIGHT", SimEvent = "FUEL_SELECTOR_SET", Value = 0 }, // Position droite visuelle = valeur 0 (left dans le sim)
+            }
+        },
+
         // ============================================
         // AUTOPILOT
         // ============================================

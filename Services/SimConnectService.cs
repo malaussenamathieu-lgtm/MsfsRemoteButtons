@@ -562,6 +562,16 @@ public class SimConnectService : IDisposable
         // L'interface web envoie directement le SimEvent à exécuter (ex: FLAPS_2)
         if (!string.IsNullOrEmpty(simEvent))
         {
+            // CAS SPÉCIAL: Si la commande a un InputEvent (B: Event), utiliser SetInputEvent avec la valeur
+            var cmdForSelector = _activeProfile.Commands.FirstOrDefault(c => c.Id == commandId);
+            if (cmdForSelector != null && TryResolveInputEventHash(cmdForSelector, out ulong selectorHash) && value.HasValue)
+            {
+                // Pour les sélecteurs avec B Event, utiliser SetInputEvent avec la valeur directement
+                SetInputEvent(selectorHash, value.Value);
+                Log($"→ {commandId} (B: SELECTOR {cmdForSelector.InputEvent} = {value.Value})");
+                return;
+            }
+            
             SendEventByName(simEvent, value: value ?? 0, momentary: false);
             return;
         }
