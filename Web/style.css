@@ -93,6 +93,18 @@ body {
     max-width: 120px;
 }
 
+/* Potentiometers in INTERIOR LIGHTS: 2 columns layout */
+.category[data-category="INTERIOR LIGHTS"] .category-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.category[data-category="INTERIOR LIGHTS"] .potentiometer-control {
+    max-width: none;
+    flex: none;
+}
+
 /* A320 Style Toggle Button - Touch optimized */
 .btn-toggle {
     display: flex;
@@ -490,4 +502,119 @@ body {
 .control-group.grid-2x2 .ctrl-btn {
     padding: 4px 1px;
     font-size: 0.55em;
+}
+
+/* Potentiometer Control */
+.potentiometer-control {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+    position: relative;
+    width: 100%;
+}
+
+.potentiometer-label {
+    font-size: 0.65em;
+    color: #888;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.potentiometer-value {
+    font-size: 1.1em;
+    color: #00d4ff;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-shadow: 0 0 8px #00d4ff, 0 0 12px rgba(0, 212, 255, 0.5);
+}
+
+.potentiometer-track {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
+    border: 1px solid #333;
+    border-radius: 4px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    margin-bottom: 4px;
+    overflow: hidden;
+}
+
+.potentiometer-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #0066cc 0%, #00d4ff 100%);
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+    transition: width 0.1s ease;
+}
+
+.potentiometer-slider {
+    width: 100%;
+    height: 8px;
+    background: transparent;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+    margin: 0;
+    padding: 0;
+}
+
+/* Webkit (Chrome, Safari) */
+.potentiometer-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #00d4ff 0%, #0066cc 100%);
+    border: 2px solid #00d4ff;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.8), 
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.potentiometer-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 15px rgba(0, 212, 255, 1), 
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.potentiometer-slider::-webkit-slider-track {
+    background: transparent;
+    height: 8px;
+}
+
+/* Firefox */
+.potentiometer-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #00d4ff 0%, #0066cc 100%);
+    border: 2px solid #00d4ff;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.8), 
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.potentiometer-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 15px rgba(0, 212, 255, 1), 
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.potentiometer-slider::-moz-range-track {
+    background: transparent;
+    height: 8px;
 }

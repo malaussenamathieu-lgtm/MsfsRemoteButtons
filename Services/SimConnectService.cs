@@ -80,6 +80,10 @@ public class SimConnectService : IDisposable
     // null = pas encore testé, true = Developer Mode actif, false = inactif ou timeout
     private bool? _developerModeDetected;
 
+    // Polling périodique des A: vars uniquement (par ex. potentiomètres d'éclairage)
+    // Note: Les L: vars ne sont pas supportées (non disponibles via SimConnect en MSFS 2024)
+    private CancellationTokenSource? _localVarPollCts;
+
     // === ÉVÉNEMENTS PUBLICS ===
     // Ces événements permettent aux autres services (WebServer) de réagir aux changements
     public event Action<bool>? ConnectionChanged;           // Déclenché quand connexion/déconnexion MSFS
@@ -100,7 +104,7 @@ public class SimConnectService : IDisposable
     // B: EVENT
     public bool IsDeveloperModeActive => _developerModeDetected == true;
 
-    // Réflexion: handle natif SimConnect (pour ExecuteCalculatorCode des LocalVars)
+    // Réflexion: handle natif SimConnect (pour ExecuteCalculatorCode des A: vars uniquement)
     private static readonly FieldInfo? _simConnectHandleField =
         typeof(SimConnect).GetField("hSimConnect", BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -219,6 +223,10 @@ public class SimConnectService : IDisposable
     /// </summary>
     public void Disconnect()
     {
+        // Arrêter le polling des LocalVars
+        _localVarPollCts?.Cancel();
+        _localVarPollCts = null;
+
         if (_simConnect != null)
         {
             lock (_simConnectLock)
@@ -334,6 +342,10 @@ public class SimConnectService : IDisposable
     /// </summary>
     public void SetProfile(IAircraftProfile profile)
     {
+        // Arrêter le polling LocalVars du profil précédent
+        _localVarPollCts?.Cancel();
+        _localVarPollCts = null;
+
         _activeProfile = profile;
         RegisterProfileEvents();
         RegisterProfileSimVars();
@@ -373,6 +385,22 @@ public class SimConnectService : IDisposable
         }
 
         Log($"✈️ Profil chargé: {profile.AircraftName}");
+
+        // Démarrer le polling périodique des LocalVars (A: vars, etc.)
+        StartLocalVarPolling();
+    }
+
+    /// <summary>
+    /// Lance une tâche de polling périodique pour toutes les commandes qui n'ont
+    /// pas de SimVar mais une A: var (Aircraft var), typiquement les potentiomètres.
+    /// DÉSACTIVÉ: ExecuteCalculatorCode n'est pas disponible dans MSFS 2024 SimConnect.dll.
+    /// Les potentiomètres ne peuvent pas être lus, uniquement contrôlés.
+    /// </summary>
+    private void StartLocalVarPolling()
+    {
+        // Désactivé: ExecuteCalculatorCode non disponible dans MSFS 2024
+        // Ne pas démarrer de polling pour éviter les erreurs en boucle
+        return;
     }
 
     /// <summary>
@@ -419,6 +447,17 @@ public class SimConnectService : IDisposable
         // B: EVENT: si la commande a un Input Event et qu'on a le hash, utiliser SetInputEvent (prioritaire sur K:)
         if (repeatCount == 1 && TryResolveInputEventHash(command, out ulong inputHash))
         {
+            // CAS SPÉCIAL: Potentiomètres avec valeur (0-100)
+            if (command.ControlType == ControlType.Potentiometer && value.HasValue)
+            {
+                // Convertir la valeur uint (0-100) en double pour SetInputEvent
+                double potentiometerValue = value.Value;
+                SetInputEvent(inputHash, potentiometerValue);
+                Log($"→ {commandId} (B: POTENTIOMETER {command.InputEvent} = {potentiometerValue})");
+                return;
+            }
+            
+            // Logique normale pour les autres types de commandes
             SendInputEventCommand(actualCommandId, command, inputHash);
             return;
         }
@@ -601,11 +640,9 @@ public class SimConnectService : IDisposable
             return;
         }
 
-        // Cas LocalVar : lecture directe (fallback lorsque SimVar absente)
-        if (!string.IsNullOrEmpty(command.LocalVar))
-        {
-            RefreshLocalVarState(commandId, command.LocalVar, command.LocalVarUnit);
-        }
+        // Cas A: var : lecture désactivée
+        // DÉSACTIVÉ: ExecuteCalculatorCode n'est pas disponible dans MSFS 2024 SimConnect.dll
+        // Les potentiomètres ne peuvent pas être lus, uniquement contrôlés
 
     }
 
@@ -781,7 +818,20 @@ public class SimConnectService : IDisposable
                     );
                     _simConnect.RegisterDataDefineStruct<SimVarData>((DefineId)defId);
 
-                    // Demander les mises à jour automatiques
+                    Log($"   ✓ SimVar enregistrée: {command.SimVar} ({command.SimVarUnit ?? "Bool"}) → {command.Id} (defId={defId})");
+
+                    // Lecture initiale immédiate pour obtenir l'état actuel
+                    _simConnect.RequestDataOnSimObject(
+                        (RequestId)defId,
+                        (DefineId)defId,
+                        SimConnect.SIMCONNECT_OBJECT_ID_USER,
+                        SIMCONNECT_PERIOD.ONCE,
+                        SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT,
+                        0, 0, 0
+                    );
+
+                    // Demander les mises à jour automatiques (seulement sur changement)
+                    // Note: On utilise le même RequestId car SimConnect permet plusieurs requêtes avec le même ID
                     _simConnect.RequestDataOnSimObject(
                         (RequestId)defId,
                         (DefineId)defId,
@@ -799,6 +849,22 @@ public class SimConnectService : IDisposable
         }
 
         Log($"   → {_simVarDefinitions.Count} SimVars enregistrées");
+        
+        // Forcer une relecture de toutes les SimVars après un court délai
+        // pour s'assurer que les valeurs initiales sont reçues
+        // Note: Les A: vars ne peuvent pas être lues (ExecuteCalculatorCode non disponible dans MSFS 2024)
+        Task.Run(async () =>
+        {
+            await Task.Delay(500); // Attendre 500ms pour que SimConnect soit prêt
+            foreach (var command in _activeProfile.Commands)
+            {
+                if (!string.IsNullOrEmpty(command.SimVar))
+                {
+                    RefreshSimVarForCommand(command.Id);
+                }
+                // Les LocalVar (A: vars) ne sont pas lues car ExecuteCalculatorCode n'est pas disponible
+            }
+        });
     }
 
     // ========================================================================
@@ -997,6 +1063,9 @@ public class SimConnectService : IDisposable
     /// </summary>
     private void OnRecvSimobjectData(SimConnect sender, SIMCONNECT_RECV_SIMOBJECT_DATA data)
     {
+        // Log pour debug: voir tous les callbacks reçus
+        Log($"[DEBUG] OnRecvSimobjectData: RequestID={data.dwRequestID}");
+        
         // === CAS 1: Titre de l'avion ===
         if (data.dwRequestID == AIRCRAFT_TITLE_REQUEST)
         {
@@ -1037,82 +1106,32 @@ public class SimConnectService : IDisposable
                 if (Math.Abs(oldValue - simVarData.Value) > 0.001)
                 {
                     _buttonStates[commandId] = simVarData.Value;
+                    Log($"[DEBUG] SimVar {commandId}: {oldValue} → {simVarData.Value}");
                     Task.Run(() => StateChanged?.Invoke(commandId, simVarData.Value));  // Notifier l'interface web sans bloquer SimConnect
                 }
+                else
+                {
+                    Log($"[DEBUG] SimVar {commandId}: valeur inchangée ({simVarData.Value}), seuil non dépassé");
+                }
             }
+        }
+        else
+        {
+            Log($"[DEBUG] SimVar RequestId {requestId} non trouvé dans _simVarDefinitions");
         }
     }
 
     /// <summary>
-    /// Lit une LocalVariable (L: var) via l'API native ExecuteCalculatorCode.
+    /// Lit une variable A: (Aircraft var) via l'API native ExecuteCalculatorCode.
+    /// DÉSACTIVÉ: ExecuteCalculatorCode n'est pas disponible dans MSFS 2024 SimConnect.dll.
+    /// Les potentiomètres ne peuvent pas être lus, uniquement contrôlés.
     /// </summary>
     private bool TryReadLocalVar(string localVar, string? unit, out double value)
     {
         value = 0;
-        if (_simConnect == null || !_isConnected) return false;
-        
-        try
-        {
-            var handle = GetSimConnectHandle();
-            if (handle == IntPtr.Zero)
-            {
-                Log($"⚠️ LVar: handle SimConnect non disponible");
-                return false;
-            }
-
-            string safeUnit = string.IsNullOrWhiteSpace(unit) ? "Number" : unit!;
-            string code = $"(L:{localVar},{safeUnit})";
-
-            double result = 0;
-            int hr = unchecked((int)0x80004005); // E_FAIL par défaut
-            
-            // Vérifier que le handle est valide avant l'appel
-            if (handle == IntPtr.Zero)
-            {
-                return false;
-            }
-            
-            try
-            {
-                lock (_simConnectLock)
-                {
-                    hr = NativeSimConnect.ExecuteCalculatorCode(handle, code, ref result, IntPtr.Zero, IntPtr.Zero);
-                }
-            }
-            catch (DllNotFoundException)
-            {
-                Log($"⚠️ SimConnect.dll non trouvé pour ExecuteCalculatorCode");
-                return false;
-            }
-            catch (EntryPointNotFoundException)
-            {
-                Log($"⚠️ ExecuteCalculatorCode non disponible dans SimConnect.dll (MSFS 2024?)");
-                return false;
-            }
-            catch (Exception ex)
-            {
-                Log($"⚠️ Exception ExecuteCalculatorCode: {ex.GetType().Name} - {ex.Message}");
-                return false;
-            }
-
-            if (hr == 0)
-            {
-                value = result;
-                return true;
-            }
-
-            // Ne pas logger les erreurs HRESULT normales (LVar peut ne pas exister)
-            if (hr != unchecked((int)0x80004005)) // E_FAIL
-            {
-                Log($"⚠️ LVar read failed: {localVar} hr=0x{hr:X8}");
-            }
-            return false;
-        }
-        catch (Exception ex)
-        {
-            Log($"⚠️ Exception LVar {localVar}: {ex.Message}");
-            return false;
-        }
+        // Désactivé: ExecuteCalculatorCode non disponible dans MSFS 2024
+        // Ne pas essayer d'appeler pour éviter les erreurs en boucle
+        return false;
     }
 
     /// <summary>
@@ -1126,7 +1145,8 @@ public class SimConnectService : IDisposable
     }
 
     /// <summary>
-    /// Met à jour le cache d'état à partir d'une LocalVariable et notifie si changement.
+    /// Met à jour le cache d'état à partir d'une A: var (Aircraft var) et notifie si changement.
+    /// Note: Seules les A: vars sont supportées, pas les L: vars.
     /// </summary>
     private void RefreshLocalVarState(string commandId, string localVar, string? unit)
     {
@@ -1177,12 +1197,11 @@ enum DefineId { }           // IDs pour les définitions de données (SimVars)
 enum RequestId { }          // IDs pour les requêtes de données
 enum EventId { }            // IDs pour les événements (K:Events)
 enum NotificationGroup { Group0 = 0 }  // Groupe de priorité pour les events
-
 internal static class NativeSimConnect
 {
     // Signature native SimConnect_ExecuteCalculatorCode (non exposée dans le wrapper managed)
     // NOTE: Cette fonction peut ne pas exister dans MSFS 2024 SimConnect.dll
-    // Si elle cause des crashes, désactiver les appels LocalVar
+    // Utilisée uniquement pour lire les A: vars (pas les L: vars)
     [DllImport("SimConnect.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
     public static extern int ExecuteCalculatorCode(
         IntPtr hSimConnect,
@@ -1191,3 +1210,4 @@ internal static class NativeSimConnect
         IntPtr reserved1,
         IntPtr reserved2);
 }
+

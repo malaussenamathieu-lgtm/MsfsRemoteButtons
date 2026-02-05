@@ -128,6 +128,7 @@ public class WebServerService : IDisposable
     /// </summary>
     private void OnStateChanged(string commandId, double value)
     {
+        Console.WriteLine($"[DEBUG] WebServer: Envoi état {commandId} = {value}");
         Broadcast(new WsMessage
         {
             Type = "state",
@@ -304,6 +305,7 @@ public class SimConnectWebSocket : WebSocketModule
 
             if (cmd != null)
             {
+                Console.WriteLine($"[DEBUG] WebServer: Received command id={cmd.Id}, simEvent={cmd.SimEvent}, value={cmd.Value}");
                 _simConnect.SendCommand(cmd.Id, cmd.SimEvent, cmd.Value);
             }
         }

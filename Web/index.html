@@ -171,7 +171,7 @@
                 const commands = profile.commands.filter(c => c.category === category && !c.hidden);
                 if (commands.length === 0) continue;
 
-                html += `<div class="category">`;
+                html += `<div class="category" data-category="${category}">`;
                 html += `<div class="category-title">${category}</div>`;
 
                 // Special layout for AUTOPILOT with displays
@@ -199,6 +199,11 @@
                         html += renderSelector(cmd);
                     } else if (cmd.controlType === 'momentary') {
                         html += renderMomentary(cmd);
+                    } else if (cmd.controlType === 'potentiometer') {
+                        console.log(`[DEBUG] Rendering potentiometer: ${cmd.id} (${cmd.name})`);
+                        html += renderPotentiometer(cmd);
+                    } else {
+                        console.log(`[DEBUG] Unknown controlType: ${cmd.controlType} for ${cmd.id}`);
                     }
                 }
 
@@ -226,6 +231,83 @@
             }
 
             controlsEl.innerHTML = html;
+
+            // Attacher les event listeners pour les potentiomètres
+            document.querySelectorAll('.potentiometer-slider').forEach(slider => {
+                const cmdId = slider.dataset.cmdId;
+                let lastSentValue = -1; // Valeur initiale pour forcer l'envoi de la première valeur
+                let isDragging = false;
+                
+                const updateAndSend = (value) => {
+                    const potentiometer = slider.closest('.potentiometer-control');
+                    const valueLabel = potentiometer.querySelector('.potentiometer-value');
+                    const fillBar = potentiometer.querySelector('.potentiometer-fill');
+                    
+                    // Mise à jour visuelle immédiate
+                    if (valueLabel) valueLabel.textContent = `${value}%`;
+                    if (fillBar) fillBar.style.width = `${value}%`;
+                    
+                    // Envoi de commande seulement si la valeur a changé
+                    if (lastSentValue !== value) {
+                        console.log(`[DEBUG] Potentiometer ${cmdId}: sending value ${value} during drag`);
+                        sendPotentiometer(cmdId, value);
+                        lastSentValue = value;
+                    }
+                };
+                
+                // Event 'input': mise à jour visuelle + envoi de commande en temps réel
+                slider.addEventListener('input', (e) => {
+                    const value = parseInt(e.target.value);
+                    updateAndSend(value);
+                });
+                
+                // Event 'mousedown': marquer le début du drag
+                slider.addEventListener('mousedown', () => {
+                    isDragging = true;
+                });
+                
+                // Event 'mousemove': capturer les changements pendant le drag
+                slider.addEventListener('mousemove', (e) => {
+                    if (isDragging && e.buttons === 1) {
+                        const value = parseInt(slider.value);
+                        updateAndSend(value);
+                    }
+                });
+                
+                // Event 'mouseup': fin du drag
+                slider.addEventListener('mouseup', () => {
+                    isDragging = false;
+                });
+                
+                // Event 'touchstart': marquer le début du drag tactile
+                slider.addEventListener('touchstart', () => {
+                    isDragging = true;
+                });
+                
+                // Event 'touchmove': capturer les changements pendant le drag tactile
+                slider.addEventListener('touchmove', () => {
+                    if (isDragging) {
+                        const value = parseInt(slider.value);
+                        updateAndSend(value);
+                    }
+                });
+                
+                // Event 'touchend': fin du drag tactile
+                slider.addEventListener('touchend', () => {
+                    isDragging = false;
+                });
+                
+                // Event 'change': envoie la commande finale quand l'utilisateur relâche (sécurité)
+                slider.addEventListener('change', (e) => {
+                    const value = parseInt(e.target.value);
+                    // Envoyer seulement si la valeur finale est différente de la dernière envoyée
+                    if (lastSentValue !== value) {
+                        console.log(`[DEBUG] Potentiometer ${cmdId}: sending final value ${value}`);
+                        sendPotentiometer(cmdId, value);
+                        lastSentValue = value;
+                    }
+                });
+            });
 
             // Appliquer les états déjà connus aux nouveaux éléments
             for (const [id, value] of Object.entries(states)) {
@@ -308,6 +390,31 @@
             `;
         }
 
+        /**
+         * Génère le HTML pour un Potentiometer (slider 0-100%)
+         */
+        function renderPotentiometer(cmd) {
+            const currentValue = states[cmd.id] || 0;
+            const percentValue = Math.round(currentValue);
+            return `
+                <div class="potentiometer-control" data-cmd-id="${cmd.id}">
+                    <div class="potentiometer-label">${cmd.name}</div>
+                    <div class="potentiometer-value" data-cmd-id="${cmd.id}">${percentValue}%</div>
+                    <div class="potentiometer-track" data-cmd-id="${cmd.id}">
+                        <div class="potentiometer-fill" data-cmd-id="${cmd.id}" style="width: ${percentValue}%"></div>
+                    </div>
+                    <input type="range" 
+                           class="potentiometer-slider" 
+                           data-cmd-id="${cmd.id}"
+                           min="0" 
+                           max="100" 
+                           step="1" 
+                           value="${percentValue}"
+                           aria-label="${cmd.name}">
+                </div>
+            `;
+        }
+
         // ================================================================
         // MISE À JOUR DE L'INTERFACE
         // ================================================================
@@ -371,6 +478,29 @@
                 const vsValue = states['display_vs'] || 0;
                 if (el) el.textContent = value > 0.5 ? ((vsValue >= 0 ? '+' : '') + Math.round(vsValue)) : '----';
             }
+
+            // Potentiometer controls
+            const potentiometer = document.querySelector(`.potentiometer-control[data-cmd-id="${id}"]`);
+            if (potentiometer) {
+                const percentValue = Math.round(value);
+                const valueLabel = potentiometer.querySelector('.potentiometer-value');
+                const fillBar = potentiometer.querySelector('.potentiometer-fill');
+                const slider = potentiometer.querySelector('.potentiometer-slider');
+                
+                console.log(`[DEBUG] Potentiometer ${id}: updating to ${percentValue}%`);
+                
+                if (valueLabel) valueLabel.textContent = `${percentValue}%`;
+                if (fillBar) fillBar.style.width = `${percentValue}%`;
+                if (slider) slider.value = percentValue;
+            } else {
+                // Debug: vérifier si l'élément existe avec un autre sélecteur
+                const altSelector = document.querySelector(`[data-cmd-id="${id}"]`);
+                if (altSelector) {
+                    console.log(`[DEBUG] Potentiometer ${id}: found element but not .potentiometer-control`, altSelector);
+                } else {
+                    console.log(`[DEBUG] Potentiometer ${id}: element not found`);
+                }
+            }
         }
 
         // ================================================================
@@ -406,6 +536,25 @@
 
             // Mise à jour optimiste de l'UI (n'attend pas la confirmation serveur)
             updateControlState(id, value);
+        }
+
+        /**
+         * Envoie une commande Potentiometer au serveur avec la valeur (0-100)
+         * @param {string} id - ID de la commande (ex: "interior_panels")
+         * @param {number} value - Valeur du potentiomètre (0-100)
+         */
+        function sendPotentiometer(id, value) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                console.log(`[DEBUG] Potentiometer ${id}: WebSocket not ready, state=${ws?.readyState}`);
+                return;
+            }
+
+            const message = {
+                type: 'command',
+                data: { id: id, value: value }
+            };
+            console.log(`[DEBUG] Potentiometer ${id}: sending command`, message);
+            ws.send(JSON.stringify(message));
         }
 
         // ================================================================
