@@ -1074,10 +1074,11 @@ body {
 .fuel-selector-panel {
     position: relative;
     width: 180px;
-    height: 246px; /* Même hauteur que les autres cadres */
+    height: auto; /* Hauteur automatique pour inclure la jauge */
+    min-height: 246px; /* Hauteur minimale identique aux autres cadres */
     background: rgba(45, 45, 45, 0.5);
     border: 1px solid #fff;
-    padding: 8px;
+    padding: 8px; /* Même padding que flaps-control-realistic */
     display: flex;
     flex-direction: column;
     align-items: center;
