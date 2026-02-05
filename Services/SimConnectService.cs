@@ -2,6 +2,7 @@ using Microsoft.FlightSimulator.SimConnect;
 using MsfsRemoteButtons.Profiles;
 using System.Runtime.InteropServices;
 using System.Linq;
+using System.Reflection;
 
 namespace MsfsRemoteButtons.Services;
 
@@ -98,6 +99,10 @@ public class SimConnectService : IDisposable
     /// <summary>True si Developer Mode est actif dans MSFS (B: events disponibles).</summary>
     // B: EVENT
     public bool IsDeveloperModeActive => _developerModeDetected == true;
+
+    // Réflexion: handle natif SimConnect (pour ExecuteCalculatorCode des LocalVars)
+    private static readonly FieldInfo? _simConnectHandleField =
+        typeof(SimConnect).GetField("hSimConnect", BindingFlags.Instance | BindingFlags.NonPublic);
 
     /// <summary>
     /// Tente de se connecter à MSFS avec retry automatique (3 tentatives, délais 0 / 2 s / 5 s).
@@ -338,6 +343,15 @@ public class SimConnectService : IDisposable
         Log("   Commandes : K: events (toujours disponibles). B: events si Developer Mode activé dans MSFS.");
         EnumerateInputEvents();
 
+        // LocalVars : initialiser l'état pour les commandes sans SimVar
+        foreach (var cmd in _activeProfile.Commands)
+        {
+            if (string.IsNullOrEmpty(cmd.SimVar) && !string.IsNullOrEmpty(cmd.LocalVar))
+            {
+                RefreshLocalVarState(cmd.Id, cmd.LocalVar, cmd.LocalVarUnit);
+            }
+        }
+
         // Exporter les SimEvents après le chargement du profil
         try
         {
@@ -536,32 +550,44 @@ public class SimConnectService : IDisposable
         if (_simConnect == null || _activeProfile == null) return;
 
         var command = _activeProfile.Commands.FirstOrDefault(c => c.Id == commandId);
-        if (command == null || string.IsNullOrEmpty(command.SimVar)) return;
+        if (command == null) return;
 
-        try
+        // Cas SimVar classique
+        if (!string.IsNullOrEmpty(command.SimVar))
         {
-            // Chercher la defId associée à cette command
-            var defId = _simVarDefinitions.FirstOrDefault(x => x.Value == commandId).Key;
-            if (defId > 0)
+            try
             {
-                // Re-demander les données immédiatement
-                lock (_simConnectLock)
+                // Chercher la defId associée à cette command
+                var defId = _simVarDefinitions.FirstOrDefault(x => x.Value == commandId).Key;
+                if (defId > 0)
                 {
-                    _simConnect.RequestDataOnSimObject(
-                        (RequestId)defId,
-                        (DefineId)defId,
-                        SimConnect.SIMCONNECT_OBJECT_ID_USER,
-                        SIMCONNECT_PERIOD.ONCE,
-                        SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT,
-                        0, 0, 0
-                    );
+                    // Re-demander les données immédiatement
+                    lock (_simConnectLock)
+                    {
+                        _simConnect.RequestDataOnSimObject(
+                            (RequestId)defId,
+                            (DefineId)defId,
+                            SimConnect.SIMCONNECT_OBJECT_ID_USER,
+                            SIMCONNECT_PERIOD.ONCE,
+                            SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT,
+                            0, 0, 0
+                        );
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                Log($"⚠️ Erreur refresh SimVar pour {commandId}: {ex.Message}");
+            }
+            return;
         }
-        catch (Exception ex)
+
+        // Cas LocalVar : lecture directe (fallback lorsque SimVar absente)
+        if (!string.IsNullOrEmpty(command.LocalVar))
         {
-            Log($"⚠️ Erreur refresh SimVar pour {commandId}: {ex.Message}");
+            RefreshLocalVarState(commandId, command.LocalVar, command.LocalVarUnit);
         }
+
     }
 
     /// <summary>
@@ -999,6 +1025,65 @@ public class SimConnectService : IDisposable
     }
 
     /// <summary>
+    /// Lit une LocalVariable (L: var) via l'API native ExecuteCalculatorCode.
+    /// </summary>
+    private bool TryReadLocalVar(string localVar, string? unit, out double value)
+    {
+        value = 0;
+        if (_simConnect == null || !_isConnected) return false;
+        var handle = GetSimConnectHandle();
+        if (handle == IntPtr.Zero) return false;
+
+        string safeUnit = string.IsNullOrWhiteSpace(unit) ? "Number" : unit!;
+        string code = $"(L:{localVar},{safeUnit})";
+
+        double result = 0;
+        int hr;
+        lock (_simConnectLock)
+        {
+            hr = NativeSimConnect.ExecuteCalculatorCode(handle, code, ref result, IntPtr.Zero, IntPtr.Zero);
+        }
+
+        if (hr == 0)
+        {
+            value = result;
+            return true;
+        }
+
+        Log($"⚠️ LVar read failed: {localVar} hr=0x{hr:X}");
+        return false;
+    }
+
+    /// <summary>
+    /// Retourne le handle natif SimConnect (pour les appels P/Invoke).
+    /// </summary>
+    private IntPtr GetSimConnectHandle()
+    {
+        if (_simConnect == null || _simConnectHandleField == null) return IntPtr.Zero;
+        var val = _simConnectHandleField.GetValue(_simConnect);
+        return val is IntPtr ptr ? ptr : IntPtr.Zero;
+    }
+
+    /// <summary>
+    /// Met à jour le cache d'état à partir d'une LocalVariable et notifie si changement.
+    /// </summary>
+    private void RefreshLocalVarState(string commandId, string localVar, string? unit)
+    {
+        if (TryReadLocalVar(localVar, unit, out var newValue))
+        {
+            lock (_stateLock)
+            {
+                var oldValue = _buttonStates.GetValueOrDefault(commandId);
+                if (Math.Abs(oldValue - newValue) > 0.001)
+                {
+                    _buttonStates[commandId] = newValue;
+                    Task.Run(() => StateChanged?.Invoke(commandId, newValue));
+                }
+            }
+        }
+    }
+
+    /// <summary>
     /// Affiche un message dans la console et notifie les abonnés
     /// </summary>
     private void Log(string message)
@@ -1024,3 +1109,15 @@ enum DefineId { }           // IDs pour les définitions de données (SimVars)
 enum RequestId { }          // IDs pour les requêtes de données
 enum EventId { }            // IDs pour les événements (K:Events)
 enum NotificationGroup { Group0 = 0 }  // Groupe de priorité pour les events
+
+internal static class NativeSimConnect
+{
+    // Signature native SimConnect_ExecuteCalculatorCode (non exposée dans le wrapper managed)
+    [DllImport("SimConnect.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+    public static extern int ExecuteCalculatorCode(
+        IntPtr hSimConnect,
+        string szCode,
+        ref double value,
+        IntPtr reserved1,
+        IntPtr reserved2);
+}

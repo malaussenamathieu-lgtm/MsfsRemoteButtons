@@ -32,6 +32,10 @@ public class AircraftCommand
     public string? SimEventOff { get; set; }           // K:Event pour "éteindre" (optionnel)
     public string? SimVar { get; set; }                // Variable SimConnect pour lire l'état
     public string? SimVarUnit { get; set; } = "Bool";  // Unité de la SimVar
+    /// <summary>Nom d'une LocalVariable (L:) à lire si aucune SimVar n'est disponible.</summary>
+    public string? LocalVar { get; set; }
+    /// <summary>Unité de la LocalVariable (ex: Bool, Number). Par défaut Number.</summary>
+    public string? LocalVarUnit { get; set; } = "Number";
     /// <summary>Nom de l'Input Event B: (ex: LIGHTING_NAV_0). Si défini, prioritaire sur SimEvent quand le hash est disponible.</summary>
     public string? InputEvent { get; set; }
     /// <summary>Hash de l'Input Event B: (optionnel). Si 0 ou null, résolu à l'exécution via EnumerateInputEvents.</summary>
