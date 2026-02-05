@@ -461,7 +461,7 @@ public class SimConnectService : IDisposable
         string? eventName = command.InputEvent;
         bool isToggleOnly = commandId.StartsWith("ap_", StringComparison.OrdinalIgnoreCase) ||
                            (eventName?.Contains("AS1000_AUTOPILOT", StringComparison.OrdinalIgnoreCase) ?? false) ||
-                           (eventName?.Contains("DEICE_", StringComparison.OrdinalIgnoreCase) ?? false);
+                           (eventName?.Contains("BREAKER", StringComparison.OrdinalIgnoreCase) ?? false);
 
         if (isToggleOnly)
         {

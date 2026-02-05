@@ -184,13 +184,14 @@ public class Cessna172G1000Profile : IAircraftProfile
         },
 
         // Chauffe-sonde Pitot - évite le givrage
-        // B: event DEICE_PITOT_1 pour écriture, SimVar PITOT HEAT SWITCH:1 pour lecture état
+        // B: event ELECTRICAL_BREAKER_BTN_BREAKER_PITOT_HEAT pour écriture, SimVar PITOT HEAT SWITCH:1 pour lecture état
         new AircraftCommand
         {
             Id = "pitot_heat",
             Name = "Pitot Heat",
             SimEvent = "TOGGLE_PITOT_HEATER",
-            InputEvent = "DEICE_PITOT_1",
+            InputEvent = "ELECTRICAL_BREAKER_BTN_BREAKER_PITOT_HEAT",
+            InputEventHash = 11609134930471255972UL, // 0xA11BEEB620517FA4
             SimVar = "PITOT HEAT SWITCH:1",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
