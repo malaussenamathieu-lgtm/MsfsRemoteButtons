@@ -197,7 +197,8 @@ public class Cessna172G1000Profile : IAircraftProfile
             Category = "ÉLECTRIQUE",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
-            ControlType = ControlType.Toggle
+            ControlType = ControlType.Toggle,
+            IsMomentary = true
         },
 
         // Pompe à carburant électrique - Pour amorçage et secours
@@ -239,20 +240,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             Name = "Avionics Bus 2",
             InputEvent = "ELECTRICAL_LINE_BUS_2_TO_AVIONICS_BUS_2",
             SimVar = "LINE CONNECTION ON:'BUS_2_To_AVIONICS_BUS_2'_n",
-            SimVarUnit = "Bool",
-            Category = "ÉLECTRIQUE",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
-            ControlType = ControlType.Toggle
-        },
-
-        // Cabin Power 12V - Alimentation cabine 12V
-        new AircraftCommand
-        {
-            Id = "cabin_power_12v",
-            Name = "Cabin Power 12V",
-            InputEvent = "ELECTRICAL_ELECTRICAL_SWITCH_POWER12V_Position",
-            SimVar = "Power_12V",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
             Key = ConsoleKey.NoName,
