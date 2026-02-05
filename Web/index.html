@@ -215,37 +215,41 @@
                     html += `</div>`; // close category-buttons
                 }
 
-                // Special layout for INTERIOR LIGHTS with sections
-                if (category === 'INTERIOR LIGHTS') {
-                    html += `<div class="interior-lights-container">`;
-                    html += `<div class="interior-lights-section section-1">`;
-                    html += `<div class="interior-lights-section-title">DIMMING</div>`;
-                    html += `<div class="interior-lights-grid">`;
-                    
-                    // Rendre les 4 potentiomètres en 2x2
+                // Layout spécial pour LUMIÈRES : DIMMING à gauche + LIGHTS à droite
+                if (category === 'LUMIÈRES') {
+                    // Séparer les switches toggle (lumières extérieures) des potentiomètres (DIMMING)
+                    const toggleCommands = commands.filter(c => c.controlType === 'toggle');
                     const potentiometers = commands.filter(c => c.controlType === 'potentiometer');
-                    for (const cmd of potentiometers) {
-                        html += renderPotentiometer(cmd);
+                    
+                    // Conteneur flex pour placer DIMMING et LIGHTS côte à côte
+                    html += `<div class="lights-wrapper">`;
+                    
+                    // Partie 1: DIMMING à gauche avec le même style de cadre blanc
+                    if (potentiometers.length > 0) {
+                        html += `<div class="lights-container">`;
+                        html += `<div class="lights-title">DIMMING</div>`;
+                        html += `<div class="interior-lights-grid">`;
+                        
+                        // Rendre les 4 potentiomètres en 2x2
+                        for (const cmd of potentiometers) {
+                            html += renderPotentiometer(cmd);
+                        }
+                        
+                        html += `</div>`; // close interior-lights-grid
+                        html += `</div>`; // close lights-container
                     }
                     
-                    html += `</div>`; // close interior-lights-grid
-                    html += `</div>`; // close section-1
-                    html += `</div>`; // close interior-lights-container
-                } else if (category === 'LUMIÈRES') {
-                    // Layout spécial pour LUMIÈRES : switches cylindriques dans un cadre avec titre
-                    html += `<div class="lights-wrapper">`;
+                    // Partie 2: LIGHTS à droite avec switches cylindriques
                     html += `<div class="lights-container">`;
                     html += `<div class="lights-title">LIGHTS</div>`;
                     html += `<div class="lights-switches">`;
                     
                     // Ordre spécifique : BEACON, LAND, TAXI, NAV, STROBE
                     const lightsOrder = ['beacon', 'landing_light', 'taxi_light', 'nav_lights', 'strobe'];
-                    const lightsCommands = lightsOrder.map(id => commands.find(c => c.id === id)).filter(c => c);
+                    const lightsCommands = lightsOrder.map(id => toggleCommands.find(c => c.id === id)).filter(c => c);
                     
                     for (const cmd of lightsCommands) {
-                        if (cmd.controlType === 'toggle') {
-                            html += renderCylindricalSwitch(cmd, true); // true = pour les lumières
-                        }
+                        html += renderCylindricalSwitch(cmd, true); // true = pour les lumières
                     }
                     
                     html += `</div>`; // close lights-switches

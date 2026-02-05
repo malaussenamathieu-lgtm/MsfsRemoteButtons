@@ -48,10 +48,9 @@ public class Cessna172G1000Profile : IAircraftProfile
     public List<string> Categories => new()
     {
         "AUTOPILOT",    // En haut car le plus utilisé en vol
-        "LUMIÈRES",
+        "LUMIÈRES",     // Contient les 5 lumières extérieures + 4 potentiomètres DIMMING
         "VOLETS",
         "ÉLECTRIQUE",
-        "INTERIOR LIGHTS",
     };
 
     // ========================================================================
@@ -255,6 +254,15 @@ public class Cessna172G1000Profile : IAircraftProfile
         // Pour l'instant: lecture seule (Hidden=false pour affichage)
         // ============================================
 
+        // DIMMING (Potentiomètres éclairage intérieur)
+        // ============================================
+        // 4 potentiomètres pour l'éclairage intérieur du cockpit
+        // Déplacés dans LUMIÈRES mais gardent leur sous-section DIMMING pour l'affichage
+        // Layout: 2 lignes x 2 colonnes
+        // Ligne 1: SW / CB Panels | STBY IND
+        // Ligne 2: PEDESTAL | AVIONICS
+        // ============================================
+
         // SW / CB Panels
         new AircraftCommand
         {
@@ -265,7 +273,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVarUnit = null,
             InputEvent = "LIGHTING_PANEL_1",
             InputEventHash = 8210702418028666615UL,
-            Category = "INTERIOR LIGHTS",
+            Category = "LUMIÈRES",  // Déplacé de INTERIOR LIGHTS vers LUMIÈRES
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
             ControlType = ControlType.Potentiometer,
@@ -281,7 +289,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVarUnit = null,
             InputEvent = "LIGHTING_PANEL_2",
             InputEventHash = 13178487316034110786UL,
-            Category = "INTERIOR LIGHTS",
+            Category = "LUMIÈRES",  // Déplacé de INTERIOR LIGHTS vers LUMIÈRES
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
             ControlType = ControlType.Potentiometer,
@@ -297,7 +305,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVarUnit = null,
             InputEvent = "LIGHTING_PEDESTRAL_1",
             InputEventHash = 2385961043412447678UL,
-            Category = "INTERIOR LIGHTS",
+            Category = "LUMIÈRES",  // Déplacé de INTERIOR LIGHTS vers LUMIÈRES
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
             ControlType = ControlType.Potentiometer,
@@ -313,7 +321,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             SimVarUnit = null,
             InputEvent = "LIGHTING_POTENTIOMETER_5",
             InputEventHash = 15349620790358860248UL,
-            Category = "INTERIOR LIGHTS",
+            Category = "LUMIÈRES",  // Déplacé de INTERIOR LIGHTS vers LUMIÈRES
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
             ControlType = ControlType.Potentiometer,
