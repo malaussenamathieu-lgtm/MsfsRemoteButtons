@@ -51,6 +51,7 @@ public class Cessna172G1000Profile : IAircraftProfile
         "LUMIÈRES",
         "VOLETS",
         "ÉLECTRIQUE",
+        "INTERIOR LIGHTS",
     };
 
     // ========================================================================
@@ -242,6 +243,72 @@ public class Cessna172G1000Profile : IAircraftProfile
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
             ControlType = ControlType.Toggle
+        },
+
+        // ============================================
+        // INTERIOR LIGHTS (Potentiomètres)
+        // ============================================
+        // 4 potentiomètres pour l'éclairage intérieur du cockpit
+        // Layout: 2 lignes x 2 colonnes
+        // Ligne 1: SW / CB Panels | STBY IND
+        // Ligne 2: PEDESTAL | AVIONICS
+        // Pour l'instant: lecture seule (Hidden=false pour affichage)
+        // ============================================
+
+        // SW / CB Panels
+        new AircraftCommand
+        {
+            Id = "interior_panels",
+            Name = "SW / CB Panels",
+            SimVar = "LIGHTING_PANEL_1",
+            SimVarUnit = "Percent",
+            Category = "INTERIOR LIGHTS",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Potentiometer,
+            Hidden = false
+        },
+
+        // STBY IND
+        new AircraftCommand
+        {
+            Id = "interior_stby_ind",
+            Name = "STBY IND",
+            SimVar = "LIGHTING_PANEL_2",
+            SimVarUnit = "Percent",
+            Category = "INTERIOR LIGHTS",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Potentiometer,
+            Hidden = false
+        },
+
+        // PEDESTAL
+        new AircraftCommand
+        {
+            Id = "interior_pedestal",
+            Name = "PEDESTAL",
+            SimVar = "LIGHTING_PEDESTRAL_1",
+            SimVarUnit = "Percent",
+            Category = "INTERIOR LIGHTS",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Potentiometer,
+            Hidden = false
+        },
+
+        // AVIONICS
+        new AircraftCommand
+        {
+            Id = "interior_avionics",
+            Name = "AVIONICS",
+            SimVar = "LIGHTING_POTENTIOMETER_5",
+            SimVarUnit = "Percent",
+            Category = "INTERIOR LIGHTS",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Potentiometer,
+            Hidden = false
         },
 
         // ============================================
