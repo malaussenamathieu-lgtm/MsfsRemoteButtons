@@ -189,6 +189,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             Id = "pitot_heat",
             Name = "Pitot Heat",
             SimEvent = "TOGGLE_PITOT_HEATER",
+            InputEvent = "DEICE_PITOT_1",
             SimVar = "PITOT HEAT SWITCH:1",
             SimVarUnit = "Bool",
             Category = "ÉLECTRIQUE",
