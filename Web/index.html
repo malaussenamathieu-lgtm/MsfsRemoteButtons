@@ -206,6 +206,70 @@
                     html += `</div>`; // close interior-lights-grid
                     html += `</div>`; // close section-1
                     html += `</div>`; // close interior-lights-container
+                } else if (category === 'LUMIÈRES') {
+                    // Layout spécial pour LUMIÈRES : switches cylindriques dans un cadre avec titre
+                    html += `<div class="lights-wrapper">`;
+                    html += `<div class="lights-container">`;
+                    html += `<div class="lights-title">LIGHTS</div>`;
+                    html += `<div class="lights-switches">`;
+                    
+                    // Ordre spécifique : BEACON, LAND, TAXI, NAV, STROBE
+                    const lightsOrder = ['beacon', 'landing_light', 'taxi_light', 'nav_lights', 'strobe'];
+                    const lightsCommands = lightsOrder.map(id => commands.find(c => c.id === id)).filter(c => c);
+                    
+                    for (const cmd of lightsCommands) {
+                        if (cmd.controlType === 'toggle') {
+                            html += renderCylindricalSwitch(cmd, true); // true = pour les lumières
+                        }
+                    }
+                    
+                    html += `</div>`; // close lights-switches
+                    html += `</div>`; // close lights-container
+                    html += `</div>`; // close lights-wrapper
+                } else if (category === 'ÉLECTRIQUE') {
+                    // Layout spécial pour ÉLECTRIQUE : switches double-toggle côte à côte
+                    html += `<div class="electrical-container">`;
+                    
+                    // Switch MASTER (ALT + BAT)
+                    const altCmd = commands.find(c => c.id === 'master_alternator');
+                    const batCmd = commands.find(c => c.id === 'master_battery');
+                    if (altCmd && batCmd) {
+                        html += renderDoubleToggleSwitch('MASTER', ['ALT', 'BAT'], [altCmd, batCmd]);
+                    }
+                    
+                    // Switch AVIONICS (BUS 1 + BUS 2)
+                    const bus1Cmd = commands.find(c => c.id === 'avionics_bus_1');
+                    const bus2Cmd = commands.find(c => c.id === 'avionics_bus_2');
+                    if (bus1Cmd && bus2Cmd) {
+                        html += renderDoubleToggleSwitch('AVIONICS', ['BUS 1', 'BUS 2'], [bus1Cmd, bus2Cmd]);
+                    }
+                    
+                    // Autres boutons ÉLECTRIQUE (Fuel Pump, Pitot Heat, etc.)
+                    const otherCommands = commands.filter(c => 
+                        c.id !== 'master_alternator' && 
+                        c.id !== 'master_battery' && 
+                        c.id !== 'avionics_bus_1' && 
+                        c.id !== 'avionics_bus_2'
+                    ).sort((a, b) => {
+                        // Trier pour mettre fuel_pump avant pitot_heat
+                        if (a.id === 'fuel_pump' && b.id === 'pitot_heat') return -1;
+                        if (a.id === 'pitot_heat' && b.id === 'fuel_pump') return 1;
+                        return 0;
+                    });
+                    
+                    if (otherCommands.length > 0) {
+                        html += `<div class="electrical-other-buttons">`;
+                        for (const cmd of otherCommands) {
+                            if (cmd.controlType === 'toggle') {
+                                html += renderCylindricalSwitch(cmd);
+                            } else if (cmd.controlType === 'momentary') {
+                                html += renderMomentary(cmd);
+                            }
+                        }
+                        html += `</div>`; // close electrical-other-buttons
+                    }
+                    
+                    html += `</div>`; // close electrical-container
                 } else {
                     // Layout normal pour les autres catégories
                     html += `<div class="category-buttons">`;
@@ -328,6 +392,16 @@
                 });
             });
 
+            // Attacher les event listeners pour les switches cylindriques (zone de touch optimisée)
+            document.querySelectorAll('.cylindrical-switch').forEach(switchEl => {
+                const cmdId = switchEl.dataset.id;
+                // Rendre toute la zone switch cliquable pour le tactile
+                switchEl.style.cursor = 'pointer';
+                switchEl.addEventListener('click', () => {
+                    sendToggle(cmdId);
+                });
+            });
+
             // Appliquer les états déjà connus aux nouveaux éléments
             for (const [id, value] of Object.entries(states)) {
                 updateControlState(id, value);
@@ -410,6 +484,70 @@
         }
 
         /**
+         * Génère le HTML pour un switch double-toggle (deux boutons côte à côte)
+         * @param {string} title - Titre principal (ex: "MASTER", "AVIONICS")
+         * @param {string[]} labels - Labels pour chaque levier (ex: ["ALT", "BAT"])
+         * @param {Array} commands - Tableau de 2 AircraftCommand
+         */
+        function renderDoubleToggleSwitch(title, labels, commands) {
+            const state1 = states[commands[0].id] || 0;
+            const state2 = states[commands[1].id] || 0;
+            const stateClass1 = state1 > 0.5 ? 'on' : 'off';
+            const stateClass2 = state2 > 0.5 ? 'on' : 'off';
+            // Classe de couleur selon le type de switch
+            const colorClass = title === 'MASTER' ? 'switch-red' : 'switch-grey';
+            
+            return `
+                <div class="double-toggle-switch">
+                    <div class="double-toggle-title">${title}</div>
+                    <div class="double-toggle-labels">
+                        <span class="double-toggle-label-left">${labels[0]}</span>
+                        <span class="double-toggle-label-right">${labels[1]}</span>
+                    </div>
+                    <div class="double-toggle-buttons">
+                        <button class="double-toggle-btn ${colorClass} ${stateClass1}" 
+                                data-id="${commands[0].id}" 
+                                onclick="sendToggle('${commands[0].id}')">
+                            <div class="indicator"></div>
+                        </button>
+                        <button class="double-toggle-btn ${colorClass} ${stateClass2}" 
+                                data-id="${commands[1].id}" 
+                                onclick="sendToggle('${commands[1].id}')">
+                            <div class="indicator"></div>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Génère le HTML pour un switch cylindrique (style cockpit)
+         * @param {Object} cmd - AircraftCommand
+         * @param {boolean} isLightSwitch - Si true, utilise un indicateur ambre au lieu de rouge
+         */
+        function renderCylindricalSwitch(cmd, isLightSwitch = false) {
+            const state = states[cmd.id] || 0;
+            const isOn = state > 0.5;
+            // Couleur du levier : vert pour Pitot Heat, blanc/gris pour les autres
+            const leverColor = cmd.id === 'pitot_heat' ? 'green' : 'white';
+            const indicatorClass = isOn ? (isLightSwitch ? 'on-indicator-light' : 'on-indicator') : '';
+            
+            return `
+                <div class="cylindrical-switch" data-id="${cmd.id}">
+                    <div class="cylindrical-switch-label">${cmd.name}</div>
+                    <div class="cylindrical-switch-lever-wrapper">
+                        <div class="cylindrical-switch-bezel ${indicatorClass}">
+                            <div class="cylindrical-switch-lever ${leverColor} ${isOn ? 'on' : 'off'}" 
+                                 data-id="${cmd.id}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cylindrical-switch-state">${isOn ? 'ON' : 'OFF'}</div>
+                </div>
+            `;
+        }
+
+        /**
          * Génère le HTML pour un Potentiometer (slider 0-100%)
          */
         function renderPotentiometer(cmd) {
@@ -455,6 +593,38 @@
             if (toggleBtn) {
                 toggleBtn.classList.remove('on', 'off');
                 toggleBtn.classList.add(value > 0.5 ? 'on' : 'off');
+            }
+
+            // Double-toggle switches
+            const doubleToggleBtn = document.querySelector(`.double-toggle-btn[data-id="${id}"]`);
+            if (doubleToggleBtn) {
+                doubleToggleBtn.classList.remove('on', 'off');
+                doubleToggleBtn.classList.add(value > 0.5 ? 'on' : 'off');
+            }
+
+            // Cylindrical switches
+            const cylindricalSwitch = document.querySelector(`.cylindrical-switch[data-id="${id}"]`);
+            if (cylindricalSwitch) {
+                const lever = cylindricalSwitch.querySelector('.cylindrical-switch-lever');
+                const bezel = cylindricalSwitch.querySelector('.cylindrical-switch-bezel');
+                const stateLabel = cylindricalSwitch.querySelector('.cylindrical-switch-state');
+                const isOn = value > 0.5;
+                // Vérifier si c'est un switch de lumières (dans .lights-container)
+                const isLightSwitch = cylindricalSwitch.closest('.lights-container') !== null;
+                
+                if (lever) {
+                    lever.classList.remove('on', 'off');
+                    lever.classList.add(isOn ? 'on' : 'off');
+                }
+                if (bezel) {
+                    bezel.classList.remove('on-indicator', 'on-indicator-light');
+                    if (isOn) {
+                        bezel.classList.add(isLightSwitch ? 'on-indicator-light' : 'on-indicator');
+                    }
+                }
+                if (stateLabel) {
+                    stateLabel.textContent = isOn ? 'ON' : 'OFF';
+                }
             }
 
             // Selector options (including flaps-control)
