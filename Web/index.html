@@ -22,6 +22,9 @@
         <div class="status" style="margin-top: 8px;">
             <span class="aircraft-name" id="aircraftName">En attente...</span>
         </div>
+        <div class="status" style="margin-top: 8px;">
+            <span id="oatDisplay">OAT: --°C</span>
+        </div>
     </div>
 
     <div id="controls">
@@ -55,6 +58,7 @@
         let profile = null;          // Profil d'avion actuel (commandes, catégories)
         let states = {};             // Cache des états: { commandId: valeur }
         let reconnectTimeout = null; // Timer pour reconnexion auto
+        let currentOAT = null;       // Température extérieure actuelle (OAT)
 
         // === ÉLÉMENTS DOM ===
         const controlsEl = document.getElementById('controls');
@@ -62,6 +66,7 @@
         const simStatusEl = document.getElementById('simStatus');
         const aircraftNameEl = document.getElementById('aircraftName');
         const disconnectedOverlay = document.getElementById('disconnectedOverlay');
+        const oatDisplayEl = document.getElementById('oatDisplay');
 
         // ================================================================
         // CONNEXION WEBSOCKET
@@ -145,6 +150,15 @@
                     updateControlState(msg.data.id, msg.data.value);
                     break;
 
+                case 'environmentUpdate':
+                    if (msg.data && msg.data.oat !== undefined) {
+                        const oat = parseFloat(msg.data.oat);
+                        currentOAT = oat;
+                        oatDisplayEl.textContent = `OAT: ${oat.toFixed(1)}°C`;
+                        updateOATWarningLED();
+                    }
+                    break;
+
                 case 'pong':
                     // Heartbeat OK - Connexion toujours active
                     break;
@@ -171,7 +185,7 @@
                 const commands = profile.commands.filter(c => c.category === category && !c.hidden);
                 if (commands.length === 0) continue;
 
-                html += `<div class="category">`;
+                html += `<div class="category" data-category="${category}">`;
                 html += `<div class="category-title">${category}</div>`;
 
                 // Special layout for AUTOPILOT with displays
@@ -181,44 +195,156 @@
                     html += `<div class="displays-row">`;
                     html += `<div class="display-spacer"></div>`; // AP
                     html += `<div class="display-spacer"></div>`; // FD
-                    html += `<div class="display-box"><div class="display-label">SPD</div><div class="display-value" id="display-spd">---</div></div>`;
                     html += `<div class="display-box"><div class="display-label">HDG</div><div class="display-value" id="display-hdg">---</div></div>`;
                     html += `<div class="display-box"><div class="display-label">ALT</div><div class="display-value" id="display-alt">-----</div></div>`;
                     html += `<div class="display-spacer"></div>`; // NAV
+                    html += `<div class="display-spacer"></div>`; // VNAV
                     html += `<div class="display-spacer"></div>`; // APR
+                    html += `<div class="display-spacer"></div>`; // BC (pas encore créé)
                     html += `<div class="display-box"><div class="display-label">VS</div><div class="display-value" id="display-vs">----</div></div>`;
+                    html += `<div class="display-box"><div class="display-label">SPD</div><div class="display-value" id="display-spd">---</div></div>`; // FLC
                     html += `</div>`; // close displays-row
-                }
-
-                html += `<div class="category-buttons">`;
-
-                for (const cmd of commands) {
-                    if (cmd.controlType === 'toggle') {
-                        html += renderToggle(cmd);
-                    } else if (cmd.controlType === 'selector') {
-                        html += renderSelector(cmd);
-                    } else if (cmd.controlType === 'momentary') {
-                        html += renderMomentary(cmd);
+                    
+                    // Mode buttons row - INSIDE autopilot-panel
+                    html += `<div class="category-buttons">`;
+                    for (const cmd of commands) {
+                        if (cmd.controlType === 'toggle') {
+                            html += renderToggle(cmd);
+                        }
                     }
+                    html += `</div>`; // close category-buttons
                 }
 
-                html += `</div>`; // close category-buttons
+                // Special layout for INTERIOR LIGHTS with sections
+                if (category === 'INTERIOR LIGHTS') {
+                    html += `<div class="interior-lights-container">`;
+                    html += `<div class="interior-lights-section section-1">`;
+                    html += `<div class="interior-lights-section-title">DIMMING</div>`;
+                    html += `<div class="interior-lights-grid">`;
+                    
+                    // Rendre les 4 potentiomètres en 2x2
+                    const potentiometers = commands.filter(c => c.controlType === 'potentiometer');
+                    for (const cmd of potentiometers) {
+                        html += renderPotentiometer(cmd);
+                    }
+                    
+                    html += `</div>`; // close interior-lights-grid
+                    html += `</div>`; // close section-1
+                    html += `</div>`; // close interior-lights-container
+                } else if (category === 'LUMIÈRES') {
+                    // Layout spécial pour LUMIÈRES : switches cylindriques dans un cadre avec titre
+                    html += `<div class="lights-wrapper">`;
+                    html += `<div class="lights-container">`;
+                    html += `<div class="lights-title">LIGHTS</div>`;
+                    html += `<div class="lights-switches">`;
+                    
+                    // Ordre spécifique : BEACON, LAND, TAXI, NAV, STROBE
+                    const lightsOrder = ['beacon', 'landing_light', 'taxi_light', 'nav_lights', 'strobe'];
+                    const lightsCommands = lightsOrder.map(id => commands.find(c => c.id === id)).filter(c => c);
+                    
+                    for (const cmd of lightsCommands) {
+                        if (cmd.controlType === 'toggle') {
+                            html += renderCylindricalSwitch(cmd, true); // true = pour les lumières
+                        }
+                    }
+                    
+                    html += `</div>`; // close lights-switches
+                    html += `</div>`; // close lights-container
+                    html += `</div>`; // close lights-wrapper
+                } else if (category === 'ÉLECTRIQUE') {
+                    // Layout spécial pour ÉLECTRIQUE : switches double-toggle côte à côte
+                    html += `<div class="electrical-container">`;
+                    
+                    // Switch MASTER (ALT + BAT)
+                    const altCmd = commands.find(c => c.id === 'master_alternator');
+                    const batCmd = commands.find(c => c.id === 'master_battery');
+                    if (altCmd && batCmd) {
+                        html += renderDoubleToggleSwitch('MASTER', ['ALT', 'BAT'], [altCmd, batCmd]);
+                    }
+                    
+                    // Switch AVIONICS (BUS 1 + BUS 2)
+                    const bus1Cmd = commands.find(c => c.id === 'avionics_bus_1');
+                    const bus2Cmd = commands.find(c => c.id === 'avionics_bus_2');
+                    if (bus1Cmd && bus2Cmd) {
+                        html += renderDoubleToggleSwitch('AVIONICS', ['BUS 1', 'BUS 2'], [bus1Cmd, bus2Cmd]);
+                    }
+                    
+                    // Autres boutons ÉLECTRIQUE (Fuel Pump, Pitot Heat, etc.)
+                    const otherCommands = commands.filter(c => 
+                        c.id !== 'master_alternator' && 
+                        c.id !== 'master_battery' && 
+                        c.id !== 'avionics_bus_1' && 
+                        c.id !== 'avionics_bus_2'
+                    ).sort((a, b) => {
+                        // Trier pour mettre fuel_pump avant pitot_heat
+                        if (a.id === 'fuel_pump' && b.id === 'pitot_heat') return -1;
+                        if (a.id === 'pitot_heat' && b.id === 'fuel_pump') return 1;
+                        return 0;
+                    });
+                    
+                    if (otherCommands.length > 0) {
+                        html += `<div class="electrical-other-buttons">`;
+                        for (const cmd of otherCommands) {
+                            if (cmd.controlType === 'toggle') {
+                                html += renderCylindricalSwitch(cmd);
+                            } else if (cmd.controlType === 'momentary') {
+                                html += renderMomentary(cmd);
+                            }
+                        }
+                        html += `</div>`; // close electrical-other-buttons
+                    }
+                    
+                    html += `</div>`; // close electrical-container
+                } else if (category !== 'AUTOPILOT') {
+                    // Layout normal pour les autres catégories (sauf AUTOPILOT qui a son propre layout)
+                    html += `<div class="category-buttons">`;
+
+                    for (const cmd of commands) {
+                        if (cmd.controlType === 'toggle') {
+                            html += renderToggle(cmd);
+                        } else if (cmd.controlType === 'selector') {
+                            html += renderSelector(cmd);
+                        } else if (cmd.controlType === 'momentary') {
+                            html += renderMomentary(cmd);
+                        } else if (cmd.controlType === 'potentiometer') {
+                            console.log(`[DEBUG] Rendering potentiometer: ${cmd.id} (${cmd.name})`);
+                            html += renderPotentiometer(cmd);
+                        } else {
+                            console.log(`[DEBUG] Unknown controlType: ${cmd.controlType} for ${cmd.id}`);
+                        }
+                    }
+
+                    html += `</div>`; // close category-buttons
+                }
 
                 // Control buttons row - BELOW main buttons
                 if (category === 'AUTOPILOT') {
                     html += `<div class="controls-row">`;
                     html += `<div class="control-spacer"></div>`; // AP
-                    html += `<div class="control-spacer"></div>`; // FD
-                    // SPD controls
-                    html += `<div class="control-group"><button class="ctrl-btn" onclick="sendToggle('spd_dec')">−</button><button class="ctrl-btn" onclick="sendToggle('spd_inc')">+</button></div>`;
-                    // HDG controls (2x2 grid)
-                    html += `<div class="control-group grid-2x2"><button class="ctrl-btn" onclick="sendToggle('hdg_dec_10')">−10</button><button class="ctrl-btn" onclick="sendToggle('hdg_inc_10')">+10</button><button class="ctrl-btn" onclick="sendToggle('hdg_dec_1')">−1</button><button class="ctrl-btn" onclick="sendToggle('hdg_inc_1')">+1</button></div>`;
-                    // ALT controls (2x2 grid)
-                    html += `<div class="control-group grid-2x2"><button class="ctrl-btn" onclick="sendToggle('alt_dec_1000')">−1000</button><button class="ctrl-btn" onclick="sendToggle('alt_inc_1000')">+1000</button><button class="ctrl-btn" onclick="sendToggle('alt_dec_100')">−100</button><button class="ctrl-btn" onclick="sendToggle('alt_inc_100')">+100</button></div>`;
-                    html += `<div class="control-spacer"></div>`; // NAV
+                    // Sélecteur d'incrément HDG sous FD
+                    html += `<div class="control-group increment-selector-group">`;
+                    html += `<button class="ctrl-btn increment-selector-btn" data-hdg-value="10" onclick="setHdgIncrement(10)">+10</button>`;
+                    html += `<button class="ctrl-btn increment-selector-btn" data-hdg-value="100" onclick="setHdgIncrement(100)">+100</button>`;
+                    html += `</div>`;
+                    // HDG controls - + en haut, - en bas
+                    html += `<div class="control-group vs-controls"><button class="ctrl-btn" onclick="sendHdgIncrement(true)">+</button><button class="ctrl-btn" onclick="sendHdgIncrement(false)">−</button></div>`;
+                    // ALT controls - + en haut, - en bas
+                    html += `<div class="control-group vs-controls"><button class="ctrl-btn" onclick="sendAltIncrement(true)">+</button><button class="ctrl-btn" onclick="sendAltIncrement(false)">−</button></div>`;
+                    // Sélecteur d'incrément ALT sous NAV
+                    html += `<div class="control-group increment-selector-group">`;
+                    html += `<button class="ctrl-btn increment-selector-btn" data-alt-value="100" onclick="setAltIncrement(100)">+100</button>`;
+                    html += `<button class="ctrl-btn increment-selector-btn" data-alt-value="1000" onclick="setAltIncrement(1000)">+1000</button>`;
+                    html += `</div>`;
+                    html += `<div class="control-spacer"></div>`; // VNAV
                     html += `<div class="control-spacer"></div>`; // APR
-                    // VS controls
-                    html += `<div class="control-group"><button class="ctrl-btn" onclick="sendToggle('vs_dec')">DN</button><button class="ctrl-btn" onclick="sendToggle('vs_inc')">UP</button></div>`;
+                    html += `<div class="control-spacer"></div>`; // BC
+                    // VS controls - Nose UP/DN sur 2 lignes
+                    html += `<div class="control-group vs-controls">`;
+                    html += `<button class="ctrl-btn nose-btn" onclick="sendToggle('vs_inc')"><span class="nose-label">Nose</span><span class="nose-direction">UP</span></button>`;
+                    html += `<button class="ctrl-btn nose-btn" onclick="sendToggle('vs_dec')"><span class="nose-label">Nose</span><span class="nose-direction">DN</span></button>`;
+                    html += `</div>`;
+                    // SPD controls (pour FLC) - + en haut, - en bas
+                    html += `<div class="control-group vs-controls"><button class="ctrl-btn" onclick="sendToggle('spd_inc')">+</button><button class="ctrl-btn" onclick="sendToggle('spd_dec')">−</button></div>`;
                     html += `</div>`; // close controls-row
                     html += `</div>`; // close autopilot-panel
                 }
@@ -227,10 +353,104 @@
 
             controlsEl.innerHTML = html;
 
+            // Attacher les event listeners pour les potentiomètres
+            document.querySelectorAll('.potentiometer-slider').forEach(slider => {
+                const cmdId = slider.dataset.cmdId;
+                let lastSentValue = -1; // Valeur initiale pour forcer l'envoi de la première valeur
+                let isDragging = false;
+                
+                const updateAndSend = (value) => {
+                    const potentiometer = slider.closest('.potentiometer-control');
+                    const valueLabel = potentiometer.querySelector('.potentiometer-value');
+                    const fillBar = potentiometer.querySelector('.potentiometer-fill');
+                    
+                    // Mise à jour visuelle immédiate
+                    if (valueLabel) valueLabel.textContent = `${value}%`;
+                    if (fillBar) fillBar.style.width = `${value}%`;
+                    
+                    // Envoi de commande seulement si la valeur a changé
+                    if (lastSentValue !== value) {
+                        console.log(`[DEBUG] Potentiometer ${cmdId}: sending value ${value} during drag`);
+                        sendPotentiometer(cmdId, value);
+                        lastSentValue = value;
+                    }
+                };
+                
+                // Event 'input': mise à jour visuelle + envoi de commande en temps réel
+                slider.addEventListener('input', (e) => {
+                    const value = parseInt(e.target.value);
+                    updateAndSend(value);
+                });
+                
+                // Event 'mousedown': marquer le début du drag
+                slider.addEventListener('mousedown', () => {
+                    isDragging = true;
+                });
+                
+                // Event 'mousemove': capturer les changements pendant le drag
+                slider.addEventListener('mousemove', (e) => {
+                    if (isDragging && e.buttons === 1) {
+                        const value = parseInt(slider.value);
+                        updateAndSend(value);
+                    }
+                });
+                
+                // Event 'mouseup': fin du drag
+                slider.addEventListener('mouseup', () => {
+                    isDragging = false;
+                });
+                
+                // Event 'touchstart': marquer le début du drag tactile
+                slider.addEventListener('touchstart', () => {
+                    isDragging = true;
+                });
+                
+                // Event 'touchmove': capturer les changements pendant le drag tactile
+                slider.addEventListener('touchmove', () => {
+                    if (isDragging) {
+                        const value = parseInt(slider.value);
+                        updateAndSend(value);
+                    }
+                });
+                
+                // Event 'touchend': fin du drag tactile
+                slider.addEventListener('touchend', () => {
+                    isDragging = false;
+                });
+                
+                // Event 'change': envoie la commande finale quand l'utilisateur relâche (sécurité)
+                slider.addEventListener('change', (e) => {
+                    const value = parseInt(e.target.value);
+                    // Envoyer seulement si la valeur finale est différente de la dernière envoyée
+                    if (lastSentValue !== value) {
+                        console.log(`[DEBUG] Potentiometer ${cmdId}: sending final value ${value}`);
+                        sendPotentiometer(cmdId, value);
+                        lastSentValue = value;
+                    }
+                });
+            });
+
+            // Attacher les event listeners pour les switches cylindriques (zone de touch optimisée)
+            document.querySelectorAll('.cylindrical-switch').forEach(switchEl => {
+                const cmdId = switchEl.dataset.id;
+                // Rendre toute la zone switch cliquable pour le tactile
+                switchEl.style.cursor = 'pointer';
+                switchEl.addEventListener('click', () => {
+                    sendToggle(cmdId);
+                });
+            });
+
+            // Initialiser les sélecteurs d'incrément
+            setHdgIncrement(10); // Valeur par défaut : 10
+            setAltIncrement(100); // Valeur par défaut : 100
+
             // Appliquer les états déjà connus aux nouveaux éléments
             for (const [id, value] of Object.entries(states)) {
                 updateControlState(id, value);
             }
+
+            // Mettre à jour la LED d'avertissement OAT si l'OAT est déjà disponible
+            updateOATWarningLED();
         }
 
         /**
@@ -239,12 +459,41 @@
         function renderToggle(cmd) {
             const state = states[cmd.id] || 0;
             const stateClass = state > 0.5 ? 'on' : 'off';
+            
+            // LED rouge pour pitot_heat quand OAT < 4.4°C (éteinte par défaut)
+            const showOATWarning = cmd.id === 'pitot_heat' ? '<div class="oat-warning-led inactive" id="oat-warning-pitot"></div>' : '';
+            
             return `
-                <button class="btn-toggle ${stateClass}" data-id="${cmd.id}" onclick="sendToggle('${cmd.id}')">
-                    <div class="indicator"></div>
-                    <span class="label">${cmd.name}</span>
-                </button>
+                <div class="toggle-wrapper" data-toggle-id="${cmd.id}">
+                    <button class="btn-toggle ${stateClass}" data-id="${cmd.id}" onclick="sendToggle('${cmd.id}')">
+                        <div class="indicator"></div>
+                        <span class="label">${cmd.name}</span>
+                    </button>
+                    ${showOATWarning}
+                </div>
             `;
+        }
+
+        /**
+         * Met à jour la LED d'avertissement OAT sous le bouton pitot_heat
+         * La LED s'allume en rouge quand OAT < 4.4°C
+         */
+        function updateOATWarningLED() {
+            const ledEl = document.getElementById('oat-warning-pitot');
+            if (!ledEl) {
+                console.log('[DEBUG] OAT Warning LED: élément non trouvé');
+                return;
+            }
+            
+            console.log(`[DEBUG] OAT Warning LED: OAT=${currentOAT}, affichage=${currentOAT !== null && currentOAT < 4.4 ? 'OUI' : 'NON'}`);
+            
+            if (currentOAT !== null && currentOAT < 4.4) {
+                ledEl.classList.add('active');
+                ledEl.classList.remove('inactive');
+            } else {
+                ledEl.classList.remove('active');
+                ledEl.classList.add('inactive');
+            }
         }
 
         /**
@@ -308,6 +557,105 @@
             `;
         }
 
+        /**
+         * Génère le HTML pour un switch double-toggle (deux boutons côte à côte)
+         * @param {string} title - Titre principal (ex: "MASTER", "AVIONICS")
+         * @param {string[]} labels - Labels pour chaque levier (ex: ["ALT", "BAT"])
+         * @param {Array} commands - Tableau de 2 AircraftCommand
+         */
+        function renderDoubleToggleSwitch(title, labels, commands) {
+            const state1 = states[commands[0].id] || 0;
+            const state2 = states[commands[1].id] || 0;
+            const stateClass1 = state1 > 0.5 ? 'on' : 'off';
+            const stateClass2 = state2 > 0.5 ? 'on' : 'off';
+            // Classe de couleur selon le type de switch
+            const colorClass = title === 'MASTER' ? 'switch-red' : 'switch-grey';
+            
+            return `
+                <div class="double-toggle-switch">
+                    <div class="double-toggle-title">${title}</div>
+                    <div class="double-toggle-labels">
+                        <span class="double-toggle-label-left">${labels[0]}</span>
+                        <span class="double-toggle-label-right">${labels[1]}</span>
+                    </div>
+                    <div class="double-toggle-buttons">
+                        <button class="double-toggle-btn ${colorClass} ${stateClass1}" 
+                                data-id="${commands[0].id}" 
+                                onclick="sendToggle('${commands[0].id}')">
+                            <div class="indicator"></div>
+                        </button>
+                        <button class="double-toggle-btn ${colorClass} ${stateClass2}" 
+                                data-id="${commands[1].id}" 
+                                onclick="sendToggle('${commands[1].id}')">
+                            <div class="indicator"></div>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Génère le HTML pour un switch cylindrique (style cockpit)
+         * @param {Object} cmd - AircraftCommand
+         * @param {boolean} isLightSwitch - Si true, utilise un indicateur ambre au lieu de rouge
+         */
+        function renderCylindricalSwitch(cmd, isLightSwitch = false) {
+            const state = states[cmd.id] || 0;
+            const isOn = state > 0.5;
+            // Couleur du levier : vert pour Pitot Heat, blanc/gris pour les autres
+            const leverColor = cmd.id === 'pitot_heat' ? 'green' : 'white';
+            const indicatorClass = isOn ? (isLightSwitch ? 'on-indicator-light' : 'on-indicator') : '';
+            
+            // LED rouge pour pitot_heat quand OAT < 4.4°C (éteinte par défaut)
+            const showOATWarning = cmd.id === 'pitot_heat' ? '<div class="oat-warning-led inactive" id="oat-warning-pitot"></div>' : '';
+            
+            return `
+                <div class="cylindrical-switch-wrapper" data-switch-id="${cmd.id}">
+                    <div class="cylindrical-switch" data-id="${cmd.id}">
+                        <div class="cylindrical-switch-label">${cmd.name}</div>
+                        <div class="cylindrical-switch-lever-wrapper">
+                            <div class="cylindrical-switch-bezel ${indicatorClass}">
+                                <div class="cylindrical-switch-lever ${leverColor} ${isOn ? 'on' : 'off'}" 
+                                     data-id="${cmd.id}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cylindrical-switch-state-wrapper">
+                            <div class="cylindrical-switch-state">OFF</div>
+                            ${showOATWarning}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Génère le HTML pour un Potentiometer (slider 0-100%)
+         */
+        function renderPotentiometer(cmd) {
+            const currentValue = states[cmd.id] || 0;
+            const percentValue = Math.round(currentValue);
+            return `
+                <div class="potentiometer-control" data-cmd-id="${cmd.id}">
+                    <div class="potentiometer-label">${cmd.name}</div>
+                    <div class="potentiometer-value" data-cmd-id="${cmd.id}">${percentValue}%</div>
+                    <div class="potentiometer-track-wrapper">
+                        <div class="potentiometer-track" data-cmd-id="${cmd.id}">
+                            <div class="potentiometer-fill" data-cmd-id="${cmd.id}" style="width: ${percentValue}%"></div>
+                        </div>
+                        <input type="range" 
+                               class="potentiometer-slider" 
+                               data-cmd-id="${cmd.id}"
+                               min="0" 
+                               max="100" 
+                               step="1" 
+                               value="${percentValue}"
+                               aria-label="${cmd.name}">
+                    </div>
+                </div>
+            `;
+        }
+
         // ================================================================
         // MISE À JOUR DE L'INTERFACE
         // ================================================================
@@ -327,6 +675,38 @@
             if (toggleBtn) {
                 toggleBtn.classList.remove('on', 'off');
                 toggleBtn.classList.add(value > 0.5 ? 'on' : 'off');
+            }
+
+            // Double-toggle switches
+            const doubleToggleBtn = document.querySelector(`.double-toggle-btn[data-id="${id}"]`);
+            if (doubleToggleBtn) {
+                doubleToggleBtn.classList.remove('on', 'off');
+                doubleToggleBtn.classList.add(value > 0.5 ? 'on' : 'off');
+            }
+
+            // Cylindrical switches
+            const cylindricalSwitch = document.querySelector(`.cylindrical-switch[data-id="${id}"]`);
+            if (cylindricalSwitch) {
+                const lever = cylindricalSwitch.querySelector('.cylindrical-switch-lever');
+                const bezel = cylindricalSwitch.querySelector('.cylindrical-switch-bezel');
+                const stateLabel = cylindricalSwitch.querySelector('.cylindrical-switch-state');
+                const isOn = value > 0.5;
+                // Vérifier si c'est un switch de lumières (dans .lights-container)
+                const isLightSwitch = cylindricalSwitch.closest('.lights-container') !== null;
+                
+                if (lever) {
+                    lever.classList.remove('on', 'off');
+                    lever.classList.add(isOn ? 'on' : 'off');
+                }
+                if (bezel) {
+                    bezel.classList.remove('on-indicator', 'on-indicator-light');
+                    if (isOn) {
+                        bezel.classList.add(isLightSwitch ? 'on-indicator-light' : 'on-indicator');
+                    }
+                }
+                // Le texte reste toujours "OFF" comme dans l'avion réel
+                // L'état est indiqué uniquement par la position du levier
+                // Pas de modification du texte stateLabel
             }
 
             // Selector options (including flaps-control)
@@ -371,6 +751,29 @@
                 const vsValue = states['display_vs'] || 0;
                 if (el) el.textContent = value > 0.5 ? ((vsValue >= 0 ? '+' : '') + Math.round(vsValue)) : '----';
             }
+
+            // Potentiometer controls
+            const potentiometer = document.querySelector(`.potentiometer-control[data-cmd-id="${id}"]`);
+            if (potentiometer) {
+                const percentValue = Math.round(value);
+                const valueLabel = potentiometer.querySelector('.potentiometer-value');
+                const fillBar = potentiometer.querySelector('.potentiometer-fill');
+                const slider = potentiometer.querySelector('.potentiometer-slider');
+                
+                console.log(`[DEBUG] Potentiometer ${id}: updating to ${percentValue}%`);
+                
+                if (valueLabel) valueLabel.textContent = `${percentValue}%`;
+                if (fillBar) fillBar.style.width = `${percentValue}%`;
+                if (slider) slider.value = percentValue;
+            } else {
+                // Debug: vérifier si l'élément existe avec un autre sélecteur
+                const altSelector = document.querySelector(`[data-cmd-id="${id}"]`);
+                if (altSelector) {
+                    console.log(`[DEBUG] Potentiometer ${id}: found element but not .potentiometer-control`, altSelector);
+                } else {
+                    console.log(`[DEBUG] Potentiometer ${id}: element not found`);
+                }
+            }
         }
 
         // ================================================================
@@ -406,6 +809,93 @@
 
             // Mise à jour optimiste de l'UI (n'attend pas la confirmation serveur)
             updateControlState(id, value);
+        }
+
+        /**
+         * Envoie une commande Potentiometer au serveur avec la valeur (0-100)
+         * @param {string} id - ID de la commande (ex: "interior_panels")
+         * @param {number} value - Valeur du potentiomètre (0-100)
+         */
+        function sendPotentiometer(id, value) {
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                console.log(`[DEBUG] Potentiometer ${id}: WebSocket not ready, state=${ws?.readyState}`);
+                return;
+            }
+
+            const message = {
+                type: 'command',
+                data: { id: id, value: value }
+            };
+            console.log(`[DEBUG] Potentiometer ${id}: sending command`, message);
+            ws.send(JSON.stringify(message));
+        }
+
+        // ================================================================
+        // HDG & ALT INCREMENT SELECTORS
+        // ================================================================
+        let hdgIncrement = 10; // Valeur par défaut : 10
+        let altIncrement = 100; // Valeur par défaut : 100
+
+        /**
+         * Définit l'incrément pour les boutons HDG (+/-)
+         * @param {number} value - Valeur de l'incrément (10 ou 100)
+         */
+        function setHdgIncrement(value) {
+            hdgIncrement = value;
+            // Mettre à jour l'apparence des boutons sélecteurs HDG uniquement
+            document.querySelectorAll('[data-hdg-value]').forEach(btn => {
+                const btnValue = parseInt(btn.dataset.hdgValue);
+                if (btnValue === value) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        /**
+         * Envoie une commande d'incrément/décrément HDG avec l'incrément sélectionné
+         * @param {boolean} increment - true pour incrémenter, false pour décrémenter
+         */
+        function sendHdgIncrement(increment) {
+            if (hdgIncrement === 10) {
+                const commandId = increment ? 'hdg_inc_10' : 'hdg_dec_10';
+                sendToggle(commandId);
+            } else if (hdgIncrement === 100) {
+                // Pour +100, répéter hdg_inc_10 dix fois
+                const baseCmd = increment ? 'hdg_inc_10' : 'hdg_dec_10';
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => sendToggle(baseCmd), i * 10); // Espacer de 10ms
+                }
+            }
+        }
+
+        /**
+         * Définit l'incrément pour les boutons ALT (+/-)
+         * @param {number} value - Valeur de l'incrément (100 ou 1000)
+         */
+        function setAltIncrement(value) {
+            altIncrement = value;
+            // Mettre à jour l'apparence des boutons sélecteurs ALT uniquement
+            document.querySelectorAll('[data-alt-value]').forEach(btn => {
+                const btnValue = parseInt(btn.dataset.altValue);
+                if (btnValue === value) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        /**
+         * Envoie une commande d'incrément/décrément ALT avec l'incrément sélectionné
+         * @param {boolean} increment - true pour incrémenter, false pour décrémenter
+         */
+        function sendAltIncrement(increment) {
+            const commandId = increment 
+                ? (altIncrement === 100 ? 'alt_inc_100' : 'alt_inc_1000')
+                : (altIncrement === 100 ? 'alt_dec_100' : 'alt_dec_1000');
+            sendToggle(commandId);
         }
 
         // ================================================================

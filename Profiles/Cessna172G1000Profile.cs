@@ -51,6 +51,7 @@ public class Cessna172G1000Profile : IAircraftProfile
         "LUMIÈRES",
         "VOLETS",
         "ÉLECTRIQUE",
+        "INTERIOR LIGHTS",
     };
 
     // ========================================================================
@@ -183,6 +184,21 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle
         },
 
+        // Chauffe-sonde Pitot - évite le givrage
+        // K: event PITOT_HEAT_TOGGLE pour écriture, SimVar PITOT HEAT SWITCH:1 pour lecture état
+        new AircraftCommand
+        {
+            Id = "pitot_heat",
+            Name = "Pitot Heat",
+            SimEvent = "PITOT_HEAT_TOGGLE",
+            SimVar = "PITOT HEAT SWITCH:1",
+            SimVarUnit = "Bool",
+            Category = "ÉLECTRIQUE",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
+        },
+
         // Pompe à carburant électrique - Pour amorçage et secours
         // B: FUEL_PUMP_1 ou K: SimEventOn/Off (press+release)
         new AircraftCommand
@@ -227,6 +243,81 @@ public class Cessna172G1000Profile : IAircraftProfile
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
             ControlType = ControlType.Toggle
+        },
+
+        // ============================================
+        // INTERIOR LIGHTS (Potentiomètres)
+        // ============================================
+        // 4 potentiomètres pour l'éclairage intérieur du cockpit
+        // Layout: 2 lignes x 2 colonnes
+        // Ligne 1: SW / CB Panels | STBY IND
+        // Ligne 2: PEDESTAL | AVIONICS
+        // Pour l'instant: lecture seule (Hidden=false pour affichage)
+        // ============================================
+
+        // SW / CB Panels
+        new AircraftCommand
+        {
+            Id = "interior_panels",
+            Name = "SW / CB Panels",
+            // Contrôle via B: event (pas de lecture disponible)
+            SimVar = null,
+            SimVarUnit = null,
+            InputEvent = "LIGHTING_PANEL_1",
+            InputEventHash = 8210702418028666615UL,
+            Category = "INTERIOR LIGHTS",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Potentiometer,
+            Hidden = false
+        },
+
+        // STBY IND
+        new AircraftCommand
+        {
+            Id = "interior_stby_ind",
+            Name = "STBY IND",
+            SimVar = null,
+            SimVarUnit = null,
+            InputEvent = "LIGHTING_PANEL_2",
+            InputEventHash = 13178487316034110786UL,
+            Category = "INTERIOR LIGHTS",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Potentiometer,
+            Hidden = false
+        },
+
+        // PEDESTAL
+        new AircraftCommand
+        {
+            Id = "interior_pedestal",
+            Name = "PEDESTAL",
+            SimVar = null,
+            SimVarUnit = null,
+            InputEvent = "LIGHTING_PEDESTRAL_1",
+            InputEventHash = 2385961043412447678UL,
+            Category = "INTERIOR LIGHTS",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Potentiometer,
+            Hidden = false
+        },
+
+        // AVIONICS
+        new AircraftCommand
+        {
+            Id = "interior_avionics",
+            Name = "AVIONICS",
+            SimVar = null,
+            SimVarUnit = null,
+            InputEvent = "LIGHTING_POTENTIOMETER_5",
+            InputEventHash = 15349620790358860248UL,
+            Category = "INTERIOR LIGHTS",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Potentiometer,
+            Hidden = false
         },
 
         // ============================================
@@ -319,20 +410,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle
         },
 
-        // Flight Level Change - Maintient la vitesse en montée/descente
-        new AircraftCommand
-        {
-            Id = "ap_flc",
-            Name = "FLC",
-            SimEvent = "FLIGHT_LEVEL_CHANGE",
-            SimVar = "AUTOPILOT FLIGHT LEVEL CHANGE",
-            SimVarUnit = "Bool",
-            Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
-            ControlType = ControlType.Toggle
-        },
-
         // Heading Hold - Maintient le cap sélectionné (HDG bug)
         new AircraftCommand
         {
@@ -378,6 +455,19 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle
         },
 
+        // Vertical Navigation (VNAV) - Mode VNAV du G1000
+        new AircraftCommand
+        {
+            Id = "ap_vnav",
+            Name = "VNAV",
+            InputEvent = "AS1000_AUTOPILOT_VERTICAL_NAVIGATION_PFD",   // B: event (hash connu)
+            InputEventHash = 16400171622324593381UL,                   // 0xE3991D32DC1962E5
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
+        },
+
         // Approach Hold - Mode approche ILS/RNAV
         new AircraftCommand
         {
@@ -389,6 +479,21 @@ public class Cessna172G1000Profile : IAircraftProfile
             Category = "AUTOPILOT",
             Key = ConsoleKey.R,
             KeyDisplay = "R",
+            ControlType = ControlType.Toggle
+        },
+
+        // Back Course - Mode approche back course ILS
+        new AircraftCommand
+        {
+            Id = "ap_bc",
+            Name = "BC",
+            InputEvent = "AS1000_AUTOPILOT_BACKCOURSE_PFD",
+            InputEventHash = 16708404293000148863UL,
+            SimVar = "AUTOPILOT APPROACH HOLD",
+            SimVarUnit = "Bool",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
 
@@ -404,6 +509,20 @@ public class Cessna172G1000Profile : IAircraftProfile
             Category = "AUTOPILOT",
             Key = ConsoleKey.W,
             KeyDisplay = "W",
+            ControlType = ControlType.Toggle
+        },
+
+        // Flight Level Change - Maintient la vitesse en montée/descente
+        new AircraftCommand
+        {
+            Id = "ap_flc",
+            Name = "FLC",
+            SimEvent = "FLIGHT_LEVEL_CHANGE",
+            SimVar = "AUTOPILOT FLIGHT LEVEL CHANGE",
+            SimVarUnit = "Bool",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
 
@@ -544,7 +663,8 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "vs_inc",
             Name = "VS UP",
-            SimEvent = "AP_VS_VAR_INC",
+            InputEvent = "AS1000_AUTOPILOT_VERTICALSPEED_UP_PFD",
+            InputEventHash = 11862786159055984339UL, // 0xA4A11528F0F3D6D3
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
@@ -555,7 +675,8 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "vs_dec",
             Name = "VS DN",
-            SimEvent = "AP_VS_VAR_DEC",
+            InputEvent = "AS1000_AUTOPILOT_VERTICALSPEED_DOWN_PFD",
+            InputEventHash = 1969240319255845983UL, // 0x1B5425A30A9F1C5F
             Category = "AUTOPILOT",
             Key = ConsoleKey.NoName,
             KeyDisplay = "",

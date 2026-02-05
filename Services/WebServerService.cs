@@ -42,6 +42,7 @@ public class WebServerService : IDisposable
         _simConnect.ConnectionChanged += OnConnectionChanged;
         _simConnect.AircraftChanged += OnAircraftChanged;
         _simConnect.StateChanged += OnStateChanged;
+        _simConnect.EnvironmentDataChanged += OnEnvironmentDataChanged;
     }
 
     /// <summary>
@@ -128,10 +129,23 @@ public class WebServerService : IDisposable
     /// </summary>
     private void OnStateChanged(string commandId, double value)
     {
+        Console.WriteLine($"[DEBUG] WebServer: Envoi état {commandId} = {value}");
         Broadcast(new WsMessage
         {
             Type = "state",
             Data = new { id = commandId, value }
+        });
+    }
+
+    /// <summary>
+    /// Relaye les données environnementales (OAT) vers les clients web
+    /// </summary>
+    private void OnEnvironmentDataChanged(double oat)
+    {
+        Broadcast(new WsMessage
+        {
+            Type = "environmentUpdate",
+            Data = new { oat }
         });
     }
 
@@ -304,6 +318,7 @@ public class SimConnectWebSocket : WebSocketModule
 
             if (cmd != null)
             {
+                Console.WriteLine($"[DEBUG] WebServer: Received command id={cmd.Id}, simEvent={cmd.SimEvent}, value={cmd.Value}");
                 _simConnect.SendCommand(cmd.Id, cmd.SimEvent, cmd.Value);
             }
         }
@@ -352,6 +367,17 @@ public class SimConnectWebSocket : WebSocketModule
                 {
                     Type = "state",
                     Data = new { id = state.Key, value = state.Value }
+                });
+            }
+
+            // 4. Données environnementales (OAT) si disponibles
+            var currentOAT = _simConnect.CurrentOAT;
+            if (!double.IsNaN(currentOAT))
+            {
+                await SendToClient(context, new WsMessage
+                {
+                    Type = "environmentUpdate",
+                    Data = new { oat = currentOAT }
                 });
             }
         }
