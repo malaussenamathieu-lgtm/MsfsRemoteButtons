@@ -26,6 +26,16 @@ public struct AircraftTitleData
 }
 
 /// <summary>
+/// Données environnementales (OAT - Outside Air Temperature)
+/// </summary>
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
+public struct EnvironmentData
+{
+    [MarshalAs(UnmanagedType.R8)]
+    public double OutsideAirTemperature;
+}
+
+/// <summary>
 /// Service de gestion SimConnect - Interface principale avec MSFS 2024
 ///
 /// Ce service gère:
@@ -65,6 +75,10 @@ public class SimConnectService : IDisposable
     // B: EVENT: ID de requête pour l'énumération des Input Events (EnumerateInputEvents)
     private const int INPUT_EVENTS_REQUEST_ID = 9999;
 
+    // Données environnementales (OAT)
+    private const int ENVIRONMENT_DATA_DEFINITION = 2;
+    private const int ENVIRONMENT_DATA_REQUEST = 2;
+
     // === ÉTATS DES CONTRÔLES ===
     // Cache local des valeurs SimVar pour éviter les requêtes répétées
     private readonly Dictionary<string, double> _buttonStates = new();      // commandId -> valeur actuelle (0.0 ou 1.0 pour Bool)
@@ -84,17 +98,20 @@ public class SimConnectService : IDisposable
     // Note: Les L: vars ne sont pas supportées (non disponibles via SimConnect en MSFS 2024)
     private CancellationTokenSource? _localVarPollCts;
 
+
     // === ÉVÉNEMENTS PUBLICS ===
     // Ces événements permettent aux autres services (WebServer) de réagir aux changements
     public event Action<bool>? ConnectionChanged;           // Déclenché quand connexion/déconnexion MSFS
     public event Action<string>? AircraftChanged;           // Déclenché quand l'avion change (nouveau titre détecté)
     public event Action<string, double>? StateChanged;      // Déclenché quand une SimVar change (commandId, nouvelle valeur)
     public event Action<string>? LogMessage;                // Déclenché pour afficher un message dans la console
+    public event Action<double>? EnvironmentDataChanged;     // Déclenché quand l'OAT change
 
     // === PROPRIÉTÉS PUBLIQUES ===
     public bool IsConnected => _isConnected;
     public IAircraftProfile? ActiveProfile => _activeProfile;
     public string CurrentAircraftTitle { get; private set; } = "";
+    public double CurrentOAT { get; private set; } = double.NaN;
 
     /// <summary>True si l'énumération des B: Input Events a été effectuée (Developer Mode requis).</summary>
     // B: EVENT
@@ -172,6 +189,18 @@ public class SimConnectService : IDisposable
                     SimConnect.SIMCONNECT_UNUSED
                 );
                 _simConnect.RegisterDataDefineStruct<AircraftTitleData>((DefineId)AIRCRAFT_TITLE_DEFINITION);
+
+                // Enregistrer la définition pour les données environnementales (OAT)
+                _simConnect.AddToDataDefinition(
+                    (DefineId)ENVIRONMENT_DATA_DEFINITION,
+                    "AMBIENT TEMPERATURE",
+                    "celsius",
+                    SIMCONNECT_DATATYPE.FLOAT64,
+                    0,
+                    SimConnect.SIMCONNECT_UNUSED
+                );
+                _simConnect.RegisterDataDefineStruct<EnvironmentData>((DefineId)ENVIRONMENT_DATA_DEFINITION);
+                Log("   ✓ Définition OAT enregistrée (AMBIENT TEMPERATURE, celsius, FLOAT64)");
             }
 
             Log("   En attente de la confirmation du simulateur (max. 10 s)...");
@@ -306,6 +335,39 @@ public class SimConnectService : IDisposable
             SIMCONNECT_PERIOD.ONCE,
             SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT,
             0, 0, 0
+            );
+        }
+    }
+
+    /// <summary>
+    /// Demande les données environnementales (OAT) avec mise à jour automatique
+    /// Utilise VISUAL_FRAME + CHANGED pour éviter le "pile up" de requêtes
+    /// </summary>
+    private void RequestEnvironmentData()
+    {
+        if (_simConnect == null || !_isConnected) return;
+
+        lock (_simConnectLock)
+        {
+            // Lecture initiale immédiate pour obtenir l'état actuel
+            _simConnect.RequestDataOnSimObject(
+                (RequestId)ENVIRONMENT_DATA_REQUEST,
+                (DefineId)ENVIRONMENT_DATA_DEFINITION,
+                SimConnect.SIMCONNECT_OBJECT_ID_USER,
+                SIMCONNECT_PERIOD.ONCE,
+                SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT,
+                0, 0, 0
+            );
+
+            // Mise à jour automatique toutes les frames visuelles (seulement sur changement)
+            // Cela évite le "pile up" de requêtes multiples
+            _simConnect.RequestDataOnSimObject(
+                (RequestId)ENVIRONMENT_DATA_REQUEST,
+                (DefineId)ENVIRONMENT_DATA_DEFINITION,
+                SimConnect.SIMCONNECT_OBJECT_ID_USER,
+                SIMCONNECT_PERIOD.VISUAL_FRAME,
+                SIMCONNECT_DATA_REQUEST_FLAG.CHANGED,
+                0, 0, 0
             );
         }
     }
@@ -893,6 +955,9 @@ public class SimConnectService : IDisposable
 
         // Demander le titre de l'avion une fois la connexion confirmée
         RequestAircraftTitle();
+
+        // Démarrer la récupération des données environnementales (OAT)
+        RequestEnvironmentData();
     }
 
     /// <summary>
@@ -1092,7 +1157,21 @@ public class SimConnectService : IDisposable
             return;
         }
 
-        // === CAS 2: Données SimVar d'une commande ===
+        // === CAS 2: Données environnementales (OAT) ===
+        if (data.dwRequestID == ENVIRONMENT_DATA_REQUEST)
+        {
+            var envData = (EnvironmentData)data.dwData[0];
+            var newOAT = envData.OutsideAirTemperature;
+            
+            if (double.IsNaN(CurrentOAT) || Math.Abs(CurrentOAT - newOAT) > 0.1)
+            {
+                CurrentOAT = newOAT;
+                Task.Run(() => EnvironmentDataChanged?.Invoke(CurrentOAT));
+            }
+            return;
+        }
+
+        // === CAS 3: Données SimVar d'une commande ===
         // On retrouve le commandId via le mapping _simVarDefinitions
         int requestId = (int)data.dwRequestID;
         if (_simVarDefinitions.TryGetValue(requestId, out var commandId))

@@ -22,6 +22,9 @@
         <div class="status" style="margin-top: 8px;">
             <span class="aircraft-name" id="aircraftName">En attente...</span>
         </div>
+        <div class="status" style="margin-top: 8px;">
+            <span id="oatDisplay">OAT: --°C</span>
+        </div>
     </div>
 
     <div id="controls">
@@ -62,6 +65,7 @@
         const simStatusEl = document.getElementById('simStatus');
         const aircraftNameEl = document.getElementById('aircraftName');
         const disconnectedOverlay = document.getElementById('disconnectedOverlay');
+        const oatDisplayEl = document.getElementById('oatDisplay');
 
         // ================================================================
         // CONNEXION WEBSOCKET
@@ -143,6 +147,13 @@
                 case 'state':
                     states[msg.data.id] = msg.data.value;
                     updateControlState(msg.data.id, msg.data.value);
+                    break;
+
+                case 'environmentUpdate':
+                    if (msg.data && msg.data.oat !== undefined) {
+                        const oat = parseFloat(msg.data.oat);
+                        oatDisplayEl.textContent = `OAT: ${oat.toFixed(1)}°C`;
+                    }
                     break;
 
                 case 'pong':
