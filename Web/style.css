@@ -870,6 +870,64 @@ body {
     justify-content: center;
 }
 
+/* Boutons Nose UP/DN pour VS */
+.control-group.vs-controls .nose-btn {
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 4px;
+}
+
+.nose-label {
+    font-size: 0.6em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.nose-direction {
+    font-size: 0.9em;
+    font-weight: bold;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+/* Sélecteurs d'incrément HDG et ALT - même format que les boutons +/- */
+.increment-selector-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: stretch;
+    width: 70px;
+    min-width: 70px;
+    height: 80px;
+    min-height: 80px;
+    max-height: 80px;
+    gap: 3px;
+}
+
+.increment-selector-group .ctrl-btn.increment-selector-btn {
+    flex: 1 1 50%;
+    min-height: 0;
+    padding: 8px 4px;
+    font-size: 0.75em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-family: 'Consolas', monospace;
+}
+
+.increment-selector-group .ctrl-btn.increment-selector-btn.active {
+    background: #00aa00;
+    border-color: #00ff00;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+}
+
+.increment-selector-group .ctrl-btn.increment-selector-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
 /* Potentiometer Control */
 .potentiometer-control {
     display: flex;

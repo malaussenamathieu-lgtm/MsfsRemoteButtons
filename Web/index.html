@@ -307,19 +307,30 @@
                 if (category === 'AUTOPILOT') {
                     html += `<div class="controls-row">`;
                     html += `<div class="control-spacer"></div>`; // AP
-                    html += `<div class="control-spacer"></div>`; // FD
-                    // HDG controls (2x2 grid)
-                    html += `<div class="control-group grid-2x2"><button class="ctrl-btn" onclick="sendToggle('hdg_dec_10')">−10</button><button class="ctrl-btn" onclick="sendToggle('hdg_inc_10')">+10</button><button class="ctrl-btn" onclick="sendToggle('hdg_dec_1')">−1</button><button class="ctrl-btn" onclick="sendToggle('hdg_inc_1')">+1</button></div>`;
-                    // ALT controls (2x2 grid)
-                    html += `<div class="control-group grid-2x2"><button class="ctrl-btn" onclick="sendToggle('alt_dec_1000')">−1000</button><button class="ctrl-btn" onclick="sendToggle('alt_inc_1000')">+1000</button><button class="ctrl-btn" onclick="sendToggle('alt_dec_100')">−100</button><button class="ctrl-btn" onclick="sendToggle('alt_inc_100')">+100</button></div>`;
-                    html += `<div class="control-spacer"></div>`; // NAV
+                    // Sélecteur d'incrément HDG sous FD
+                    html += `<div class="control-group increment-selector-group">`;
+                    html += `<button class="ctrl-btn increment-selector-btn" data-hdg-value="10" onclick="setHdgIncrement(10)">+10</button>`;
+                    html += `<button class="ctrl-btn increment-selector-btn" data-hdg-value="100" onclick="setHdgIncrement(100)">+100</button>`;
+                    html += `</div>`;
+                    // HDG controls - + en haut, - en bas
+                    html += `<div class="control-group vs-controls"><button class="ctrl-btn" onclick="sendHdgIncrement(true)">+</button><button class="ctrl-btn" onclick="sendHdgIncrement(false)">−</button></div>`;
+                    // ALT controls - + en haut, - en bas
+                    html += `<div class="control-group vs-controls"><button class="ctrl-btn" onclick="sendAltIncrement(true)">+</button><button class="ctrl-btn" onclick="sendAltIncrement(false)">−</button></div>`;
+                    // Sélecteur d'incrément ALT sous NAV
+                    html += `<div class="control-group increment-selector-group">`;
+                    html += `<button class="ctrl-btn increment-selector-btn" data-alt-value="100" onclick="setAltIncrement(100)">+100</button>`;
+                    html += `<button class="ctrl-btn increment-selector-btn" data-alt-value="1000" onclick="setAltIncrement(1000)">+1000</button>`;
+                    html += `</div>`;
                     html += `<div class="control-spacer"></div>`; // VNAV
                     html += `<div class="control-spacer"></div>`; // APR
-                    html += `<div class="control-spacer"></div>`; // BC (pas encore créé)
-                    // VS controls
-                    html += `<div class="control-group vs-controls"><button class="ctrl-btn" onclick="sendToggle('vs_dec')">DN</button><button class="ctrl-btn" onclick="sendToggle('vs_inc')">UP</button></div>`;
-                    // SPD controls (pour FLC) - même format que VS controls
-                    html += `<div class="control-group vs-controls"><button class="ctrl-btn" onclick="sendToggle('spd_dec')">−</button><button class="ctrl-btn" onclick="sendToggle('spd_inc')">+</button></div>`;
+                    html += `<div class="control-spacer"></div>`; // BC
+                    // VS controls - Nose UP/DN sur 2 lignes
+                    html += `<div class="control-group vs-controls">`;
+                    html += `<button class="ctrl-btn nose-btn" onclick="sendToggle('vs_inc')"><span class="nose-label">Nose</span><span class="nose-direction">UP</span></button>`;
+                    html += `<button class="ctrl-btn nose-btn" onclick="sendToggle('vs_dec')"><span class="nose-label">Nose</span><span class="nose-direction">DN</span></button>`;
+                    html += `</div>`;
+                    // SPD controls (pour FLC) - + en haut, - en bas
+                    html += `<div class="control-group vs-controls"><button class="ctrl-btn" onclick="sendToggle('spd_inc')">+</button><button class="ctrl-btn" onclick="sendToggle('spd_dec')">−</button></div>`;
                     html += `</div>`; // close controls-row
                     html += `</div>`; // close autopilot-panel
                 }
@@ -414,6 +425,10 @@
                     sendToggle(cmdId);
                 });
             });
+
+            // Initialiser les sélecteurs d'incrément
+            setHdgIncrement(10); // Valeur par défaut : 10
+            setAltIncrement(100); // Valeur par défaut : 100
 
             // Appliquer les états déjà connus aux nouveaux éléments
             for (const [id, value] of Object.entries(states)) {
@@ -759,6 +774,74 @@
             };
             console.log(`[DEBUG] Potentiometer ${id}: sending command`, message);
             ws.send(JSON.stringify(message));
+        }
+
+        // ================================================================
+        // HDG & ALT INCREMENT SELECTORS
+        // ================================================================
+        let hdgIncrement = 10; // Valeur par défaut : 10
+        let altIncrement = 100; // Valeur par défaut : 100
+
+        /**
+         * Définit l'incrément pour les boutons HDG (+/-)
+         * @param {number} value - Valeur de l'incrément (10 ou 100)
+         */
+        function setHdgIncrement(value) {
+            hdgIncrement = value;
+            // Mettre à jour l'apparence des boutons sélecteurs HDG uniquement
+            document.querySelectorAll('[data-hdg-value]').forEach(btn => {
+                const btnValue = parseInt(btn.dataset.hdgValue);
+                if (btnValue === value) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        /**
+         * Envoie une commande d'incrément/décrément HDG avec l'incrément sélectionné
+         * @param {boolean} increment - true pour incrémenter, false pour décrémenter
+         */
+        function sendHdgIncrement(increment) {
+            if (hdgIncrement === 10) {
+                const commandId = increment ? 'hdg_inc_10' : 'hdg_dec_10';
+                sendToggle(commandId);
+            } else if (hdgIncrement === 100) {
+                // Pour +100, répéter hdg_inc_10 dix fois
+                const baseCmd = increment ? 'hdg_inc_10' : 'hdg_dec_10';
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => sendToggle(baseCmd), i * 10); // Espacer de 10ms
+                }
+            }
+        }
+
+        /**
+         * Définit l'incrément pour les boutons ALT (+/-)
+         * @param {number} value - Valeur de l'incrément (100 ou 1000)
+         */
+        function setAltIncrement(value) {
+            altIncrement = value;
+            // Mettre à jour l'apparence des boutons sélecteurs ALT uniquement
+            document.querySelectorAll('[data-alt-value]').forEach(btn => {
+                const btnValue = parseInt(btn.dataset.altValue);
+                if (btnValue === value) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
+        /**
+         * Envoie une commande d'incrément/décrément ALT avec l'incrément sélectionné
+         * @param {boolean} increment - true pour incrémenter, false pour décrémenter
+         */
+        function sendAltIncrement(increment) {
+            const commandId = increment 
+                ? (altIncrement === 100 ? 'alt_inc_100' : 'alt_inc_1000')
+                : (altIncrement === 100 ? 'alt_dec_100' : 'alt_dec_1000');
+            sendToggle(commandId);
         }
 
         // ================================================================
