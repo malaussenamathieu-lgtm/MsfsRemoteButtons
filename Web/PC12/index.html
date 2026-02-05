@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PC-12 - MSFS Remote Buttons</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <div class="header-line header-line-1">
+            <h1>✈️ PC-12 NGX</h1>
+            <div class="status">
+                <div class="status-item">
+                    <span class="status-dot" id="wsStatus"></span>
+                    <span>Serveur</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="simStatus"></span>
+                    <span>MSFS</span>
+                </div>
+            </div>
+        </div>
+        <div class="header-line header-line-2">
+            <span class="aircraft-name" id="aircraftName">En attente...</span>
+            <span id="oatDisplay">OAT: --&#176;C</span>
+        </div>
+    </div>
+
+    <div id="controls">
+        <div class="loading" id="loadingState">
+            <span>Connexion au serveur...</span>
+            <button type="button" class="loading-retry" id="loadingRetry">Réessayer</button>
+        </div>
+    </div>
+
+    <div class="disconnected-overlay" id="disconnectedOverlay">
+        <h2>⚠️ Déconnecté</h2>
+        <p>Connexion au serveur perdue. Reconnexion...</p>
+        <p class="overlay-hint">Lancez l'application sur le PC, puis ouvrez <strong>http://localhost:8080</strong> (ou l'IP du PC si vous êtes sur tablette).</p>
+        <button type="button" class="overlay-retry" id="overlayRetry">Réessayer</button>
+    </div>
+
+    <script src="/js/app.js"></script>
+    <script>
+        function doRetry() { if (typeof connect === 'function') connect(); }
+        document.getElementById('overlayRetry').addEventListener('click', doRetry);
+        document.getElementById('loadingRetry').addEventListener('click', doRetry);
+    </script>
+</body>
+</html>

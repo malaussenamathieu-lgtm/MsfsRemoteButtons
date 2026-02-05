@@ -120,6 +120,10 @@ public class SimConnectService : IDisposable
     // Note: Les L: vars ne sont pas supportées (non disponibles via SimConnect en MSFS 2024)
     private CancellationTokenSource? _localVarPollCts;
 
+    // Rafraîchissement périodique du titre avion pour détecter un changement d'avion dans le simu
+    private DateTime _lastAircraftTitleRequestUtc = DateTime.MinValue;
+    private static readonly TimeSpan AircraftTitleRefreshInterval = TimeSpan.FromSeconds(10);
+
 
     // === ÉVÉNEMENTS PUBLICS ===
     // Ces événements permettent aux autres services (WebServer) de réagir aux changements
@@ -382,6 +386,14 @@ public class SimConnectService : IDisposable
     {
         if (_simConnect == null || !_isConnected) return;
 
+        // Rafraîchir le titre avion périodiquement pour détecter un changement d'avion (ex. Pilatus → Cessna)
+        var now = DateTime.UtcNow;
+        if ((now - _lastAircraftTitleRequestUtc) >= AircraftTitleRefreshInterval)
+        {
+            _lastAircraftTitleRequestUtc = now;
+            RequestAircraftTitle();
+        }
+
         try
         {
             lock (_simConnectLock)
@@ -431,6 +443,8 @@ public class SimConnectService : IDisposable
     public void RequestAircraftTitle()
     {
         if (_simConnect == null || !_isConnected) return;
+
+        _lastAircraftTitleRequestUtc = DateTime.UtcNow;
 
         lock (_simConnectLock)
         {
@@ -1497,9 +1511,10 @@ public class SimConnectService : IDisposable
         if (data.dwRequestID == AIRCRAFT_TITLE_REQUEST)
         {
             var titleData = (AircraftTitleData)data.dwData[0];
-            if (titleData.Title != CurrentAircraftTitle)
+            var normalizedTitle = ProfileManager.NormalizeAircraftTitle(titleData.Title) ?? titleData.Title.Trim();
+            if (normalizedTitle != CurrentAircraftTitle)
             {
-                CurrentAircraftTitle = titleData.Title;
+                CurrentAircraftTitle = normalizedTitle;
                 Log($"🛫 Avion détecté: {CurrentAircraftTitle}");
 
                 // Auto-détection du profil

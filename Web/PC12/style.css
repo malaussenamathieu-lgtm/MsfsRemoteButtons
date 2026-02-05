@@ -1,0 +1,1872 @@
+/* Thème PC-12 NGX - accent bleu */
+:root {
+    --accent: #00aaff;
+    --accent-glow: #00aaff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Optimisations tactiles globales */
+button, [role="button"], input[type="range"], .btn-toggle, .btn-momentary, 
+.selector-option, .flaps-btn, .ctrl-btn, .double-toggle-btn, 
+.cylindrical-switch, .potentiometer-slider {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+}
+
+body {
+    font-family: 'Consolas', 'Courier New', monospace;
+    background: #2d2d2d;
+    color: #eee;
+    min-height: 100vh;
+    padding: 15px;
+    margin: 0 auto;
+}
+
+/* Header - 2 lignes */
+.header {
+    text-align: center;
+    padding: 10px 12px;
+    background: #333333;
+    border: 1px solid #444;
+    margin-bottom: 15px;
+}
+
+.header-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.header-line-1 {
+    margin-bottom: 6px;
+}
+
+.header-line-2 {
+    font-size: 0.85em;
+    color: #ccc;
+    gap: 20px;
+}
+
+.header-line-2 .aircraft-name {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.header h1 {
+    font-size: 1.1em;
+    color: var(--accent);
+    margin: 0;
+    font-weight: normal;
+    letter-spacing: 2px;
+}
+
+.status {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 0.8em;
+}
+
+/* Jauge de trim de profondeur (verticale) */
+.trim-gauge-panel {
+    position: relative;
+    width: 180px;
+    height: auto;
+    min-height: 246px; /* Même hauteur que les autres cadres */
+    background: rgba(45, 45, 45, 0.5);
+    border: 1px solid #fff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+}
+
+.trim-gauge-vertical {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    margin-top: 10px;
+    padding: 4px;
+}
+
+.trim-gauge-scale-vertical {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 4px 0;
+    font-size: 0.6em;
+    color: #ccc;
+}
+
+.trim-gauge-mark-vertical {
+    position: absolute;
+    font-size: 0.55em;
+    color: #aaa;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.trim-gauge-mark-max-vertical {
+    top: 0;
+}
+
+.trim-gauge-mark-takeoff-vertical {
+    /* Position TAKEOFF : environ 1.5° correspond à ~8% sur la plage -86.4% à +100% */
+    /* Calcul : (8 - (-86.4)) / (100 - (-86.4)) * 100% ≈ 50.6% depuis le bas */
+    bottom: calc((8 - (-86.4)) / (100 - (-86.4)) * 100%);
+    transform: translateY(50%);
+    color: #ffc107; /* Jaune pour la position recommandée */
+    font-weight: bold;
+}
+
+.trim-gauge-mark-min-vertical {
+    bottom: 0;
+}
+
+.trim-gauge-bar-vertical {
+    position: absolute;
+    left: 50px;
+    top: 4px;
+    bottom: 4px;
+    width: 16px;
+    background: rgba(40, 40, 40, 0.8);
+    border: 1px solid #666;
+    border-radius: 2px;
+    overflow: visible;
+}
+
+.trim-gauge-indicator-bar-vertical {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 4px;
+    background: #00ff00;
+    border: 1px solid #00cc00;
+    border-radius: 1px;
+    z-index: 10;
+    transition: bottom 0.2s ease;
+}
+
+.trim-gauge-takeoff-marker-vertical {
+    position: absolute;
+    left: -2px;
+    width: calc(100% + 4px);
+    height: 2px;
+    background: #ffc107;
+    border: none;
+    z-index: 5;
+    /* Position TAKEOFF : environ 1.5° correspond à ~8% sur la plage -86.4% à +100% */
+    bottom: calc((8 - (-86.4)) / (100 - (-86.4)) * 100%);
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #333;
+    border: 1px solid #555;
+}
+
+.status-dot.connected {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.aircraft-name {
+    color: #ffcc00;
+    font-weight: normal;
+    font-size: 0.9em;
+}
+
+/* Categories */
+.category {
+    margin-bottom: 12px;
+}
+
+.category-title {
+    font-size: 0.75em;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 6px 10px;
+    background: #333333;
+    border: 1px solid #444;
+    border-bottom: none;
+}
+
+.category-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px;
+    background: #2d2d2d;
+    border: 1px solid #444;
+}
+
+.category-buttons > * {
+    flex: 1 1 90px;
+    max-width: 120px;
+}
+
+/* Le wrapper toggle-wrapper doit se comporter comme un enfant direct */
+.category-buttons > .toggle-wrapper {
+    flex: 1 1 90px;
+    max-width: 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.category-buttons > .toggle-wrapper > .btn-toggle {
+    flex: 1;
+    width: 100%;
+}
+
+/* INTERIOR LIGHTS: Structure avec sections */
+.interior-lights-container {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+    padding: 10px;
+    background: #2d2d2d;
+    border: 1px solid #444;
+}
+
+.interior-lights-section {
+    display: flex;
+    flex-direction: column;
+}
+
+.interior-lights-section.section-1 {
+    width: 25%;
+    min-width: 25%;
+    border: 1px solid #555;
+    background: #333333;
+    padding: 8px;
+}
+
+.interior-lights-section-title {
+    text-align: center;
+    color: #fff;
+    font-size: 0.75em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 6px 0;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #444;
+}
+
+.interior-lights-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+}
+
+.interior-lights-grid .potentiometer-control {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* ÉLECTRIQUE: Double-toggle switches */
+.electrical-container {
+    display: flex;
+    gap: 20px;
+    padding: 10px;
+    background: #2d2d2d;
+    border: 1px solid #444;
+    align-items: flex-start;
+}
+
+.double-toggle-switch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 120px;
+    border: 1px solid #fff;
+    padding: 8px;
+    background: rgba(45, 45, 45, 0.5);
+}
+
+.double-toggle-title {
+    font-size: 0.75em;
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    text-align: center;
+}
+
+.double-toggle-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 4px;
+    font-size: 0.65em;
+    color: #ccc;
+    text-transform: uppercase;
+}
+
+.double-toggle-label-left {
+    text-align: left;
+}
+
+.double-toggle-label-right {
+    text-align: right;
+}
+
+.double-toggle-buttons {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    margin-bottom: 4px;
+}
+
+.double-toggle-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 10px 6px;
+    border: 1px solid #444;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    min-height: 60px;
+    min-width: 60px;
+    position: relative;
+    /* Zone de touch optimisée */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 255, 0, 0.2);
+}
+
+.double-toggle-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.double-toggle-btn .indicator {
+    width: 100%;
+    height: 6px;
+    border-radius: 1px;
+    margin-bottom: 4px;
+    background: #333333;
+    border: 1px solid #444;
+    transition: all 0.15s ease;
+}
+
+.double-toggle-btn.on .indicator {
+    background: #00ff00;
+    border-color: #00ff00;
+    box-shadow: 0 0 10px #00ff00, 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.double-toggle-btn.off .indicator {
+    background: #333333;
+    border-color: #444;
+}
+
+/* Couleurs des switches selon le type */
+.double-toggle-btn.switch-red.on .indicator {
+    background: #ff3333;
+    border-color: #ff3333;
+    box-shadow: 0 0 10px #ff3333, 0 0 20px rgba(255, 51, 51, 0.3);
+}
+
+.double-toggle-btn.switch-red {
+    background: linear-gradient(180deg, #3a1a1a 0%, #2a0a0a 100%);
+}
+
+.double-toggle-btn.switch-grey.on .indicator {
+    background: #e0e0e0;
+    border-color: #e0e0e0;
+    box-shadow: 0 0 10px #e0e0e0, 0 0 20px rgba(224, 224, 224, 0.3);
+}
+
+.double-toggle-btn.switch-grey {
+    background: linear-gradient(180deg, #4a4a4a 0%, #333333 100%);
+}
+
+.electrical-other-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+}
+
+/* Lights Wrapper - même padding que electrical-container */
+.lights-wrapper {
+    padding: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+/* Lights Container */
+.lights-container {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    border: 1px solid #fff;
+    padding: 8px;
+    background: rgba(45, 45, 45, 0.5);
+    width: fit-content;
+}
+
+.lights-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.lights-switches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+/* Cylindrical Switch Wrapper - pour contenir la LED d'avertissement OAT */
+.cylindrical-switch-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+}
+
+/* Cylindrical Switch (style cockpit) */
+.cylindrical-switch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    min-width: 100px;
+    /* Zone de touch optimisée : toute la zone switch est cliquable */
+    min-height: 120px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 255, 0, 0.2);
+}
+
+.cylindrical-switch-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+.cylindrical-switch-lever-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 60px;
+    /* Zone de touch optimisée : toute la zone wrapper est cliquable */
+    min-height: 60px;
+    padding: 15px;
+    margin: -15px;
+}
+
+.cylindrical-switch-bezel {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    transition: box-shadow 0.2s ease;
+    /* Zone de touch optimisée : toute la zone bezel est cliquable */
+    min-width: 50px;
+    min-height: 50px;
+}
+
+.cylindrical-switch-bezel.on-indicator {
+    box-shadow: 0 0 8px rgba(255, 0, 0, 0.8), 0 0 12px rgba(255, 0, 0, 0.5);
+}
+
+.cylindrical-switch-bezel.on-indicator-light {
+    box-shadow: 0 0 8px rgba(255, 200, 0, 0.9), 0 0 12px rgba(255, 165, 0, 0.6), 0 0 16px rgba(255, 140, 0, 0.3);
+}
+
+.cylindrical-switch-lever {
+    width: 24px;
+    height: 40px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.cylindrical-switch-lever.white {
+    background: linear-gradient(180deg, #e8e8e8 0%, #d0d0d0 100%);
+}
+
+.cylindrical-switch-lever.white.on {
+    transform: translateY(-12px);
+    background: linear-gradient(180deg, #f0f0f0 0%, #e0e0e0 100%);
+}
+
+.cylindrical-switch-lever.white.off {
+    transform: translateY(12px);
+    background: linear-gradient(180deg, #c8c8c8 0%, #b0b0b0 100%);
+}
+
+.cylindrical-switch-lever.green {
+    background: linear-gradient(180deg, #4ade80 0%, #22c55e 100%);
+}
+
+.cylindrical-switch-lever.green.on {
+    transform: translateY(-12px);
+    background: linear-gradient(180deg, #5ee984 0%, #4ade80 100%);
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+}
+
+.cylindrical-switch-lever.green.off {
+    transform: translateY(12px);
+    background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
+}
+
+.cylindrical-switch-lever:hover {
+    opacity: 0.9;
+}
+
+.cylindrical-switch-state-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.cylindrical-switch-state {
+    font-size: 11px;
+    font-weight: 600;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+/* A320 Style Toggle Button - Touch optimized */
+.btn-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 12px 10px;
+    border: 1px solid #444;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    background: linear-gradient(180deg, #3a3a3a 0%, #2d2d2d 100%);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    min-height: 80px;
+    min-width: 80px;
+    /* Zone de touch optimisée */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 255, 0, 0.2);
+}
+
+.btn-toggle:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* A320 LED indicator - rectangular bar at top */
+.btn-toggle .indicator {
+    width: 100%;
+    height: 6px;
+    border-radius: 1px;
+    margin-bottom: 8px;
+    background: #333333;
+    border: 1px solid #444;
+    transition: all 0.15s ease;
+}
+
+.btn-toggle.on .indicator {
+    background: #00ff00;
+    border-color: #00ff00;
+    box-shadow: 0 0 10px #00ff00, 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+.btn-toggle.off .indicator {
+    background: #333333;
+    border-color: #444;
+}
+
+.btn-toggle .label {
+    font-size: 1.1em;
+    color: #ccc;
+    text-align: center;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Selector */
+.selector {
+    display: flex;
+    flex-direction: column;
+    background: #2d2d2d;
+    border: 1px solid #444;
+    border-radius: 3px;
+    padding: 8px;
+    grid-column: span 2;
+}
+
+.selector-label {
+    font-size: 0.65em;
+    color: #888;
+    text-align: center;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.selector-options {
+    display: flex;
+    gap: 4px;
+}
+
+.selector-option {
+    flex: 1;
+    padding: 12px 6px;
+    border: 1px solid #444;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 0.65em;
+    font-weight: bold;
+    background: linear-gradient(180deg, #3a3a3a, #2d2d2d);
+    color: #888;
+    transition: all 0.1s ease;
+    text-transform: uppercase;
+    /* Zone de touch optimisée */
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 255, 0, 0.2);
+}
+
+.selector-option:active {
+    transform: translateY(1px);
+}
+
+.selector-option.active {
+    background: #00aa00;
+    border-color: #00ff00;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+}
+
+/* Momentary Button - Touch optimized */
+.btn-momentary {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 10px;
+    border: 1px solid #444;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    background: linear-gradient(180deg, #3a3a3a, #2d2d2d);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    min-height: 80px;
+    min-width: 80px;
+    color: #888;
+    /* Zone de touch optimisée */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 255, 0, 0.2);
+}
+
+.btn-momentary:active {
+    transform: translateY(1px);
+    background: #00aa00;
+    border-color: #00ff00;
+    color: #fff;
+}
+
+.btn-momentary .label {
+    font-size: 1.1em;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* VOLETS - Flaps control with vertical selector and +/- buttons */
+.flaps-control {
+    background: #2d2d2d;
+    border: 1px solid #444;
+    border-radius: 3px;
+    padding: 8px;
+}
+
+.flaps-control .selector-label {
+    font-size: 0.65em;
+    color: #888;
+    text-align: center;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: block;
+}
+
+.flaps-content {
+    display: flex;
+    gap: 4px;
+}
+
+.flaps-control .selector-options {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.flaps-control .selector-option {
+    min-width: 50px;
+}
+
+.flaps-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.flaps-btn {
+    flex: 1;
+    width: 50px;
+    padding: 12px 6px;
+    border: 1px solid #444;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 0.8em;
+    font-weight: bold;
+    background: linear-gradient(180deg, #3a3a3a, #2d2d2d);
+    color: #888;
+    transition: all 0.1s ease;
+    /* Zone de touch optimisée */
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 255, 0, 0.2);
+}
+
+.flaps-btn:active {
+    transform: translateY(1px);
+    background: #00aa00;
+    border-color: #00ff00;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+}
+
+/* VOLETS RÉALISTE - Sélecteur mécanique avec levier vertical */
+.flaps-control-realistic {
+    background: rgba(45, 45, 45, 0.5);
+    border: 1px solid #fff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 200px;
+    height: 246px; /* Hauteur fixe identique au rotating-handle-panel */
+}
+
+.flaps-title {
+    font-size: 0.75em;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.flaps-mechanical-panel {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    width: 100%;
+    justify-content: center;
+}
+
+.flaps-track {
+    position: relative;
+    width: 120px;
+    height: 200px;
+    background: transparent;
+    border: none;
+    padding: 8px;
+    overflow: hidden;
+}
+
+/* Zone bleue de UP à 10° (vitesse 110) */
+.flaps-track::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    width: calc(100% - 16px);
+    height: 50%; /* Zone bleue jusqu'à 50% */
+    background: linear-gradient(180deg, #4a7ba7 0%, #3d6a95 100%);
+    z-index: 1;
+}
+
+/* Zone blanche de 10° à FULL (vitesse 85) */
+.flaps-track::after {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 50%; /* À partir de 50% */
+    width: calc(100% - 16px);
+    height: 50%; /* De 50% à FULL */
+    background: #ffffff;
+    z-index: 1;
+}
+
+.flaps-markings {
+    position: absolute;
+    left: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: 100%;
+    height: calc(100% - 16px);
+}
+
+.flaps-marking {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+}
+
+.flaps-marking-up {
+    top: 4px; /* Remonté un peu */
+    transform: translateY(0); /* Pas de translation vers le haut */
+    z-index: 2;
+    color: #fff;
+    right: 56px; /* Encore plus à gauche */
+    left: auto;
+    align-items: flex-end;
+}
+
+.flaps-marking-10 {
+    top: 40%; /* 10° à 40% */
+    transform: translateY(-50%);
+    z-index: 2;
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-marking-20 {
+    top: 60%; /* 20° à 60% */
+    transform: translateY(-50%);
+    z-index: 2;
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-marking-full {
+    bottom: 0;
+    transform: translateY(50%);
+    z-index: 2;
+    right: 56px; /* Encore plus à gauche */
+    left: auto;
+    align-items: flex-end;
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-marking-up .flaps-label {
+    background: transparent; /* Pas de fond, juste le texte blanc */
+    color: #fff;
+    padding: 0;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+
+/* Zones de vitesse alignées à gauche mais centrées verticalement */
+.flaps-speed-zone {
+    position: absolute;
+    left: 8px;
+    color: #fff;
+    font-size: 0.9em;
+    font-weight: bold;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 4px;
+}
+
+.flaps-speed-85 {
+    color: #000; /* Noir sur fond blanc */
+}
+
+.flaps-speed-110 {
+    top: 8px;
+    height: 50%; /* Zone bleue jusqu'à 50% */
+}
+
+.flaps-speed-85 {
+    top: 50%; /* À partir de 50% */
+    height: 50%; /* Zone blanche de 50% à FULL */
+}
+
+.flaps-marking-10 .flaps-angle {
+    background: transparent; /* Pas de fond, juste le texte noir */
+    color: #000;
+    padding: 0;
+    font-size: 0.65em;
+    font-weight: bold;
+}
+
+.flaps-marking-20 .flaps-angle {
+    background: transparent; /* Pas de fond, juste le texte noir */
+    color: #000;
+    padding: 0;
+    font-size: 0.65em;
+    font-weight: bold;
+}
+
+.flaps-marking-full .flaps-label {
+    background: transparent; /* Pas de fond, juste le texte noir */
+    color: #000;
+    padding: 0;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+
+
+.flaps-lever-track {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    bottom: 8px;
+    width: 40px;
+    background: #1f1f1f;
+    border: 1px solid #555;
+    border-radius: 2px;
+    z-index: 2;
+}
+
+/* Ajuster la position des marquages 10° et 20° pour être juste à gauche du levier */
+.flaps-marking-10,
+.flaps-marking-20 {
+    right: 50px; /* Juste à gauche du track du levier (40px de largeur + 8px de padding + 2px d'espace) */
+    left: auto;
+    align-items: flex-end;
+}
+
+.flaps-lever {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 24px;
+    height: 32px;
+    background: linear-gradient(135deg, #c0c0c0, #808080);
+    border: 2px solid #555;
+    border-radius: 3px;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.5),
+        0 0 0 1px #333;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    z-index: 10;
+    /* Position calculée pour centrer le levier sur les marquages */
+    /* UP (0%): top = 0% (le levier monte jusqu'en haut) */
+    /* 10° (40%): top = 40% - 16px/184px ≈ 31.3% */
+    /* 20° (60%): top = 60% - 16px/184px ≈ 51.3% */
+    /* FULL (100%): top = 100% - 32px/184px ≈ 82.6% */
+}
+
+.flaps-lever::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+    border-radius: 2px;
+}
+
+.flaps-indicator-strip {
+    display: none; /* Cacher l'indicateur numérique */
+}
+
+.flaps-indicator {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    color: #000;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    font-weight: bold;
+    border: 1px solid #333;
+    transition: top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+    transform: translateY(-50%);
+}
+
+.flaps-control-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.flaps-control-realistic .flaps-btn {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.flaps-click-zones {
+    display: none; /* Les zones cliquables sont cachées, on utilise les boutons +/- */
+}
+
+/* Hide default flaps +/- buttons rendered outside */
+.btn-momentary[data-id="flaps_decr"],
+.btn-momentary[data-id="flaps_incr"] {
+    display: none;
+}
+
+/* Conteneur VOLETS */
+.volets-container {
+    display: flex;
+    gap: 20px;
+    align-items: flex-end; /* Aligner les cadres en bas */
+    flex-wrap: wrap;
+}
+
+.parking-brake-section,
+.trim-gauge-section {
+    margin-left: 10px;
+}
+
+.fuel-selector-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Poignée rotative pour le frein de parking */
+.rotating-handle-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.rotating-handle-panel {
+    position: relative;
+    width: 180px;
+    /* Hauteur identique au flaps-control-realistic */
+    /* Structure flaps-control-realistic: padding (8px) + titre (~20px) + margin-bottom (10px) + track (200px) + padding (8px) = 246px */
+    /* Structure rotating-handle-panel: padding (8px) + titre (~20px) + margin-bottom (10px) + wrapper (flex:1) + padding (8px) */
+    /* Pour avoir la même hauteur totale, le wrapper doit faire 200px comme le track */
+    height: 246px; /* Hauteur fixe identique au flaps-control-realistic */
+    background: rgba(45, 45, 45, 0.5);
+    border: 1px solid #fff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0; /* Pas de gap, le margin-bottom du titre gère l'espacement */
+}
+
+.rotating-handle-title {
+    font-size: 0.75em;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 10px; /* Même margin-bottom que flaps-title */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.rotating-handle-wrapper {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: flex-start; /* Aligné en haut pour correspondre au padding du flaps-track */
+    justify-content: center;
+    padding-top: 0; /* Le padding est géré par le panneau */
+}
+
+.rotating-handle {
+    position: relative;
+    width: 150px; /* 50px * 3 */
+    height: 48px; /* 16px * 3 */
+    background: linear-gradient(135deg, #3a3a3a, #1a1a1a);
+    border: 2px solid #555;
+    border-radius: 6px;
+    cursor: pointer;
+    /* Point de rotation au centre du cercle gris clair (à droite) */
+    /* Le cercle est à right: 12px, donc son centre est à 12px + 4.5px (rayon) = 16.5px depuis la droite */
+    /* En pourcentage depuis la droite : (12px + 4.5px) / 150px ≈ 11% */
+    transform-origin: calc(100% - 16.5px) center; /* Centre du cercle gris clair */
+    transform: rotate(0deg);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.05),
+        0 4px 8px rgba(0, 0, 0, 0.6);
+    z-index: 10;
+    /* Style mat/texturé comme dans l'image */
+    background-image: 
+        repeating-linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.1) 0px,
+            transparent 2px,
+            transparent 4px,
+            rgba(0, 0, 0, 0.1) 6px
+        );
+}
+
+.rotating-handle::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent);
+    border-radius: 4px;
+}
+
+.rotating-handle::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 12px; /* Position originale à droite */
+    width: 9px; /* 3px * 3 */
+    height: 9px; /* 3px * 3 */
+    background: #888;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+.rotating-handle:hover {
+    background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
+}
+
+.rotating-handle:active {
+    transform-origin: calc(100% - 16.5px) center; /* Centre du cercle gris clair */
+    transform: rotate(-90deg) scale(0.98); /* Anti-horaire */
+}
+
+/* Sélecteur de carburant (3 positions) */
+.fuel-selector-panel {
+    position: relative;
+    width: 180px;
+    height: auto; /* Hauteur automatique pour inclure la jauge */
+    min-height: 246px; /* Hauteur minimale identique aux autres cadres */
+    background: rgba(45, 45, 45, 0.5);
+    border: 1px solid #fff;
+    padding: 8px; /* Même padding que flaps-control-realistic */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+}
+
+.fuel-selector-wrapper {
+    position: relative;
+    width: 100%;
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 0;
+}
+
+.fuel-selector-base {
+    position: relative;
+    width: 160px;
+    height: 160px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 10px;
+}
+
+.fuel-selector-lever {
+    position: absolute;
+    width: 8px;
+    height: 70px;
+    background: linear-gradient(135deg, #c0c0c0, #808080);
+    border: 1px solid #555;
+    border-radius: 4px;
+    cursor: pointer;
+    /* Axe de rotation au centre du cercle noir (poignée) */
+    /* Le cercle est à top: -8px et fait 16px de haut, donc son centre est à 0px du haut de la poignée */
+    transform-origin: center 0px;
+    transform: rotate(0deg);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+    box-shadow: 
+        inset 0 1px 2px rgba(255, 255, 255, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.5);
+    /* Position intermédiaire : entre le haut et le bas des boutons LEFT et RIGHT */
+    top: 80px;
+    left: 50%;
+    margin-left: -4px; /* Moitié de la largeur pour centrer */
+}
+
+.fuel-selector-lever::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, #4a4a4a, #2a2a2a);
+    border: 2px solid #555;
+    border-radius: 50%;
+    box-shadow: 
+        inset 0 2px 4px rgba(255, 255, 255, 0.1),
+        0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.fuel-selector-labels {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    align-items: center;
+    justify-items: center;
+}
+
+.fuel-selector-label {
+    font-size: 0.65em;
+    color: #888;
+    text-align: center;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+    line-height: 1.2;
+}
+
+.fuel-selector-label:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.fuel-selector-label.active {
+    color: #fff;
+    font-weight: bold;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.fuel-selector-label-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.fuel-selector-left-wrapper {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+    margin-left: 5px;
+}
+
+.fuel-selector-right-wrapper {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: end;
+    margin-right: 5px;
+}
+
+.fuel-selector-quantity {
+    font-size: 0.55em;
+    color: #aaa;
+    text-align: center;
+    font-weight: normal;
+    margin-top: 2px;
+}
+
+.fuel-selector-top {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    align-self: start;
+    margin-top: -10px;
+    padding-top: 0;
+}
+
+.fuel-selector-right {
+    /* Le label RIGHT est maintenant dans le wrapper */
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: 50px;
+    color: #888;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.loading-retry {
+    margin-top: 8px;
+    padding: 10px 24px;
+    background: var(--accent, #00aaff);
+    color: #111;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.loading-retry:hover {
+    filter: brightness(1.15);
+}
+
+.loading::after {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #00ff00;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Disconnected overlay */
+.disconnected-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.9);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.disconnected-overlay.show {
+    display: flex;
+}
+
+.disconnected-overlay h2 {
+    color: #ff3333;
+    margin-bottom: 10px;
+}
+
+.disconnected-overlay p {
+    color: #888;
+    text-align: center;
+    max-width: 320px;
+}
+
+.disconnected-overlay .overlay-hint {
+    font-size: 0.9em;
+    margin-top: 8px;
+    color: #aaa;
+}
+
+.disconnected-overlay .overlay-retry {
+    margin-top: 16px;
+    padding: 10px 24px;
+    background: var(--accent, #00aaff);
+    color: #111;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.disconnected-overlay .overlay-retry:hover {
+    filter: brightness(1.15);
+}
+
+/* Responsive - optimized for 1920x1080 */
+@media (min-width: 600px) {
+    body {
+        padding: 30px;
+    }
+
+    .btn-toggle, .btn-momentary {
+        min-height: 75px;
+    }
+
+    .btn-toggle .label,
+    .btn-momentary .label {
+        font-size: 0.75em;
+    }
+}
+
+/* A320 Autopilot Panel with displays */
+.autopilot-panel {
+    background: #2d2d2d;
+    border: 1px solid #444;
+    padding: 10px;
+}
+
+.autopilot-panel .category-buttons {
+    display: flex;
+    gap: 6px;
+    border: none;
+    padding: 0;
+    background: transparent;
+    flex-wrap: nowrap;
+}
+
+.autopilot-panel .btn-toggle {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    flex: none;
+}
+
+.displays-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.display-column {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 70px;
+    min-width: 70px;
+}
+
+.display-spacer {
+    width: 70px;
+    min-width: 70px;
+}
+
+.display-box {
+    width: 70px;
+    min-width: 70px;
+    background: #000;
+    border: 1px solid #444;
+    border-radius: 2px;
+    padding: 4px 6px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.display-label {
+    font-size: 0.55em;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.display-value {
+    font-size: 1.1em;
+    color: #00ff00;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-weight: bold;
+}
+
+.control-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+}
+
+.control-buttons.two-buttons {
+    grid-template-columns: 1fr 1fr;
+}
+
+.ctrl-btn {
+    padding: 10px 4px;
+    border: 1px solid #444;
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 0.75em;
+    font-weight: bold;
+    background: linear-gradient(180deg, #3a3a3a, #2d2d2d);
+    color: #888;
+    font-family: 'Consolas', monospace;
+    /* Zone de touch optimisée */
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(0, 255, 0, 0.2);
+}
+
+.ctrl-btn:active {
+    background: #00aa00;
+    border-color: #00ff00;
+    color: #fff;
+}
+
+/* Controls row - below autopilot buttons */
+.controls-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    align-items: flex-start;
+}
+
+.control-spacer {
+    width: 70px;
+    min-width: 70px;
+}
+
+.control-group {
+    width: 70px;
+    min-width: 70px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.control-group .ctrl-btn {
+    flex: 1;
+    padding: 10px 4px;
+    font-size: 0.7em;
+    min-height: 44px;
+}
+
+.control-group.grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+}
+
+.control-group.grid-2x2 .ctrl-btn {
+    padding: 8px 2px;
+    font-size: 0.55em;
+    min-height: 44px;
+}
+
+.control-group.vs-controls {
+    flex-direction: column;
+    height: 80px;
+    min-height: 80px;
+    max-height: 80px;
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+.control-group.vs-controls .ctrl-btn {
+    flex: 1 1 50%;
+    min-height: 0;
+    padding: 8px 4px;
+    font-size: 0.75em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Boutons Nose UP/DN pour VS */
+.control-group.vs-controls .nose-btn {
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 4px;
+}
+
+.nose-label {
+    font-size: 0.6em;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.nose-direction {
+    font-size: 0.9em;
+    font-weight: bold;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+/* Sélecteurs d'incrément HDG et ALT - même format que les boutons +/- */
+.increment-selector-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: stretch;
+    width: 70px;
+    min-width: 70px;
+    height: 80px;
+    min-height: 80px;
+    max-height: 80px;
+    gap: 3px;
+}
+
+.increment-selector-group .ctrl-btn.increment-selector-btn {
+    flex: 1 1 50%;
+    min-height: 0;
+    padding: 8px 4px;
+    font-size: 0.75em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-family: 'Consolas', monospace;
+}
+
+.increment-selector-group .ctrl-btn.increment-selector-btn.active {
+    background: #00aa00;
+    border-color: #00ff00;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(0, 255, 0, 0.4);
+}
+
+.increment-selector-group .ctrl-btn.increment-selector-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Potentiometer Control */
+.potentiometer-control {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+    position: relative;
+    width: 100%;
+}
+
+.potentiometer-label {
+    font-size: 0.65em;
+    color: #888;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.potentiometer-value {
+    font-size: 1.1em;
+    color: #00d4ff;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 8px;
+    text-shadow: 0 0 8px #00d4ff, 0 0 12px rgba(0, 212, 255, 0.5);
+}
+
+.potentiometer-track-wrapper {
+    position: relative;
+    width: 100%;
+    height: 44px;
+    margin-bottom: 4px;
+    /* Zone de touch optimisée : toute la zone wrapper est cliquable */
+    padding: 18px 0;
+    margin-top: -18px;
+    margin-bottom: -14px;
+}
+
+.potentiometer-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(180deg, #333333 0%, #2d2d2d 100%);
+    border: 1px solid #444;
+    border-radius: 4px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8);
+    overflow: visible;
+}
+
+.potentiometer-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #0066cc 0%, #00d4ff 100%);
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(0, 212, 255, 0.6);
+    transition: width 0.1s ease;
+}
+
+.potentiometer-slider {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    width: 100%;
+    height: 44px;
+    background: transparent;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    cursor: pointer;
+    z-index: 10;
+    margin: 0;
+    padding: 0;
+    /* Zone de touch optimisée */
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Webkit (Chrome, Safari) */
+.potentiometer-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #00d4ff 0%, #0066cc 100%);
+    border: 2px solid #00d4ff;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.8), 
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-top: -5px; /* Centrer le thumb (18px) sur le track (8px) */
+}
+
+.potentiometer-slider::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 15px rgba(0, 212, 255, 1), 
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.potentiometer-slider::-webkit-slider-track {
+    background: transparent;
+    height: 8px;
+}
+
+/* Firefox */
+.potentiometer-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #00d4ff 0%, #0066cc 100%);
+    border: 2px solid #00d4ff;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.8), 
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    margin-top: -5px; /* Centrer le thumb (18px) sur le track (8px) */
+}
+
+.potentiometer-slider::-moz-range-thumb:hover {
+    box-shadow: 0 0 15px rgba(0, 212, 255, 1), 
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.potentiometer-slider::-moz-range-track {
+    background: transparent;
+    height: 8px;
+}
+
+/* OAT Warning LED - LED rouge sous le bouton pitot_heat quand OAT < 4.4°C */
+.toggle-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+}
+
+/* S'assurer que le wrapper ne casse pas le layout dans autopilot */
+.autopilot-panel .category-buttons > .toggle-wrapper {
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    flex: none;
+}
+
+.oat-warning-led {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+/* LED active (allumée) quand OAT < 4.4°C */
+.oat-warning-led.active {
+    background: #ff3333;
+    border: 1px solid #ff6666;
+    box-shadow: 0 0 8px #ff3333, 0 0 16px rgba(255, 51, 51, 0.5);
+    animation: pulse-red 1.5s ease-in-out infinite;
+}
+
+/* LED inactive (éteinte) quand OAT >= 4.4°C */
+.oat-warning-led.inactive {
+    background: #333333;
+    border: 1px solid #555555;
+    box-shadow: none;
+    animation: none;
+    opacity: 0.5;
+}
+
+@keyframes pulse-red {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 8px #ff3333, 0 0 16px rgba(255, 51, 51, 0.5);
+    }
+    50% {
+        opacity: 0.7;
+        box-shadow: 0 0 12px #ff3333, 0 0 24px rgba(255, 51, 51, 0.7);
+    }
+}

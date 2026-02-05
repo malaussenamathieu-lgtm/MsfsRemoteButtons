@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace MsfsRemoteButtons.Profiles;
 
 // ============================================================================
@@ -5,11 +7,17 @@ namespace MsfsRemoteButtons.Profiles;
 // ============================================================================
 //
 // Ce module gère la collection de profils d'avion disponibles et la détection
-// automatique du profil approprié basée sur le titre de l'avion dans MSFS.
+// automatique du profil approprié basée sur le titre de l'avion dans MSFS
+// (SimVar TITLE).
+//
+// Détection améliorée:
+// - Le titre est normalisé (Trim + espaces multiples réduits à un seul)
+// - Les patterns sont évalués dans l'ordre: le premier match gagne
+// - Patterns les plus spécifiques en premier (ex: "Pilatus PC-12 NGX" avant "PC-12")
 //
 // Pour ajouter un nouvel avion:
 // 1. Créer une classe qui implémente IAircraftProfile (voir Cessna172G1000Profile)
-// 2. L'ajouter dans la liste _profiles ci-dessous
+// 2. L'ajouter dans la liste _profiles ci-dessous (ordre = priorité de détection)
 // 3. Définir des DetectionPatterns pour la détection automatique
 //
 // ============================================================================
@@ -28,6 +36,7 @@ public static class ProfileManager
     private static readonly List<IAircraftProfile> _profiles = new()
     {
         new Cessna172G1000Profile(),
+        new PilatusPC12Profile(),
         // ----------------------------------------
         // AJOUTER D'AUTRES PROFILS ICI:
         // ----------------------------------------
@@ -71,17 +80,20 @@ public static class ProfileManager
     /// <returns>Le profil correspondant ou null si aucun match</returns>
     public static IAircraftProfile? DetectProfile(string aircraftTitle)
     {
-        if (string.IsNullOrWhiteSpace(aircraftTitle))
+        string? normalized = NormalizeAircraftTitle(aircraftTitle);
+        if (string.IsNullOrEmpty(normalized))
             return null;
 
         foreach (var profile in _profiles)
         {
             foreach (var pattern in profile.DetectionPatterns)
             {
+                if (string.IsNullOrEmpty(pattern.Pattern)) continue;
+
                 // Contains = substring match, sinon exact match
                 bool match = pattern.Contains
-                    ? aircraftTitle.Contains(pattern.Pattern, StringComparison.OrdinalIgnoreCase)
-                    : aircraftTitle.Equals(pattern.Pattern, StringComparison.OrdinalIgnoreCase);
+                    ? normalized.Contains(pattern.Pattern, StringComparison.OrdinalIgnoreCase)
+                    : normalized.Equals(pattern.Pattern, StringComparison.OrdinalIgnoreCase);
 
                 if (match)
                     return profile;
@@ -89,6 +101,17 @@ public static class ProfileManager
         }
 
         return null;  // Aucun profil trouvé - SimConnectService utilisera DefaultProfile
+    }
+
+    /// <summary>
+    /// Normalise le titre avion pour une détection fiable (Trim + espaces multiples réduits).
+    /// </summary>
+    public static string? NormalizeAircraftTitle(string? title)
+    {
+        if (string.IsNullOrWhiteSpace(title)) return null;
+        var trimmed = title.Trim();
+        if (trimmed.Length == 0) return null;
+        return Regex.Replace(trimmed, @"\s+", " ");
     }
 
     // Méthode SelectProfile supprimée - sélection manuelle non utilisée (détection automatique uniquement)
