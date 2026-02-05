@@ -41,6 +41,19 @@ public struct EnvironmentData
 }
 
 /// <summary>
+/// Données de carburant (quantités dans les réservoirs)
+/// </summary>
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = 1)]
+public struct FuelData
+{
+    [MarshalAs(UnmanagedType.R8)]
+    public double FuelLeftMainQuantity;
+    
+    [MarshalAs(UnmanagedType.R8)]
+    public double FuelRightMainQuantity;
+}
+
+/// <summary>
 /// Service de gestion SimConnect - Interface principale avec MSFS 2024
 ///
 /// Ce service gère:
@@ -84,6 +97,10 @@ public class SimConnectService : IDisposable
     private const int ENVIRONMENT_DATA_DEFINITION = 2;
     private const int ENVIRONMENT_DATA_REQUEST = 2;
 
+    // Données de carburant
+    private const int FUEL_DATA_DEFINITION = 3;
+    private const int FUEL_DATA_REQUEST = 3;
+
     // === ÉTATS DES CONTRÔLES ===
     // Cache local des valeurs SimVar pour éviter les requêtes répétées
     private readonly Dictionary<string, double> _buttonStates = new();      // commandId -> valeur actuelle (0.0 ou 1.0 pour Bool)
@@ -111,12 +128,16 @@ public class SimConnectService : IDisposable
     public event Action<string, double>? StateChanged;      // Déclenché quand une SimVar change (commandId, nouvelle valeur)
     public event Action<string>? LogMessage;                // Déclenché pour afficher un message dans la console
     public event Action<double>? EnvironmentDataChanged;     // Déclenché quand l'OAT change
+    public event Action<double, double, double>? FuelDataChanged; // Déclenché quand les données de carburant changent (left, right, total)
 
     // === PROPRIÉTÉS PUBLIQUES ===
     public bool IsConnected => _isConnected;
     public IAircraftProfile? ActiveProfile => _activeProfile;
     public string CurrentAircraftTitle { get; private set; } = "";
     public double CurrentOAT { get; private set; } = double.NaN;
+    public double FuelLeftMainGallons { get; private set; } = 0.0;
+    public double FuelRightMainGallons { get; private set; } = 0.0;
+    public double FuelTotalGallons => FuelLeftMainGallons + FuelRightMainGallons;
 
     /// <summary>True si l'énumération des B: Input Events a été effectuée (Developer Mode requis).</summary>
     // B: EVENT
@@ -206,6 +227,26 @@ public class SimConnectService : IDisposable
                 );
                 _simConnect.RegisterDataDefineStruct<EnvironmentData>((DefineId)ENVIRONMENT_DATA_DEFINITION);
                 Log("   ✓ Définition OAT enregistrée (AMBIENT TEMPERATURE, celsius, FLOAT64)");
+
+                // Enregistrer la définition pour les données de carburant
+                _simConnect.AddToDataDefinition(
+                    (DefineId)FUEL_DATA_DEFINITION,
+                    "FUEL TANK LEFT MAIN QUANTITY",
+                    "gallons",
+                    SIMCONNECT_DATATYPE.FLOAT64,
+                    0,
+                    SimConnect.SIMCONNECT_UNUSED
+                );
+                _simConnect.AddToDataDefinition(
+                    (DefineId)FUEL_DATA_DEFINITION,
+                    "FUEL TANK RIGHT MAIN QUANTITY",
+                    "gallons",
+                    SIMCONNECT_DATATYPE.FLOAT64,
+                    0,
+                    SimConnect.SIMCONNECT_UNUSED
+                );
+                _simConnect.RegisterDataDefineStruct<FuelData>((DefineId)FUEL_DATA_DEFINITION);
+                Log("   ✓ Définition carburant enregistrée (LEFT/RIGHT MAIN QUANTITY, gallons, FLOAT64)");
             }
 
             Log("   En attente de la confirmation du simulateur (max. 10 s)...");
@@ -439,6 +480,39 @@ public class SimConnectService : IDisposable
     }
 
     /// <summary>
+    /// Demande les données de carburant avec mise à jour automatique toutes les 2-3 secondes
+    /// </summary>
+    private void RequestFuelData()
+    {
+        if (_simConnect == null || !_isConnected) return;
+
+        lock (_simConnectLock)
+        {
+            // Lecture initiale immédiate pour obtenir l'état actuel
+            _simConnect.RequestDataOnSimObject(
+                (RequestId)FUEL_DATA_REQUEST,
+                (DefineId)FUEL_DATA_DEFINITION,
+                SimConnect.SIMCONNECT_OBJECT_ID_USER,
+                SIMCONNECT_PERIOD.ONCE,
+                SIMCONNECT_DATA_REQUEST_FLAG.DEFAULT,
+                0, 0, 0
+            );
+
+            // Mise à jour automatique toutes les 2 secondes (seulement sur changement)
+            // Note: Utilise SECOND avec le flag CHANGED pour éviter le pileup
+            // Le carburant ne change pas si rapidement en vol réel
+            _simConnect.RequestDataOnSimObject(
+                (RequestId)FUEL_DATA_REQUEST,
+                (DefineId)FUEL_DATA_DEFINITION,
+                SimConnect.SIMCONNECT_OBJECT_ID_USER,
+                SIMCONNECT_PERIOD.SECOND,
+                SIMCONNECT_DATA_REQUEST_FLAG.CHANGED,
+                0, 0, 0
+            );
+        }
+    }
+
+    /// <summary>
     /// Demande l'énumération des Input Events (B:) disponibles. Les résultats arrivent dans OnRecvEnumerateInputEvents.
     /// Nécessite Developer Mode activé dans MSFS. Seuls les events _SET sont retournés.
     /// </summary>
@@ -562,6 +636,16 @@ public class SimConnectService : IDisposable
         // L'interface web envoie directement le SimEvent à exécuter (ex: FLAPS_2)
         if (!string.IsNullOrEmpty(simEvent))
         {
+            // CAS SPÉCIAL: Si la commande a un InputEvent (B: Event), utiliser SetInputEvent avec la valeur
+            var cmdForSelector = _activeProfile.Commands.FirstOrDefault(c => c.Id == commandId);
+            if (cmdForSelector != null && TryResolveInputEventHash(cmdForSelector, out ulong selectorHash) && value.HasValue)
+            {
+                // Pour les sélecteurs avec B Event, utiliser SetInputEvent avec la valeur directement
+                SetInputEvent(selectorHash, value.Value);
+                Log($"→ {commandId} (B: SELECTOR {cmdForSelector.InputEvent} = {value.Value})");
+                return;
+            }
+            
             SendEventByName(simEvent, value: value ?? 0, momentary: false);
             return;
         }
@@ -754,6 +838,13 @@ public class SimConnectService : IDisposable
                     Log("   → Profil non chargé ou commande introuvable");
                 }
             }
+        }
+        // === CAS 3: Fallback si l'event n'est pas dans _eventIds ===
+        // Utiliser SendEventByName directement avec command.SimEvent
+        else if (!string.IsNullOrEmpty(command.SimEvent))
+        {
+            SendEventByName(command.SimEvent, value: 0, momentary: command.IsMomentary);
+            RefreshSimVarForCommand(commandId);  // Forcer la relecture de l'état
         }
     }
 
@@ -1143,6 +1234,9 @@ public class SimConnectService : IDisposable
 
         // Démarrer la récupération des données environnementales (OAT)
         RequestEnvironmentData();
+
+        // Démarrer la récupération des données de carburant
+        RequestFuelData();
     }
 
     /// <summary>
@@ -1474,7 +1568,40 @@ public class SimConnectService : IDisposable
             return;
         }
 
-        // === CAS 3: Données SimVar d'une commande ===
+        // === CAS 3: Données de carburant ===
+        if (data.dwRequestID == FUEL_DATA_REQUEST)
+        {
+            var fuelData = (FuelData)data.dwData[0];
+            var newLeftGallons = fuelData.FuelLeftMainQuantity;
+            var newRightGallons = fuelData.FuelRightMainQuantity;
+            
+            // Vérifier si c'est la première réception (valeurs initiales à 0.0)
+            bool isFirstUpdate = FuelLeftMainGallons == 0.0 && FuelRightMainGallons == 0.0;
+            
+            // Seuil de 0.1 gallon pour éviter les notifications dues aux petites variations
+            bool changed = false;
+            if (isFirstUpdate || Math.Abs(FuelLeftMainGallons - newLeftGallons) > 0.1)
+            {
+                FuelLeftMainGallons = newLeftGallons;
+                changed = true;
+            }
+            if (isFirstUpdate || Math.Abs(FuelRightMainGallons - newRightGallons) > 0.1)
+            {
+                FuelRightMainGallons = newRightGallons;
+                changed = true;
+            }
+            
+            if (changed)
+            {
+#if DEBUG
+                Console.WriteLine($"[DEBUG] Fuel: Left={FuelLeftMainGallons:F2}gal, Right={FuelRightMainGallons:F2}gal, Total={FuelTotalGallons:F2}gal");
+#endif
+                Task.Run(() => FuelDataChanged?.Invoke(FuelLeftMainGallons, FuelRightMainGallons, FuelTotalGallons));
+            }
+            return;
+        }
+
+        // === CAS 4: Données SimVar d'une commande ===
         // On retrouve le commandId via le mapping _simVarDefinitions
         int requestId = (int)data.dwRequestID;
         if (_simVarDefinitions.TryGetValue(requestId, out var commandId))

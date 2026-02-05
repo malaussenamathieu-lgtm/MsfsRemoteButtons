@@ -160,6 +160,16 @@
       "type": "toggle",
       "simVar": "AUTOPILOT VERTICAL HOLD",
       "simVarUnit": "Bool"
+    },
+    {
+      "id": "ap_flc",
+      "name": "FLC",
+      "category": "AUTOPILOT",
+      "inputEvent": "AS1000_AUTOPILOT_FLIGHTLEVELCHANGE_PFD",
+      "inputEventHash": 14970840394202116082,
+      "type": "toggle",
+      "simVar": "AUTOPILOT FLIGHT LEVEL CHANGE",
+      "simVarUnit": "Bool"
     }
   ],
   "notes": [

@@ -435,6 +435,30 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle
         },
 
+        // Sélecteur de carburant (3 positions)
+        new AircraftCommand
+        {
+            Id = "fuel_selector",
+            Name = "Fuel Selector",
+            SimEvent = "FUEL_SELECTOR_SET",
+            InputEvent = "FUEL_SELECTOR_1",
+            InputEventHash = 0x94DD4F6A97392589,
+            // Pas de SimVar - contrôle uniquement (write-only)
+            // Les L: vars nécessaires ne sont pas accessibles dans MSFS 2024
+            // Tentative avec FUELSYSTEM JUNCTION SETTING:'FuelSelector'_1 : ne fonctionne pas
+            Category = "VOLETS",
+            SubCategory = "fuel selector",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Selector,
+            SelectorOptions = new List<SelectorOption>
+            {
+                new SelectorOption { Label = "LEFT", SimEvent = "FUEL_SELECTOR_SET", Value = 1 }, // Position gauche visuelle = valeur 1 (haut dans le sim)
+                new SelectorOption { Label = "TAKEOFF LANDING", SimEvent = "FUEL_SELECTOR_SET", Value = 2 }, // Position haut visuelle = valeur 2 (right dans le sim)
+                new SelectorOption { Label = "RIGHT", SimEvent = "FUEL_SELECTOR_SET", Value = 0 }, // Position droite visuelle = valeur 0 (left dans le sim)
+            }
+        },
+
         // ============================================
         // AUTOPILOT
         // ============================================
@@ -580,6 +604,8 @@ public class Cessna172G1000Profile : IAircraftProfile
         {
             Id = "ap_flc",
             Name = "FLC",
+            InputEvent = "AS1000_AUTOPILOT_FLIGHTLEVELCHANGE_PFD",
+            InputEventHash = 14970840394202116082UL, // 0xCFC31C05057C6FF2
             SimEvent = "FLIGHT_LEVEL_CHANGE",
             SimVar = "AUTOPILOT FLIGHT LEVEL CHANGE",
             SimVarUnit = "Bool",
@@ -808,7 +834,22 @@ public class Cessna172G1000Profile : IAircraftProfile
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
             ControlType = ControlType.Toggle,
-            Hidden = true
+            Hidden = true  // Affichage uniquement, pas de bouton
+        },
+
+        // Trim de profondeur (affichage uniquement)
+        new AircraftCommand
+        {
+            Id = "display_elevator_trim",
+            Name = "Elevator Trim",
+            SimVar = "ELEVATOR TRIM PCT",
+            SimVarUnit = "Percent Over 100",
+            Category = "VOLETS",
+            SubCategory = "trim",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle,
+            Hidden = true  // Affichage uniquement, pas de bouton
         },
     };
 

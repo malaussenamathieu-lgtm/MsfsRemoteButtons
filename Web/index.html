@@ -8,22 +8,23 @@
 </head>
 <body>
     <div class="header">
-        <h1>✈️ MSFS Remote Buttons</h1>
-        <div class="status">
-            <div class="status-item">
-                <span class="status-dot" id="wsStatus"></span>
-                <span>Serveur</span>
-            </div>
-            <div class="status-item">
-                <span class="status-dot" id="simStatus"></span>
-                <span>MSFS</span>
+        <div class="header-line header-line-1">
+            <h1>✈️ MSFS Remote Buttons</h1>
+            <div class="status">
+                <div class="status-item">
+                    <span class="status-dot" id="wsStatus"></span>
+                    <span>Serveur</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-dot" id="simStatus"></span>
+                    <span>MSFS</span>
+                </div>
             </div>
         </div>
-        <div class="status" style="margin-top: 8px;">
+        <div class="header-line header-line-2">
             <span class="aircraft-name" id="aircraftName">En attente...</span>
-        </div>
-        <div class="status" style="margin-top: 8px;">
             <span id="oatDisplay">OAT: --°C</span>
+            <span id="trimDisplay">TRIM: --%</span>
         </div>
     </div>
 
@@ -67,6 +68,7 @@
         const aircraftNameEl = document.getElementById('aircraftName');
         const disconnectedOverlay = document.getElementById('disconnectedOverlay');
         const oatDisplayEl = document.getElementById('oatDisplay');
+        const trimDisplayEl = document.getElementById('trimDisplay');
 
         // ================================================================
         // CONNEXION WEBSOCKET
@@ -148,6 +150,16 @@
                 case 'state':
                     states[msg.data.id] = msg.data.value;
                     updateControlState(msg.data.id, msg.data.value);
+                    // Mise à jour du trim si c'est la commande display_elevator_trim
+                    if (msg.data.id === 'display_elevator_trim') {
+                        // ELEVATOR TRIM PCT avec "Percent Over 100" retourne une valeur entre -1 et 1
+                        // Multiplier par 100 pour obtenir un pourcentage (-100% à +100%)
+                        // Pour le C172, la plage réelle est environ -86.4% à +100%
+                        const trimValue = parseFloat(msg.data.value || 0);
+                        const trimPercent = trimValue * 100;
+                        trimDisplayEl.textContent = `TRIM: ${trimPercent >= 0 ? '+' : ''}${trimPercent.toFixed(1)}%`;
+                        updateTrimGauge(trimPercent);
+                    }
                     break;
 
                 case 'environmentUpdate':
@@ -156,6 +168,14 @@
                         currentOAT = oat;
                         oatDisplayEl.textContent = `OAT: ${oat.toFixed(1)}°C`;
                         updateOATWarningLED();
+                    }
+                    break;
+
+                case 'fuelUpdate':
+                    if (msg.data) {
+                        const leftGallons = parseFloat(msg.data.left || 0);
+                        const rightGallons = parseFloat(msg.data.right || 0);
+                        updateFuelQuantities(leftGallons, rightGallons);
                     }
                     break;
 
@@ -367,6 +387,21 @@
                         html += `</div>`; // close fuel-selector-section
                     }
                     
+                    // Jauge de trim (sous-catégorie) - inclure même si Hidden = true
+                    // Chercher dans profile.commands car la commande est Hidden
+                    const trimDisplayCmd = profile.commands.find(c => 
+                        c.category === 'VOLETS' && (
+                            (c.subCategory && c.subCategory.toLowerCase() === 'trim') || 
+                            c.id === 'display_elevator_trim'
+                        )
+                    );
+                    
+                    if (trimDisplayCmd) {
+                        html += `<div class="trim-gauge-section">`;
+                        html += renderTrimGauge(trimDisplayCmd);
+                        html += `</div>`; // close trim-gauge-section
+                    }
+                    
                     html += `</div>`; // close volets-container
                 } else if (category !== 'AUTOPILOT') {
                     // Layout normal pour les autres catégories (sauf AUTOPILOT qui a son propre layout)
@@ -396,8 +431,8 @@
                     html += `<div class="control-spacer"></div>`; // AP
                     // Sélecteur d'incrément HDG sous FD
                     html += `<div class="control-group increment-selector-group">`;
+                    html += `<button class="ctrl-btn increment-selector-btn" data-hdg-value="1" onclick="setHdgIncrement(1)">+1</button>`;
                     html += `<button class="ctrl-btn increment-selector-btn" data-hdg-value="10" onclick="setHdgIncrement(10)">+10</button>`;
-                    html += `<button class="ctrl-btn increment-selector-btn" data-hdg-value="100" onclick="setHdgIncrement(100)">+100</button>`;
                     html += `</div>`;
                     // HDG controls - + en haut, - en bas
                     html += `<div class="control-group vs-controls"><button class="ctrl-btn" onclick="sendHdgIncrement(true)">+</button><button class="ctrl-btn" onclick="sendHdgIncrement(false)">−</button></div>`;
@@ -514,12 +549,22 @@
             });
 
             // Initialiser les sélecteurs d'incrément
-            setHdgIncrement(10); // Valeur par défaut : 10
+            setHdgIncrement(1); // Valeur par défaut : 1
             setAltIncrement(100); // Valeur par défaut : 100
 
             // Appliquer les états déjà connus aux nouveaux éléments
             for (const [id, value] of Object.entries(states)) {
                 updateControlState(id, value);
+                // Initialiser l'affichage du trim si disponible
+                if (id === 'display_elevator_trim') {
+                    // ELEVATOR TRIM PCT avec "Percent Over 100" retourne une valeur entre -1 et 1
+                    // Multiplier par 100 pour obtenir un pourcentage (-100% à +100%)
+                    // Pour le C172, la plage réelle est environ -86.4% à +100%
+                    const trimValue = parseFloat(value || 0);
+                    const trimPercent = trimValue * 100;
+                    trimDisplayEl.textContent = `TRIM: ${trimPercent >= 0 ? '+' : ''}${trimPercent.toFixed(1)}%`;
+                    updateTrimGauge(trimPercent);
+                }
             }
 
             // Mettre à jour la LED d'avertissement OAT si l'OAT est déjà disponible
@@ -548,17 +593,61 @@
         }
 
         /**
+         * Met à jour les quantités de carburant affichées sous les boutons LEFT et RIGHT
+         * @param {number} leftGallons - Quantité dans le réservoir gauche (gallons)
+         * @param {number} rightGallons - Quantité dans le réservoir droit (gallons)
+         */
+        function updateFuelQuantities(leftGallons, rightGallons) {
+            const leftEl = document.getElementById('fuel-left-quantity');
+            const rightEl = document.getElementById('fuel-right-quantity');
+            
+            if (leftEl) {
+                leftEl.textContent = `${leftGallons.toFixed(1)}gal`;
+            }
+            if (rightEl) {
+                rightEl.textContent = `${rightGallons.toFixed(1)}gal`;
+            }
+        }
+
+        /**
+         * Met à jour la jauge de trim de profondeur (verticale)
+         * @param {number} trimPercent - Position du trim en pourcentage (-86.4% à +100%)
+         */
+        function updateTrimGauge(trimPercent) {
+            const indicatorBar = document.getElementById('trim-indicator-bar');
+            if (!indicatorBar) {
+                return;
+            }
+
+            // Plage du trim : -86.4% à +100%
+            const minTrim = -86.4;
+            const maxTrim = 100;
+            const range = maxTrim - minTrim; // 186.4
+
+            // Calculer la position en pourcentage (0-100%) de la jauge
+            // Normaliser : (trimPercent - minTrim) / range
+            const normalizedPosition = ((trimPercent - minTrim) / range) * 100;
+            const clampedPosition = Math.max(0, Math.min(100, normalizedPosition));
+
+            // Inverser pour que -86.4% soit en haut et que le curseur monte quand le trim augmente
+            const invertedPosition = 100 - clampedPosition;
+
+            // Positionner la barre indicateur verticalement
+            // Utiliser bottom inversé : -86.4% en haut, +100% en bas, curseur monte quand trim augmente
+            indicatorBar.style.bottom = `${invertedPosition}%`;
+            indicatorBar.style.top = 'auto';
+            indicatorBar.style.transform = 'translateX(-50%)'; // Centrer horizontalement
+        }
+
+        /**
          * Met à jour la LED d'avertissement OAT sous le bouton pitot_heat
          * La LED s'allume en rouge quand OAT < 4.4°C
          */
         function updateOATWarningLED() {
             const ledEl = document.getElementById('oat-warning-pitot');
             if (!ledEl) {
-                console.log('[DEBUG] OAT Warning LED: élément non trouvé');
                 return;
             }
-            
-            console.log(`[DEBUG] OAT Warning LED: OAT=${currentOAT}, affichage=${currentOAT !== null && currentOAT < 4.4 ? 'OUI' : 'NON'}`);
             
             if (currentOAT !== null && currentOAT < 4.4) {
                 ledEl.classList.add('active');
@@ -764,7 +853,16 @@
          * @param {Object} cmd - AircraftCommand
          */
         function renderFuelSelector(cmd) {
-            const currentValue = states[cmd.id] || 0;
+            // Essayer de restaurer depuis localStorage, sinon utiliser la valeur du serveur, sinon valeur par défaut
+            const storedValue = localStorage.getItem('fuel_selector_position');
+            let currentValue;
+            if (storedValue !== null) {
+                currentValue = parseInt(storedValue, 10);
+            } else if (states[cmd.id] !== undefined) {
+                currentValue = states[cmd.id];
+            } else {
+                currentValue = 1; // TAKEOFF LANDING par défaut
+            }
             const position = Math.round(currentValue);
             // Positions : 0 = Gauche, 1 = Haut, 2 = Droite
             // Axe de rotation au centre du cercle (poignée)
@@ -785,19 +883,48 @@
                                  data-current-rotation="${rotation}">
                             </div>
                             <div class="fuel-selector-labels">
-                                <div class="fuel-selector-label fuel-selector-left ${position === 0 ? 'active' : ''}" 
-                                     onclick="${cmd.options[0].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[0].simEvent}', 0)` : ''}">
-                                    LEFT
+                                <div class="fuel-selector-label-wrapper fuel-selector-left-wrapper">
+                                    <div class="fuel-selector-label fuel-selector-left ${position === 0 ? 'active' : ''}" 
+                                         onclick="${cmd.options[0].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[0].simEvent}', 0)` : ''}">
+                                        LEFT
+                                    </div>
+                                    <div class="fuel-selector-quantity" id="fuel-left-quantity">--</div>
                                 </div>
                                 <div class="fuel-selector-label fuel-selector-top ${position === 1 ? 'active' : ''}" 
                                      onclick="${cmd.options[1].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[1].simEvent}', 1)` : ''}">
                                     TAKEOFF<br>LANDING
                                 </div>
-                                <div class="fuel-selector-label fuel-selector-right ${position === 2 ? 'active' : ''}" 
-                                     onclick="${cmd.options[2].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[2].simEvent}', 2)` : ''}">
-                                    RIGHT
+                                <div class="fuel-selector-label-wrapper fuel-selector-right-wrapper">
+                                    <div class="fuel-selector-label fuel-selector-right ${position === 2 ? 'active' : ''}" 
+                                         onclick="${cmd.options[2].simEvent ? `sendSelector('${cmd.id}', '${cmd.options[2].simEvent}', 2)` : ''}">
+                                        RIGHT
+                                    </div>
+                                    <div class="fuel-selector-quantity" id="fuel-right-quantity">--</div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Génère le HTML pour la jauge de trim de profondeur (verticale)
+         * @param {Object} cmd - AircraftCommand (display_elevator_trim)
+         */
+        function renderTrimGauge(cmd) {
+            return `
+                <div class="trim-gauge-panel" data-id="${cmd.id}">
+                    <div class="rotating-handle-title">TRIM</div>
+                    <div class="trim-gauge-vertical">
+                        <div class="trim-gauge-scale-vertical">
+                            <div class="trim-gauge-mark-vertical trim-gauge-mark-max-vertical">+100%</div>
+                            <div class="trim-gauge-mark-vertical trim-gauge-mark-takeoff-vertical">TAKEOFF<br>1.5°</div>
+                            <div class="trim-gauge-mark-vertical trim-gauge-mark-min-vertical">-86.4%</div>
+                        </div>
+                        <div class="trim-gauge-bar-vertical">
+                            <div class="trim-gauge-indicator-bar-vertical" id="trim-indicator-bar"></div>
+                            <div class="trim-gauge-takeoff-marker-vertical" id="trim-takeoff-marker"></div>
                         </div>
                     </div>
                 </div>
@@ -920,7 +1047,22 @@
         // Mise à jour du sélecteur de carburant
         const fuelSelector = document.querySelector(`.fuel-selector-panel[data-id="${id}"]`);
         if (fuelSelector) {
-            const position = Math.round(value);
+            // Si value est undefined ou null, essayer de restaurer depuis localStorage
+            let positionValue = value;
+            if ((positionValue === undefined || positionValue === null) && id === 'fuel_selector') {
+                const storedValue = localStorage.getItem('fuel_selector_position');
+                if (storedValue !== null) {
+                    positionValue = parseInt(storedValue, 10);
+                } else {
+                    positionValue = 1; // TAKEOFF LANDING par défaut
+                }
+            }
+            const position = Math.round(positionValue);
+            
+            // Sauvegarder la position dans localStorage à chaque mise à jour
+            if (id === 'fuel_selector') {
+                localStorage.setItem('fuel_selector_position', position.toString());
+            }
             // Rotation pour pointer vers le haut quand position = 1 (180° depuis le bas)
             // Positions: 0 = LEFT (90°), 1 = TOP (180°), 2 = RIGHT (270°)
             const targetRotation = position === 0 ? 90 : position === 1 ? 180 : 270;
@@ -1073,6 +1215,11 @@
                 data: { id: id, simEvent: simEvent, value: value }
             }));
 
+            // Sauvegarder la position dans localStorage pour le sélecteur de carburant
+            if (id === 'fuel_selector') {
+                localStorage.setItem('fuel_selector_position', value.toString());
+            }
+
             // Mise à jour optimiste de l'UI (n'attend pas la confirmation serveur)
             updateControlState(id, value);
         }
@@ -1099,12 +1246,12 @@
         // ================================================================
         // HDG & ALT INCREMENT SELECTORS
         // ================================================================
-        let hdgIncrement = 10; // Valeur par défaut : 10
+        let hdgIncrement = 1; // Valeur par défaut : 1
         let altIncrement = 100; // Valeur par défaut : 100
 
         /**
          * Définit l'incrément pour les boutons HDG (+/-)
-         * @param {number} value - Valeur de l'incrément (10 ou 100)
+         * @param {number} value - Valeur de l'incrément (1 ou 10)
          */
         function setHdgIncrement(value) {
             hdgIncrement = value;
@@ -1124,15 +1271,12 @@
          * @param {boolean} increment - true pour incrémenter, false pour décrémenter
          */
         function sendHdgIncrement(increment) {
-            if (hdgIncrement === 10) {
+            if (hdgIncrement === 1) {
+                const commandId = increment ? 'hdg_inc_1' : 'hdg_dec_1';
+                sendToggle(commandId);
+            } else if (hdgIncrement === 10) {
                 const commandId = increment ? 'hdg_inc_10' : 'hdg_dec_10';
                 sendToggle(commandId);
-            } else if (hdgIncrement === 100) {
-                // Pour +100, répéter hdg_inc_10 dix fois
-                const baseCmd = increment ? 'hdg_inc_10' : 'hdg_dec_10';
-                for (let i = 0; i < 10; i++) {
-                    setTimeout(() => sendToggle(baseCmd), i * 10); // Espacer de 10ms
-                }
             }
         }
 
