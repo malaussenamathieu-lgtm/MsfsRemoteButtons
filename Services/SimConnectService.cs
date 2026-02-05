@@ -474,7 +474,7 @@ public class SimConnectService : IDisposable
             double currentState = GetState(commandId);
             double newValue = currentState > 0.5 ? 1.0 : 0.0; // Si ON → envoyer 1 (OFF), si OFF → envoyer 0 (ON)
             SetInputEvent(hash, newValue);
-            Log($"→ {commandId} (B: BREAKER {eventName} = {newValue}, état={currentState})");
+            Log($"→ {commandId} (B: BREAKER {eventName} = {newValue})");
         }
         else
         {
