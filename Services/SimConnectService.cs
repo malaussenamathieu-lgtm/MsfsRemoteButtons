@@ -343,14 +343,23 @@ public class SimConnectService : IDisposable
         Log("   Commandes : K: events (toujours disponibles). B: events si Developer Mode activé dans MSFS.");
         EnumerateInputEvents();
 
-        // LocalVars : initialiser l'état pour les commandes sans SimVar
-        foreach (var cmd in _activeProfile.Commands)
-        {
-            if (string.IsNullOrEmpty(cmd.SimVar) && !string.IsNullOrEmpty(cmd.LocalVar))
-            {
-                RefreshLocalVarState(cmd.Id, cmd.LocalVar, cmd.LocalVarUnit);
-            }
-        }
+        // LocalVars : initialiser l'état pour les commandes sans SimVar (avec protection)
+        // NOTE: Désactivé temporairement au chargement pour éviter les crashes SimConnect
+        // Les LocalVars seront lues à la demande via RefreshSimVarForCommand
+        // foreach (var cmd in _activeProfile.Commands)
+        // {
+        //     if (string.IsNullOrEmpty(cmd.SimVar) && !string.IsNullOrEmpty(cmd.LocalVar))
+        //     {
+        //         try
+        //         {
+        //             RefreshLocalVarState(cmd.Id, cmd.LocalVar, cmd.LocalVarUnit);
+        //         }
+        //         catch (Exception ex)
+        //         {
+        //             Log($"⚠️ Erreur lecture LVar {cmd.LocalVar}: {ex.Message}");
+        //         }
+        //     }
+        // }
 
         // Exporter les SimEvents après le chargement du profil
         try
@@ -1031,27 +1040,69 @@ public class SimConnectService : IDisposable
     {
         value = 0;
         if (_simConnect == null || !_isConnected) return false;
-        var handle = GetSimConnectHandle();
-        if (handle == IntPtr.Zero) return false;
-
-        string safeUnit = string.IsNullOrWhiteSpace(unit) ? "Number" : unit!;
-        string code = $"(L:{localVar},{safeUnit})";
-
-        double result = 0;
-        int hr;
-        lock (_simConnectLock)
+        
+        try
         {
-            hr = NativeSimConnect.ExecuteCalculatorCode(handle, code, ref result, IntPtr.Zero, IntPtr.Zero);
-        }
+            var handle = GetSimConnectHandle();
+            if (handle == IntPtr.Zero)
+            {
+                Log($"⚠️ LVar: handle SimConnect non disponible");
+                return false;
+            }
 
-        if (hr == 0)
+            string safeUnit = string.IsNullOrWhiteSpace(unit) ? "Number" : unit!;
+            string code = $"(L:{localVar},{safeUnit})";
+
+            double result = 0;
+            int hr = unchecked((int)0x80004005); // E_FAIL par défaut
+            
+            // Vérifier que le handle est valide avant l'appel
+            if (handle == IntPtr.Zero)
+            {
+                return false;
+            }
+            
+            try
+            {
+                lock (_simConnectLock)
+                {
+                    hr = NativeSimConnect.ExecuteCalculatorCode(handle, code, ref result, IntPtr.Zero, IntPtr.Zero);
+                }
+            }
+            catch (DllNotFoundException)
+            {
+                Log($"⚠️ SimConnect.dll non trouvé pour ExecuteCalculatorCode");
+                return false;
+            }
+            catch (EntryPointNotFoundException)
+            {
+                Log($"⚠️ ExecuteCalculatorCode non disponible dans SimConnect.dll (MSFS 2024?)");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Log($"⚠️ Exception ExecuteCalculatorCode: {ex.GetType().Name} - {ex.Message}");
+                return false;
+            }
+
+            if (hr == 0)
+            {
+                value = result;
+                return true;
+            }
+
+            // Ne pas logger les erreurs HRESULT normales (LVar peut ne pas exister)
+            if (hr != unchecked((int)0x80004005)) // E_FAIL
+            {
+                Log($"⚠️ LVar read failed: {localVar} hr=0x{hr:X8}");
+            }
+            return false;
+        }
+        catch (Exception ex)
         {
-            value = result;
-            return true;
+            Log($"⚠️ Exception LVar {localVar}: {ex.Message}");
+            return false;
         }
-
-        Log($"⚠️ LVar read failed: {localVar} hr=0x{hr:X}");
-        return false;
     }
 
     /// <summary>
@@ -1069,17 +1120,24 @@ public class SimConnectService : IDisposable
     /// </summary>
     private void RefreshLocalVarState(string commandId, string localVar, string? unit)
     {
-        if (TryReadLocalVar(localVar, unit, out var newValue))
+        try
         {
-            lock (_stateLock)
+            if (TryReadLocalVar(localVar, unit, out var newValue))
             {
-                var oldValue = _buttonStates.GetValueOrDefault(commandId);
-                if (Math.Abs(oldValue - newValue) > 0.001)
+                lock (_stateLock)
                 {
-                    _buttonStates[commandId] = newValue;
-                    Task.Run(() => StateChanged?.Invoke(commandId, newValue));
+                    var oldValue = _buttonStates.GetValueOrDefault(commandId);
+                    if (Math.Abs(oldValue - newValue) > 0.001)
+                    {
+                        _buttonStates[commandId] = newValue;
+                        Task.Run(() => StateChanged?.Invoke(commandId, newValue));
+                    }
                 }
             }
+        }
+        catch (Exception ex)
+        {
+            Log($"⚠️ Erreur RefreshLocalVarState {commandId}: {ex.Message}");
         }
     }
 
@@ -1113,10 +1171,12 @@ enum NotificationGroup { Group0 = 0 }  // Groupe de priorité pour les events
 internal static class NativeSimConnect
 {
     // Signature native SimConnect_ExecuteCalculatorCode (non exposée dans le wrapper managed)
-    [DllImport("SimConnect.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall)]
+    // NOTE: Cette fonction peut ne pas exister dans MSFS 2024 SimConnect.dll
+    // Si elle cause des crashes, désactiver les appels LocalVar
+    [DllImport("SimConnect.dll", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.StdCall, SetLastError = true)]
     public static extern int ExecuteCalculatorCode(
         IntPtr hSimConnect,
-        string szCode,
+        [MarshalAs(UnmanagedType.LPStr)] string szCode,
         ref double value,
         IntPtr reserved1,
         IntPtr reserved2);
