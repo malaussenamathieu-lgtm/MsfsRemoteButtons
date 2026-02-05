@@ -764,7 +764,16 @@
          * @param {Object} cmd - AircraftCommand
          */
         function renderFuelSelector(cmd) {
-            const currentValue = states[cmd.id] || 0;
+            // Essayer de restaurer depuis localStorage, sinon utiliser la valeur du serveur, sinon valeur par défaut
+            const storedValue = localStorage.getItem('fuel_selector_position');
+            let currentValue;
+            if (storedValue !== null) {
+                currentValue = parseInt(storedValue, 10);
+            } else if (states[cmd.id] !== undefined) {
+                currentValue = states[cmd.id];
+            } else {
+                currentValue = 1; // TAKEOFF LANDING par défaut
+            }
             const position = Math.round(currentValue);
             // Positions : 0 = Gauche, 1 = Haut, 2 = Droite
             // Axe de rotation au centre du cercle (poignée)
@@ -920,7 +929,22 @@
         // Mise à jour du sélecteur de carburant
         const fuelSelector = document.querySelector(`.fuel-selector-panel[data-id="${id}"]`);
         if (fuelSelector) {
-            const position = Math.round(value);
+            // Si value est undefined ou null, essayer de restaurer depuis localStorage
+            let positionValue = value;
+            if ((positionValue === undefined || positionValue === null) && id === 'fuel_selector') {
+                const storedValue = localStorage.getItem('fuel_selector_position');
+                if (storedValue !== null) {
+                    positionValue = parseInt(storedValue, 10);
+                } else {
+                    positionValue = 1; // TAKEOFF LANDING par défaut
+                }
+            }
+            const position = Math.round(positionValue);
+            
+            // Sauvegarder la position dans localStorage à chaque mise à jour
+            if (id === 'fuel_selector') {
+                localStorage.setItem('fuel_selector_position', position.toString());
+            }
             // Rotation pour pointer vers le haut quand position = 1 (180° depuis le bas)
             // Positions: 0 = LEFT (90°), 1 = TOP (180°), 2 = RIGHT (270°)
             const targetRotation = position === 0 ? 90 : position === 1 ? 180 : 270;
@@ -1072,6 +1096,11 @@
                 type: 'command',
                 data: { id: id, simEvent: simEvent, value: value }
             }));
+
+            // Sauvegarder la position dans localStorage pour le sélecteur de carburant
+            if (id === 'fuel_selector') {
+                localStorage.setItem('fuel_selector_position', value.toString());
+            }
 
             // Mise à jour optimiste de l'UI (n'attend pas la confirmation serveur)
             updateControlState(id, value);

@@ -445,6 +445,7 @@ public class Cessna172G1000Profile : IAircraftProfile
             InputEventHash = 0x94DD4F6A97392589,
             // Pas de SimVar - contrôle uniquement (write-only)
             // Les L: vars nécessaires ne sont pas accessibles dans MSFS 2024
+            // Tentative avec FUELSYSTEM JUNCTION SETTING:'FuelSelector'_1 : ne fonctionne pas
             Category = "VOLETS",
             SubCategory = "fuel selector",
             Key = ConsoleKey.NoName,
