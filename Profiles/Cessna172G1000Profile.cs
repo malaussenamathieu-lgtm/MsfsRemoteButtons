@@ -410,20 +410,6 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle
         },
 
-        // Flight Level Change - Maintient la vitesse en montée/descente
-        new AircraftCommand
-        {
-            Id = "ap_flc",
-            Name = "FLC",
-            SimEvent = "FLIGHT_LEVEL_CHANGE",
-            SimVar = "AUTOPILOT FLIGHT LEVEL CHANGE",
-            SimVarUnit = "Bool",
-            Category = "AUTOPILOT",
-            Key = ConsoleKey.NoName,
-            KeyDisplay = "",
-            ControlType = ControlType.Toggle
-        },
-
         // Heading Hold - Maintient le cap sélectionné (HDG bug)
         new AircraftCommand
         {
@@ -496,6 +482,21 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle
         },
 
+        // Back Course - Mode approche back course ILS
+        new AircraftCommand
+        {
+            Id = "ap_bc",
+            Name = "BC",
+            InputEvent = "AS1000_AUTOPILOT_BACKCOURSE_PFD",
+            InputEventHash = 16708404293000148863UL,
+            SimVar = "AUTOPILOT APPROACH HOLD",
+            SimVarUnit = "Bool",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
+        },
+
         // Vertical Speed Hold - Maintient le taux de montée/descente sélectionné
         new AircraftCommand
         {
@@ -508,6 +509,20 @@ public class Cessna172G1000Profile : IAircraftProfile
             Category = "AUTOPILOT",
             Key = ConsoleKey.W,
             KeyDisplay = "W",
+            ControlType = ControlType.Toggle
+        },
+
+        // Flight Level Change - Maintient la vitesse en montée/descente
+        new AircraftCommand
+        {
+            Id = "ap_flc",
+            Name = "FLC",
+            SimEvent = "FLIGHT_LEVEL_CHANGE",
+            SimVar = "AUTOPILOT FLIGHT LEVEL CHANGE",
+            SimVarUnit = "Bool",
+            Category = "AUTOPILOT",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
             ControlType = ControlType.Toggle
         },
 

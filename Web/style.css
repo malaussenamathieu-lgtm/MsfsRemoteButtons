@@ -756,8 +756,8 @@ body {
 .display-box {
     width: 70px;
     min-width: 70px;
-    background: #050505;
-    border: 1px solid #333;
+    background: #000;
+    border: 1px solid #444;
     border-radius: 2px;
     padding: 4px 6px;
     text-align: center;
@@ -816,6 +816,7 @@ body {
     display: flex;
     gap: 6px;
     margin-top: 10px;
+    align-items: flex-start;
 }
 
 .control-spacer {
@@ -827,6 +828,7 @@ body {
     width: 70px;
     min-width: 70px;
     display: flex;
+    flex-direction: column;
     gap: 3px;
 }
 
@@ -847,6 +849,25 @@ body {
     padding: 8px 2px;
     font-size: 0.55em;
     min-height: 44px;
+}
+
+.control-group.vs-controls {
+    flex-direction: column;
+    height: 80px;
+    min-height: 80px;
+    max-height: 80px;
+    align-items: stretch;
+    justify-content: stretch;
+}
+
+.control-group.vs-controls .ctrl-btn {
+    flex: 1 1 50%;
+    min-height: 0;
+    padding: 8px 4px;
+    font-size: 0.75em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Potentiometer Control */
