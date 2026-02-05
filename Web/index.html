@@ -190,24 +190,43 @@
                     html += `</div>`; // close displays-row
                 }
 
-                html += `<div class="category-buttons">`;
-
-                for (const cmd of commands) {
-                    if (cmd.controlType === 'toggle') {
-                        html += renderToggle(cmd);
-                    } else if (cmd.controlType === 'selector') {
-                        html += renderSelector(cmd);
-                    } else if (cmd.controlType === 'momentary') {
-                        html += renderMomentary(cmd);
-                    } else if (cmd.controlType === 'potentiometer') {
-                        console.log(`[DEBUG] Rendering potentiometer: ${cmd.id} (${cmd.name})`);
+                // Special layout for INTERIOR LIGHTS with sections
+                if (category === 'INTERIOR LIGHTS') {
+                    html += `<div class="interior-lights-container">`;
+                    html += `<div class="interior-lights-section section-1">`;
+                    html += `<div class="interior-lights-section-title">DIMMING</div>`;
+                    html += `<div class="interior-lights-grid">`;
+                    
+                    // Rendre les 4 potentiomètres en 2x2
+                    const potentiometers = commands.filter(c => c.controlType === 'potentiometer');
+                    for (const cmd of potentiometers) {
                         html += renderPotentiometer(cmd);
-                    } else {
-                        console.log(`[DEBUG] Unknown controlType: ${cmd.controlType} for ${cmd.id}`);
                     }
-                }
+                    
+                    html += `</div>`; // close interior-lights-grid
+                    html += `</div>`; // close section-1
+                    html += `</div>`; // close interior-lights-container
+                } else {
+                    // Layout normal pour les autres catégories
+                    html += `<div class="category-buttons">`;
 
-                html += `</div>`; // close category-buttons
+                    for (const cmd of commands) {
+                        if (cmd.controlType === 'toggle') {
+                            html += renderToggle(cmd);
+                        } else if (cmd.controlType === 'selector') {
+                            html += renderSelector(cmd);
+                        } else if (cmd.controlType === 'momentary') {
+                            html += renderMomentary(cmd);
+                        } else if (cmd.controlType === 'potentiometer') {
+                            console.log(`[DEBUG] Rendering potentiometer: ${cmd.id} (${cmd.name})`);
+                            html += renderPotentiometer(cmd);
+                        } else {
+                            console.log(`[DEBUG] Unknown controlType: ${cmd.controlType} for ${cmd.id}`);
+                        }
+                    }
+
+                    html += `</div>`; // close category-buttons
+                }
 
                 // Control buttons row - BELOW main buttons
                 if (category === 'AUTOPILOT') {
@@ -400,17 +419,19 @@
                 <div class="potentiometer-control" data-cmd-id="${cmd.id}">
                     <div class="potentiometer-label">${cmd.name}</div>
                     <div class="potentiometer-value" data-cmd-id="${cmd.id}">${percentValue}%</div>
-                    <div class="potentiometer-track" data-cmd-id="${cmd.id}">
-                        <div class="potentiometer-fill" data-cmd-id="${cmd.id}" style="width: ${percentValue}%"></div>
+                    <div class="potentiometer-track-wrapper">
+                        <div class="potentiometer-track" data-cmd-id="${cmd.id}">
+                            <div class="potentiometer-fill" data-cmd-id="${cmd.id}" style="width: ${percentValue}%"></div>
+                        </div>
+                        <input type="range" 
+                               class="potentiometer-slider" 
+                               data-cmd-id="${cmd.id}"
+                               min="0" 
+                               max="100" 
+                               step="1" 
+                               value="${percentValue}"
+                               aria-label="${cmd.name}">
                     </div>
-                    <input type="range" 
-                           class="potentiometer-slider" 
-                           data-cmd-id="${cmd.id}"
-                           min="0" 
-                           max="100" 
-                           step="1" 
-                           value="${percentValue}"
-                           aria-label="${cmd.name}">
                 </div>
             `;
         }
