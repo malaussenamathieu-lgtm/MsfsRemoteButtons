@@ -24,6 +24,7 @@
         </div>
         <div class="status" style="margin-top: 8px;">
             <span id="oatDisplay">OAT: --°C</span>
+            <span style="margin-left: 20px;" id="trimDisplay">TRIM: --%</span>
         </div>
     </div>
 
@@ -67,6 +68,7 @@
         const aircraftNameEl = document.getElementById('aircraftName');
         const disconnectedOverlay = document.getElementById('disconnectedOverlay');
         const oatDisplayEl = document.getElementById('oatDisplay');
+        const trimDisplayEl = document.getElementById('trimDisplay');
 
         // ================================================================
         // CONNEXION WEBSOCKET
@@ -148,6 +150,16 @@
                 case 'state':
                     states[msg.data.id] = msg.data.value;
                     updateControlState(msg.data.id, msg.data.value);
+                    // Mise à jour du trim si c'est la commande display_elevator_trim
+                    if (msg.data.id === 'display_elevator_trim') {
+                        // ELEVATOR TRIM PCT avec "Percent Over 100" retourne une valeur entre -1 et 1
+                        // Multiplier par 100 pour obtenir un pourcentage (-100% à +100%)
+                        // Pour le C172, la plage réelle est environ -86.4% à +100%
+                        const trimValue = parseFloat(msg.data.value || 0);
+                        const trimPercent = trimValue * 100;
+                        trimDisplayEl.textContent = `TRIM: ${trimPercent >= 0 ? '+' : ''}${trimPercent.toFixed(1)}%`;
+                        updateTrimGauge(trimPercent);
+                    }
                     break;
 
                 case 'environmentUpdate':
@@ -337,6 +349,7 @@
                     html += `</div>`; // close electrical-container
                 } else if (category === 'VOLETS') {
                     // Layout spécial pour VOLETS : sélecteur de volets + frein de parking
+                    console.log('[DEBUG] Rendering VOLETS category');
                     html += `<div class="volets-container">`;
                     
                     // Sélecteur de volets
@@ -373,6 +386,25 @@
                         html += `<div class="fuel-selector-section">`;
                         html += renderFuelSelector(fuelSelectorCmd);
                         html += `</div>`; // close fuel-selector-section
+                    }
+                    
+                    // Jauge de trim (sous-catégorie) - inclure même si Hidden = true
+                    // Chercher dans profile.commands car la commande est Hidden
+                    console.log('[DEBUG] Searching for trim gauge in profile.commands. Total commands:', profile.commands.length);
+                    const trimDisplayCmd = profile.commands.find(c => 
+                        c.category === 'VOLETS' && (
+                            (c.subCategory && c.subCategory.toLowerCase() === 'trim') || 
+                            c.id === 'display_elevator_trim'
+                        )
+                    );
+                    
+                    if (trimDisplayCmd) {
+                        console.log('[DEBUG] Trim gauge found:', trimDisplayCmd.id, trimDisplayCmd.subCategory, trimDisplayCmd.category);
+                        html += `<div class="trim-gauge-section">`;
+                        html += renderTrimGauge(trimDisplayCmd);
+                        html += `</div>`; // close trim-gauge-section
+                    } else {
+                        console.log('[DEBUG] Trim gauge NOT found. Profile commands:', profile.commands.filter(c => c.category === 'VOLETS').map(c => ({ id: c.id, subCategory: c.subCategory, hidden: c.hidden })));
                     }
                     
                     html += `</div>`; // close volets-container
@@ -528,6 +560,16 @@
             // Appliquer les états déjà connus aux nouveaux éléments
             for (const [id, value] of Object.entries(states)) {
                 updateControlState(id, value);
+                // Initialiser l'affichage du trim si disponible
+                if (id === 'display_elevator_trim') {
+                    // ELEVATOR TRIM PCT avec "Percent Over 100" retourne une valeur entre -1 et 1
+                    // Multiplier par 100 pour obtenir un pourcentage (-100% à +100%)
+                    // Pour le C172, la plage réelle est environ -86.4% à +100%
+                    const trimValue = parseFloat(value || 0);
+                    const trimPercent = trimValue * 100;
+                    trimDisplayEl.textContent = `TRIM: ${trimPercent >= 0 ? '+' : ''}${trimPercent.toFixed(1)}%`;
+                    updateTrimGauge(trimPercent);
+                }
             }
 
             // Mettre à jour la LED d'avertissement OAT si l'OAT est déjà disponible
@@ -570,6 +612,39 @@
             if (rightEl) {
                 rightEl.textContent = `${rightGallons.toFixed(1)}gal`;
             }
+        }
+
+        /**
+         * Met à jour la jauge de trim de profondeur (verticale)
+         * @param {number} trimPercent - Position du trim en pourcentage (-86.4% à +100%)
+         */
+        function updateTrimGauge(trimPercent) {
+            const indicatorBar = document.getElementById('trim-indicator-bar');
+            if (!indicatorBar) {
+                console.log('[DEBUG] trim-indicator-bar not found in DOM');
+                return;
+            }
+
+            // Plage du trim : -86.4% à +100%
+            const minTrim = -86.4;
+            const maxTrim = 100;
+            const range = maxTrim - minTrim; // 186.4
+
+            // Calculer la position en pourcentage (0-100%) de la jauge
+            // Normaliser : (trimPercent - minTrim) / range
+            const normalizedPosition = ((trimPercent - minTrim) / range) * 100;
+            const clampedPosition = Math.max(0, Math.min(100, normalizedPosition));
+
+            // Inverser pour que -86.4% soit en haut et que le curseur monte quand le trim augmente
+            const invertedPosition = 100 - clampedPosition;
+
+            console.log('[DEBUG] updateTrimGauge:', trimPercent, '->', clampedPosition + '% (inverted: ' + invertedPosition + '%)');
+
+            // Positionner la barre indicateur verticalement
+            // Utiliser bottom inversé : -86.4% en haut, +100% en bas, curseur monte quand trim augmente
+            indicatorBar.style.bottom = `${invertedPosition}%`;
+            indicatorBar.style.top = 'auto';
+            indicatorBar.style.transform = 'translateX(-50%)'; // Centrer horizontalement
         }
 
         /**
@@ -838,6 +913,30 @@
                                     <div class="fuel-selector-quantity" id="fuel-right-quantity">--</div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Génère le HTML pour la jauge de trim de profondeur (verticale)
+         * @param {Object} cmd - AircraftCommand (display_elevator_trim)
+         */
+        function renderTrimGauge(cmd) {
+            console.log('[DEBUG] renderTrimGauge called with cmd:', cmd);
+            return `
+                <div class="trim-gauge-panel" data-id="${cmd.id}">
+                    <div class="rotating-handle-title">TRIM</div>
+                    <div class="trim-gauge-vertical">
+                        <div class="trim-gauge-scale-vertical">
+                            <div class="trim-gauge-mark-vertical trim-gauge-mark-max-vertical">+100%</div>
+                            <div class="trim-gauge-mark-vertical trim-gauge-mark-takeoff-vertical">TAKEOFF<br>1.5°</div>
+                            <div class="trim-gauge-mark-vertical trim-gauge-mark-min-vertical">-86.4%</div>
+                        </div>
+                        <div class="trim-gauge-bar-vertical">
+                            <div class="trim-gauge-indicator-bar-vertical" id="trim-indicator-bar"></div>
+                            <div class="trim-gauge-takeoff-marker-vertical" id="trim-takeoff-marker"></div>
                         </div>
                     </div>
                 </div>

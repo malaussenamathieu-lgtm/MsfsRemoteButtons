@@ -832,7 +832,22 @@ public class Cessna172G1000Profile : IAircraftProfile
             Key = ConsoleKey.NoName,
             KeyDisplay = "",
             ControlType = ControlType.Toggle,
-            Hidden = true
+            Hidden = true  // Affichage uniquement, pas de bouton
+        },
+
+        // Trim de profondeur (affichage uniquement)
+        new AircraftCommand
+        {
+            Id = "display_elevator_trim",
+            Name = "Elevator Trim",
+            SimVar = "ELEVATOR TRIM PCT",
+            SimVarUnit = "Percent Over 100",
+            Category = "VOLETS",
+            SubCategory = "trim",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle,
+            Hidden = true  // Affichage uniquement, pas de bouton
         },
     };
 

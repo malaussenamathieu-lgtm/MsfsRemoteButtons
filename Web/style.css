@@ -48,6 +48,107 @@ body {
     font-size: 0.8em;
 }
 
+/* Jauge de trim de profondeur (verticale) */
+.trim-gauge-panel {
+    position: relative;
+    width: 180px;
+    height: auto;
+    min-height: 246px; /* Même hauteur que les autres cadres */
+    background: rgba(45, 45, 45, 0.5);
+    border: 1px solid #fff;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+}
+
+.trim-gauge-vertical {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    margin-top: 10px;
+    padding: 4px;
+}
+
+.trim-gauge-scale-vertical {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 4px 0;
+    font-size: 0.6em;
+    color: #ccc;
+}
+
+.trim-gauge-mark-vertical {
+    position: absolute;
+    font-size: 0.55em;
+    color: #aaa;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.trim-gauge-mark-max-vertical {
+    top: 0;
+}
+
+.trim-gauge-mark-takeoff-vertical {
+    /* Position TAKEOFF : environ 1.5° correspond à ~8% sur la plage -86.4% à +100% */
+    /* Calcul : (8 - (-86.4)) / (100 - (-86.4)) * 100% ≈ 50.6% depuis le bas */
+    bottom: calc((8 - (-86.4)) / (100 - (-86.4)) * 100%);
+    transform: translateY(50%);
+    color: #ffc107; /* Jaune pour la position recommandée */
+    font-weight: bold;
+}
+
+.trim-gauge-mark-min-vertical {
+    bottom: 0;
+}
+
+.trim-gauge-bar-vertical {
+    position: absolute;
+    left: 50px;
+    top: 4px;
+    bottom: 4px;
+    width: 16px;
+    background: rgba(40, 40, 40, 0.8);
+    border: 1px solid #666;
+    border-radius: 2px;
+    overflow: visible;
+}
+
+.trim-gauge-indicator-bar-vertical {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 4px;
+    background: #00ff00;
+    border: 1px solid #00cc00;
+    border-radius: 1px;
+    z-index: 10;
+    transition: bottom 0.2s ease;
+}
+
+.trim-gauge-takeoff-marker-vertical {
+    position: absolute;
+    left: -2px;
+    width: calc(100% + 4px);
+    height: 2px;
+    background: #ffc107;
+    border: none;
+    z-index: 5;
+    /* Position TAKEOFF : environ 1.5° correspond à ~8% sur la plage -86.4% à +100% */
+    bottom: calc((8 - (-86.4)) / (100 - (-86.4)) * 100%);
+}
+
 .status-item {
     display: flex;
     align-items: center;
@@ -957,6 +1058,10 @@ body {
 }
 
 .parking-brake-section,
+.trim-gauge-section {
+    margin-left: 10px;
+}
+
 .fuel-selector-section {
     display: flex;
     flex-direction: column;
