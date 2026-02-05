@@ -244,6 +244,20 @@ public class Cessna172G1000Profile : IAircraftProfile
             ControlType = ControlType.Toggle
         },
 
+        // Cabin Power 12V - Alimentation cabine 12V
+        new AircraftCommand
+        {
+            Id = "cabin_power_12v",
+            Name = "Cabin Power 12V",
+            InputEvent = "ELECTRICAL_ELECTRICAL_SWITCH_POWER12V_Position",
+            LocalVar = "Power_12V",
+            LocalVarUnit = "Bool",
+            Category = "ÉLECTRIQUE",
+            Key = ConsoleKey.NoName,
+            KeyDisplay = "",
+            ControlType = ControlType.Toggle
+        },
+
         // ============================================
         // VOLETS (Sélecteur + boutons)
         // ============================================
