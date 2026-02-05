@@ -129,7 +129,10 @@ public class WebServerService : IDisposable
     /// </summary>
     private void OnStateChanged(string commandId, double value)
     {
+#if DEBUG
+        // Log seulement en mode DEBUG pour éviter le pileup de messages
         Console.WriteLine($"[DEBUG] WebServer: Envoi état {commandId} = {value}");
+#endif
         Broadcast(new WsMessage
         {
             Type = "state",
